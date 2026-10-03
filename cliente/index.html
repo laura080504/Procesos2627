@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesos 26-27</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <h1>Procesos 26-27</h1>
+
+    <section>
+        <h2>Nuevo usuario</h2>
+        <input id="nick" type="text" placeholder="Nick">
+        <button id="botonAgregar">Agregar</button>
+        <p id="mensaje"></p>
+    </section>
+
+    <section>
+        <h2>Usuarios (<span id="numeroUsuarios">0</span>)</h2>
+        <button id="botonRefrescar">Refrescar</button>
+        <ul id="listaUsuarios"></ul>
+    </section>
+
+    <script src="js/comunicacion/clienteHttp.js"></script>
+    <script src="js/comunicacion/clienteRest.js"></script>
+    <script src="js/presentacion/controlWeb.js"></script>
+    <script src="js/inicio.js"></script>
+</body>
+</html>
