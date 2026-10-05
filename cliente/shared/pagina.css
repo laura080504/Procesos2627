@@ -1,0 +1,75 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: var(--texto);
+    color-scheme: light;
+}
+
+body.oscuro {
+    color: var(--texto-oscuro);
+    color-scheme: dark;
+}
+
+.escena {
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    align-items: safe center;
+    justify-content: center;
+    padding: 5.5rem 2.5rem 3rem;
+    background:
+        linear-gradient(var(--velo-claro), var(--velo-claro)),
+        url("../img/biblioteca.webp") center / cover no-repeat fixed;
+}
+
+body.oscuro .escena {
+    background:
+        linear-gradient(var(--velo-oscuro), var(--velo-oscuro)),
+        url("../img/biblioteca.webp") center / cover no-repeat;
+}
+
+.herramientas {
+    position: absolute;
+    top: 1.2rem;
+    right: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    z-index: 2;
+}
+
+.herramientas button {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.herramientas svg {
+    width: 26px;
+    height: 26px;
+}
+
+body:not(.oscuro) .icono-luna,
+body.oscuro .icono-sol {
+    display: none;
+}
+
+.panel {
+    width: 640px;
+    flex: 0 0 640px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

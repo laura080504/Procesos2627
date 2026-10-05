@@ -1,0 +1,12 @@
+:root {
+    --rojo-logo: #9d1830;
+    --texto: #1a1a1a;
+    --texto-oscuro: #f7f7f7;
+    --cristal-rojo: rgba(168, 28, 44, 0.46);
+    --cristal-rojo-oscuro: rgba(110, 18, 32, 0.38);
+    --cristal-blanco: rgba(255, 255, 255, 0.62);
+    --borde-cristal: rgba(255, 255, 255, 0.48);
+    --borde-aviso: rgba(255, 255, 255, 0.75);
+    --velo-claro: rgba(255, 255, 255, 0.5);
+    --velo-oscuro: rgba(12, 12, 14, 0.78);
+}
