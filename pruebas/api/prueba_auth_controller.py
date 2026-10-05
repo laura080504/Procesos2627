@@ -1,0 +1,59 @@
+from pruebas.datos_prueba import CONTRASENA
+
+REGISTRO = {"email": "nuevo@ejemplo.com", "nick": "nuevo", "contrasena": "contrasena-segura"}
+
+
+def prueba_registro_devuelve_el_usuario_sin_contrasena(cliente):
+    respuesta = cliente.post("/api/auth/registro", json=REGISTRO)
+    assert respuesta.status_code == 201
+    assert respuesta.json() == {
+        "email": "nuevo@ejemplo.com",
+        "nick": "nuevo",
+        "rol": "usuario",
+        "estado": "activo",
+    }
+
+
+def prueba_registro_duplicado_devuelve_409(cliente):
+    cliente.post("/api/auth/registro", json=REGISTRO)
+    assert cliente.post("/api/auth/registro", json=REGISTRO).status_code == 409
+
+
+def prueba_registro_con_datos_no_validos_devuelve_422(cliente):
+    assert cliente.post("/api/auth/registro", json={**REGISTRO, "email": "no-es-email"}).status_code == 422
+    assert cliente.post("/api/auth/registro", json={**REGISTRO, "contrasena": "corta"}).status_code == 422
+
+
+def prueba_inicio_sesion_correcto_crea_cookie_httponly(cliente, usuario_registrado):
+    respuesta = cliente.post(
+        "/api/auth/inicio-sesion", json={"email": usuario_registrado.email, "contrasena": CONTRASENA}
+    )
+    assert respuesta.status_code == 200
+    assert respuesta.json()["email"] == usuario_registrado.email
+    assert "httponly" in respuesta.headers["set-cookie"].lower()
+
+
+def prueba_inicio_sesion_incorrecto_devuelve_401(cliente, usuario_registrado):
+    respuesta = cliente.post(
+        "/api/auth/inicio-sesion", json={"email": usuario_registrado.email, "contrasena": "incorrecta"}
+    )
+    assert respuesta.status_code == 401
+    assert "sesion" not in cliente.cookies
+
+
+def prueba_sesion_sin_cookie_devuelve_401(cliente):
+    assert cliente.get("/api/auth/sesion").status_code == 401
+
+
+def prueba_la_sesion_se_mantiene_entre_peticiones(cliente_autenticado, usuario_registrado):
+    respuesta = cliente_autenticado.get("/api/auth/sesion")
+    assert respuesta.status_code == 200
+    assert respuesta.json()["email"] == usuario_registrado.email
+
+
+def prueba_cierre_sesion_invalida_el_token(cliente_autenticado):
+    token = cliente_autenticado.cookies["sesion"]
+    assert cliente_autenticado.post("/api/auth/cierre-sesion").status_code == 204
+
+    cliente_autenticado.cookies.set("sesion", token)
+    assert cliente_autenticado.get("/api/auth/sesion").status_code == 401

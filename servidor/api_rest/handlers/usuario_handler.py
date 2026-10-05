@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
-from servidor.logica.exceptions import UsuarioNoEncontrado, UsuarioYaExiste
+from servidor.logica.exceptions.usuario_no_encontrado import UsuarioNoEncontrado
+from servidor.logica.exceptions.usuario_ya_existe import UsuarioYaExiste
 
 
 async def usuario_ya_existe_handler(_: Request, error: UsuarioYaExiste) -> JSONResponse:

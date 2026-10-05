@@ -1,0 +1,1 @@
+CONTRASENA = "contrasena-segura"

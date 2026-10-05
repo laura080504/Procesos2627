@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from servidor.logica.entities import Usuario
+    from servidor.logica.entities.usuario import Usuario
 
 
 class RepositorioUsuarios(ABC):
@@ -14,10 +14,10 @@ class RepositorioUsuarios(ABC):
     def insertar(self, usuario: Usuario) -> Usuario: ...
 
     @abstractmethod
-    def obtener_por_nick(self, nick: str) -> Usuario | None: ...
+    def obtener_por_email(self, email: str) -> Usuario | None: ...
 
     @abstractmethod
     def obtener_todos(self) -> list[Usuario]: ...
 
     @abstractmethod
-    def eliminar(self, nick: str) -> bool: ...
+    def eliminar(self, email: str) -> bool: ...
