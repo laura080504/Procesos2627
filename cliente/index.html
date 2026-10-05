@@ -139,6 +139,61 @@
                 </form>
             </section>
 
+            <section id="vistaRecuperacion" class="tarjeta" hidden>
+                <form id="formularioRecuperacion">
+                    <h1 data-texto="recuperarTitulo">Recuperar contraseña</h1>
+                    <label class="campo">
+                        <span data-texto="email">Email</span>
+                        <span class="linea">
+                            <input name="email" type="email" required autocomplete="email">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+                                <path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+                            </svg>
+                        </span>
+                    </label>
+                    <button class="boton-entrar" type="submit" data-texto="continuar">Continuar</button>
+                    <div class="pie-tarjeta">
+                        <p>
+                            <a href="#" id="enlaceVolverInicio" data-texto="volverInicio">Volver al inicio</a>
+                        </p>
+                    </div>
+                </form>
+                <form id="formularioNuevaContrasena" hidden>
+                    <h1 data-texto="nuevaContrasenaTitulo">Nueva contraseña</h1>
+                    <label class="campo">
+                        <span data-texto="nuevaContrasena">Nueva contraseña</span>
+                        <span class="linea">
+                            <input name="contrasena" type="password" required minlength="8" maxlength="64" autocomplete="new-password">
+                            <button class="ver-contrasena" type="button" data-etiqueta="verContrasena" aria-label="Mostrar contraseña">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 20l3.2-.6L19 7.6 16.4 5 4.6 16.8 4 20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+                                    <path d="M13.8 7.6l2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                                </svg>
+                            </button>
+                        </span>
+                    </label>
+                    <label class="campo">
+                        <span data-texto="confirmarContrasena">Repite la contraseña</span>
+                        <span class="linea">
+                            <input name="confirmar" type="password" required minlength="8" maxlength="64" autocomplete="new-password">
+                            <button class="ver-contrasena" type="button" data-etiqueta="verContrasena" aria-label="Mostrar contraseña">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 20l3.2-.6L19 7.6 16.4 5 4.6 16.8 4 20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+                                    <path d="M13.8 7.6l2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                                </svg>
+                            </button>
+                        </span>
+                    </label>
+                    <button class="boton-entrar" type="submit" data-texto="guardarContrasena">Guardar contraseña</button>
+                    <div class="pie-tarjeta">
+                        <p>
+                            <a href="#" id="enlaceCancelarRecuperacion" data-texto="volverInicio">Volver al inicio</a>
+                        </p>
+                    </div>
+                </form>
+            </section>
+
             <section id="vistaUsuarios" class="tarjeta" hidden>
                 <h1><span data-texto="usuarios">Usuarios</span> (<span id="numeroUsuarios">0</span>)</h1>
                 <p class="sesion-actual">
@@ -161,6 +216,7 @@
     <script src="js/presentacion/vistas/vistaCabecera.js"></script>
     <script src="js/presentacion/vistas/vistaInicioSesion.js"></script>
     <script src="js/presentacion/vistas/vistaRegistro.js"></script>
+    <script src="js/presentacion/vistas/vistaRecuperacion.js"></script>
     <script src="js/presentacion/vistas/vistaUsuarios.js"></script>
     <script src="js/presentacion/controlWeb.js"></script>
     <script src="js/inicio.js"></script>
