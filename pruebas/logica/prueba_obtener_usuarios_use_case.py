@@ -1,14 +1,11 @@
-from servidor.logica.entities import Usuario
-from servidor.logica.queries import ObtenerUsuariosQuery
-from servidor.logica.use_cases import ObtenerUsuariosUseCase
+from servidor.logica.queries.obtener_usuarios_query import ObtenerUsuariosQuery
+from servidor.logica.use_cases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
 
 
-def prueba_inicialmente_no_hay_usuarios(repositorio):
-    assert ObtenerUsuariosUseCase(repositorio).ejecutar(ObtenerUsuariosQuery()) == []
+def prueba_inicialmente_no_hay_usuarios(repositorio_usuarios):
+    assert ObtenerUsuariosUseCase(repositorio_usuarios).ejecutar(ObtenerUsuariosQuery()) == []
 
 
-def prueba_devuelve_los_usuarios_guardados(repositorio):
-    repositorio.insertar(Usuario("laura"))
-    repositorio.insertar(Usuario("pepe"))
-    usuarios = ObtenerUsuariosUseCase(repositorio).ejecutar(ObtenerUsuariosQuery())
-    assert [usuario.nick for usuario in usuarios] == ["laura", "pepe"]
+def prueba_devuelve_los_usuarios_guardados(repositorio_usuarios, usuario_registrado):
+    usuarios = ObtenerUsuariosUseCase(repositorio_usuarios).ejecutar(ObtenerUsuariosQuery())
+    assert usuarios == [usuario_registrado]
