@@ -1,0 +1,132 @@
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 1.15rem;
+}
+
+.linea {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid currentColor;
+}
+
+.linea input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    padding: 0.35rem 0;
+    outline: none;
+}
+
+.linea svg,
+.micro svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+}
+
+.fila-opciones {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 1.25rem;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.recordar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.recordar input {
+    appearance: none;
+    width: 1.05rem;
+    height: 1.05rem;
+    margin: 0;
+    border: 2px solid var(--rojo-logo);
+    border-radius: 3px;
+    background: #fff;
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+}
+
+.recordar input:checked {
+    background: var(--rojo-logo);
+    border-color: var(--rojo-logo);
+}
+
+.recordar input:checked::after {
+    content: "";
+    width: 0.28rem;
+    height: 0.5rem;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) translate(-1px, -1px);
+}
+
+.olvido,
+.pie-tarjeta p {
+    margin: 0;
+}
+
+.olvido {
+    text-align: right;
+}
+
+.enviar {
+    display: block;
+    margin: 1rem auto 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 650;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.boton-entrar {
+    display: block;
+    margin: 1.4rem auto 0;
+    min-width: 12rem;
+    padding: 0.7rem 2rem;
+    border: 0;
+    border-radius: 12px;
+    background: #fff;
+    color: var(--rojo-logo);
+    font: inherit;
+    font-weight: 650;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.pie-tarjeta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-top: 1.35rem;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+.micro,
+.ver-contrasena {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}

@@ -3,8 +3,20 @@ class ClienteRest {
         this.clienteHttp = clienteHttp;
     }
 
-    agregarUsuario(nick) {
-        return this.clienteHttp.peticion("POST", "/usuarios", { nick });
+    registrar(email, nick, contrasena) {
+        return this.clienteHttp.peticion("POST", "/auth/registro", { email, nick, contrasena });
+    }
+
+    iniciarSesion(email, contrasena) {
+        return this.clienteHttp.peticion("POST", "/auth/inicio-sesion", { email, contrasena });
+    }
+
+    cerrarSesion() {
+        return this.clienteHttp.peticion("POST", "/auth/cierre-sesion");
+    }
+
+    obtenerSesion() {
+        return this.clienteHttp.peticion("GET", "/auth/sesion");
     }
 
     obtenerUsuarios() {
@@ -15,11 +27,11 @@ class ClienteRest {
         return this.clienteHttp.peticion("GET", "/usuarios/numero");
     }
 
-    usuarioActivo(nick) {
-        return this.clienteHttp.peticion("GET", `/usuarios/${encodeURIComponent(nick)}/activo`);
+    usuarioActivo(email) {
+        return this.clienteHttp.peticion("GET", `/usuarios/${encodeURIComponent(email)}/activo`);
     }
 
-    eliminarUsuario(nick) {
-        return this.clienteHttp.peticion("DELETE", `/usuarios/${encodeURIComponent(nick)}`);
+    eliminarUsuario(email) {
+        return this.clienteHttp.peticion("DELETE", `/usuarios/${encodeURIComponent(email)}`);
     }
 }

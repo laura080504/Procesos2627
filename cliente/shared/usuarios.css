@@ -1,0 +1,41 @@
+.sesion-actual {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.25rem 0 0;
+    font-size: 1rem;
+    white-space: nowrap;
+}
+
+#botonCerrarSesion,
+#listaUsuarios button {
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    border-radius: 999px;
+    padding: 0.25rem 0.75rem;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+#listaUsuarios {
+    list-style: none;
+    margin: 0.4rem 0 0;
+    padding: 0;
+}
+
+#listaUsuarios li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+    white-space: nowrap;
+}
+
+body.oscuro #listaUsuarios li {
+    border-bottom-color: rgba(255, 255, 255, 0.28);
+}
