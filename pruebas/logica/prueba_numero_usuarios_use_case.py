@@ -1,10 +1,10 @@
-from servidor.logica.entities import Usuario
-from servidor.logica.queries import NumeroUsuariosQuery
-from servidor.logica.use_cases import NumeroUsuariosUseCase
+from servidor.logica.queries.numero_usuarios_query import NumeroUsuariosQuery
+from servidor.logica.use_cases.numero_usuarios_use_case import NumeroUsuariosUseCase
 
 
-def prueba_cuenta_los_usuarios(repositorio):
-    use_case = NumeroUsuariosUseCase(repositorio)
-    assert use_case.ejecutar(NumeroUsuariosQuery()) == 0
-    repositorio.insertar(Usuario("laura"))
-    assert use_case.ejecutar(NumeroUsuariosQuery()) == 1
+def prueba_sin_usuarios_devuelve_cero(repositorio_usuarios):
+    assert NumeroUsuariosUseCase(repositorio_usuarios).ejecutar(NumeroUsuariosQuery()) == 0
+
+
+def prueba_cuenta_los_usuarios(repositorio_usuarios, usuario_registrado):
+    assert NumeroUsuariosUseCase(repositorio_usuarios).ejecutar(NumeroUsuariosQuery()) == 1

@@ -1,4 +1,4 @@
 class UsuarioNoEncontrado(Exception):
-    def __init__(self, nick: str):
-        self.nick = nick
-        super().__init__(f"El usuario {nick} no existe")
+    def __init__(self, email: str):
+        self.email = email
+        super().__init__(f"El usuario {email} no existe")

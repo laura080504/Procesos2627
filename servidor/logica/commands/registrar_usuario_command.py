@@ -2,5 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class AgregarUsuarioCommand:
+class RegistrarUsuarioCommand:
+    email: str
     nick: str
+    contrasena: str
