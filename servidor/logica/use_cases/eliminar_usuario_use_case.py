@@ -1,12 +1,16 @@
-from servidor.datos.repositories import RepositorioUsuarios
-from servidor.logica.commands import EliminarUsuarioCommand
-from servidor.logica.exceptions import UsuarioNoEncontrado
+from servidor.datos.repositories.repositorio_sesiones import RepositorioSesiones
+from servidor.datos.repositories.repositorio_usuarios import RepositorioUsuarios
+from servidor.logica.commands.eliminar_usuario_command import EliminarUsuarioCommand
+from servidor.logica.exceptions.usuario_no_encontrado import UsuarioNoEncontrado
 
 
 class EliminarUsuarioUseCase:
-    def __init__(self, repositorio: RepositorioUsuarios):
-        self.repositorio = repositorio
+    def __init__(self, repositorio_usuarios: RepositorioUsuarios, repositorio_sesiones: RepositorioSesiones):
+        self.repositorio_usuarios = repositorio_usuarios
+        self.repositorio_sesiones = repositorio_sesiones
 
     def ejecutar(self, command: EliminarUsuarioCommand) -> None:
-        if not self.repositorio.eliminar(command.nick):
-            raise UsuarioNoEncontrado(command.nick)
+        email = command.email.strip().lower()
+        if not self.repositorio_usuarios.eliminar(email):
+            raise UsuarioNoEncontrado(email)
+        self.repositorio_sesiones.eliminar_por_email(email)
