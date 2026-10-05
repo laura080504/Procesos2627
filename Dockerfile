@@ -11,5 +11,6 @@ COPY cliente ./cliente
 
 ENV HOST=0.0.0.0
 ENV PORT=8080
+ENV COOKIE_SEGURA=true
 
 CMD ["python", "main.py"]
