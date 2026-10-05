@@ -19,13 +19,19 @@ class ControlWeb {
         this.vistaInicioSesion = new VistaInicioSesion({
             alEnviar: (email, contrasena) => this.iniciarSesion(email, contrasena),
             alIrARegistro: () => this.mostrarRegistro(),
-            alRecuperar: () => this.mostrarMensaje(this.textos.recuperarNoDisponible, true),
+            alRecuperar: () => this.mostrarRecuperacion(),
             alDictar: (campo) => this.dictar(campo),
         });
         this.vistaRegistro = new VistaRegistro({
             alEnviar: (email, nick, contrasena) => this.registrar(email, nick, contrasena),
             alIrAInicioSesion: () => this.mostrarInicioSesion(),
             alDictar: (campo) => this.dictar(campo),
+        });
+        this.vistaRecuperacion = new VistaRecuperacion({
+            alSolicitar: (email) => this.solicitarRecuperacion(email),
+            alGuardar: (token, contrasena) => this.restablecerContrasena(token, contrasena),
+            alVolver: () => this.mostrarInicioSesion(),
+            alNoCoinciden: () => this.mostrarMensaje(this.textos.contrasenasNoCoinciden, true),
         });
         this.vistaUsuarios = new VistaUsuarios({
             alEliminar: (email) => this.eliminarUsuario(email),
@@ -64,6 +70,7 @@ class ControlWeb {
         this.barra.aplicar(this.textos);
         this.vistaInicioSesion.aplicarTextos(this.textos);
         this.vistaRegistro.aplicarTextos(this.textos);
+        this.vistaRecuperacion.aplicarTextos(this.textos);
         this.vistaUsuarios.aplicarTextos(this.textos);
     }
 
@@ -91,6 +98,7 @@ class ControlWeb {
     ocultarVistas() {
         this.vistaInicioSesion.ocultar();
         this.vistaRegistro.ocultar();
+        this.vistaRecuperacion.ocultar();
         this.vistaUsuarios.ocultar();
     }
 
@@ -107,6 +115,13 @@ class ControlWeb {
         this.vistaRegistro.mostrar();
     }
 
+    mostrarRecuperacion() {
+        this.ocultarVistas();
+        this.cabecera.ocultar();
+        this.limpiarMensaje();
+        this.vistaRecuperacion.mostrar();
+    }
+
     async mostrarPanel() {
         this.ocultarVistas();
         this.cabecera.mostrar(this.usuarioActual);
@@ -119,6 +134,26 @@ class ControlWeb {
             await this.rest.registrar(email, nick, contrasena);
             this.mostrarInicioSesion();
             this.mostrarMensaje(this.textos.cuentaCreada);
+        } catch (error) {
+            this.mostrarMensaje(error.message, true);
+        }
+    }
+
+    async solicitarRecuperacion(email) {
+        try {
+            const recuperacion = await this.rest.solicitarRecuperacion(email);
+            this.vistaRecuperacion.mostrarNuevaContrasena(recuperacion.token);
+            this.mostrarMensaje(this.textos.introduceNuevaContrasena);
+        } catch (error) {
+            this.mostrarMensaje(error.message, true);
+        }
+    }
+
+    async restablecerContrasena(token, contrasena) {
+        try {
+            await this.rest.restablecerContrasena(token, contrasena);
+            this.mostrarInicioSesion();
+            this.mostrarMensaje(this.textos.contrasenaActualizada);
         } catch (error) {
             this.mostrarMensaje(error.message, true);
         }

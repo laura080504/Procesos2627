@@ -34,4 +34,12 @@ class ClienteRest {
     eliminarUsuario(email) {
         return this.clienteHttp.peticion("DELETE", `/usuarios/${encodeURIComponent(email)}`);
     }
+
+    solicitarRecuperacion(email) {
+        return this.clienteHttp.peticion("POST", "/auth/recuperacion", { email });
+    }
+
+    restablecerContrasena(token, contrasena) {
+        return this.clienteHttp.peticion("POST", "/auth/nueva-contrasena", { token, contrasena });
+    }
 }

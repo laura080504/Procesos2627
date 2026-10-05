@@ -24,5 +24,9 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
     def obtener_todos(self) -> list[Usuario]:
         return list(self._usuarios.values())
 
+    def actualizar(self, usuario: Usuario) -> None:
+        if usuario.email in self._usuarios:
+            self._usuarios[usuario.email] = usuario
+
     def eliminar(self, email: str) -> bool:
         return self._usuarios.pop(email, None) is not None

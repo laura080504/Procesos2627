@@ -23,5 +23,8 @@ class RepositorioUsuariosServicio(RepositorioUsuarios):
     def obtener_todos(self) -> list[Usuario]:
         raise NotImplementedError
 
+    def actualizar(self, usuario: Usuario) -> None:
+        raise NotImplementedError
+
     def eliminar(self, email: str) -> bool:
         raise NotImplementedError
