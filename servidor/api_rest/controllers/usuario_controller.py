@@ -1,37 +1,29 @@
 from fastapi import APIRouter, Depends, status
 
-from servidor.api_rest.dependencies import (
-    crear_agregar_usuario_use_case,
+from servidor.api_rest.dependencies.auth_dependencies import obtener_usuario_actual
+from servidor.api_rest.dependencies.usuario_dependencies import (
     crear_eliminar_usuario_use_case,
     crear_numero_usuarios_use_case,
     crear_obtener_usuarios_use_case,
     crear_usuario_activo_use_case,
 )
-from servidor.api_rest.schemas import (
-    NumeroUsuariosSalida,
-    UsuarioActivoSalida,
-    UsuarioEntrada,
-    UsuarioSalida,
+from servidor.api_rest.schemas.numero_usuarios_salida import NumeroUsuariosSalida
+from servidor.api_rest.schemas.usuario_activo_salida import UsuarioActivoSalida
+from servidor.api_rest.schemas.usuario_salida import UsuarioSalida
+from servidor.logica.commands.eliminar_usuario_command import EliminarUsuarioCommand
+from servidor.logica.queries.numero_usuarios_query import NumeroUsuariosQuery
+from servidor.logica.queries.obtener_usuarios_query import ObtenerUsuariosQuery
+from servidor.logica.queries.usuario_activo_query import UsuarioActivoQuery
+from servidor.logica.use_cases.eliminar_usuario_use_case import EliminarUsuarioUseCase
+from servidor.logica.use_cases.numero_usuarios_use_case import NumeroUsuariosUseCase
+from servidor.logica.use_cases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
+from servidor.logica.use_cases.usuario_activo_use_case import UsuarioActivoUseCase
+
+router = APIRouter(
+    prefix="/api/usuarios",
+    tags=["usuarios"],
+    dependencies=[Depends(obtener_usuario_actual)],
 )
-from servidor.logica.commands import AgregarUsuarioCommand, EliminarUsuarioCommand
-from servidor.logica.queries import NumeroUsuariosQuery, ObtenerUsuariosQuery, UsuarioActivoQuery
-from servidor.logica.use_cases import (
-    AgregarUsuarioUseCase,
-    EliminarUsuarioUseCase,
-    NumeroUsuariosUseCase,
-    ObtenerUsuariosUseCase,
-    UsuarioActivoUseCase,
-)
-
-router = APIRouter(prefix="/api/usuarios", tags=["usuarios"])
-
-
-@router.post("", response_model=UsuarioSalida, status_code=status.HTTP_201_CREATED)
-def agregar_usuario(
-    datos: UsuarioEntrada,
-    use_case: AgregarUsuarioUseCase = Depends(crear_agregar_usuario_use_case),
-):
-    return use_case.ejecutar(AgregarUsuarioCommand(nick=datos.nick))
 
 
 @router.get("", response_model=list[UsuarioSalida])
@@ -44,11 +36,11 @@ def numero_usuarios(use_case: NumeroUsuariosUseCase = Depends(crear_numero_usuar
     return NumeroUsuariosSalida(numero=use_case.ejecutar(NumeroUsuariosQuery()))
 
 
-@router.get("/{nick}/activo", response_model=UsuarioActivoSalida)
-def usuario_activo(nick: str, use_case: UsuarioActivoUseCase = Depends(crear_usuario_activo_use_case)):
-    return UsuarioActivoSalida(nick=nick, activo=use_case.ejecutar(UsuarioActivoQuery(nick=nick)))
+@router.get("/{email}/activo", response_model=UsuarioActivoSalida)
+def usuario_activo(email: str, use_case: UsuarioActivoUseCase = Depends(crear_usuario_activo_use_case)):
+    return UsuarioActivoSalida(email=email, activo=use_case.ejecutar(UsuarioActivoQuery(email=email)))
 
 
-@router.delete("/{nick}", status_code=status.HTTP_204_NO_CONTENT)
-def eliminar_usuario(nick: str, use_case: EliminarUsuarioUseCase = Depends(crear_eliminar_usuario_use_case)):
-    use_case.ejecutar(EliminarUsuarioCommand(nick=nick))
+@router.delete("/{email}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_usuario(email: str, use_case: EliminarUsuarioUseCase = Depends(crear_eliminar_usuario_use_case)):
+    use_case.ejecutar(EliminarUsuarioCommand(email=email))

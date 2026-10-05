@@ -2,5 +2,5 @@ from pydantic import BaseModel
 
 
 class UsuarioActivoSalida(BaseModel):
-    nick: str
+    email: str
     activo: bool
