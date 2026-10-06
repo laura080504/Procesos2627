@@ -19,77 +19,72 @@ Estructura base de una aplicación SaaS organizada en capas y con gestión de us
 ```
 FRONT (navegador)                         BACK (servidor FastAPI)
 ┌─────────────────────────┐               ┌───────────────────────────────────┐
-│ presentacion            │               │ API      controllers → handlers   │
-│   controlWeb.js         │               │          schemas, dependencies    │
-│        │                │               │               │                   │
-│        ▼                │               │               ▼                   │
-│ comunicacion            │── HTTP/WS ───▶│ LÓGICA   use_cases                │
-│   clienteRest.js        │               │          commands / queries       │
-│   clienteHttp.js        │               │          entities, enums,         │
-└─────────────────────────┘               │          exceptions               │
+│ Cliente                 │               │ ApiRest  Controllers → Handlers   │
+│   ClientePresentacion   │               │          Schemas, Dependencies    │
+│   ClienteComunicacion   │── HTTP/WS ───▶│               │                   │
+└─────────────────────────┘               │               ▼                   │
+                                          │ Dominio  UseCases, Entities,      │
+                                          │          Enums, Exceptions        │
                                           │               │                   │
                                           │               ▼                   │
-                                          │ DATOS    repositories             │
-                                          │   ├─ memoria (local)              │
-                                          │   └─ servicio ────────────────────┼──▶ BBDD externa
+                                          │ Infra    Repositories, sqlite,    │
+                                          │          Migraciones              ┼──▶ aplicacion.db
                                           └───────────────────────────────────┘
 ```
 
-El backend sirve el frontend desde el mismo origen, y el cliente solo se comunica con el servidor a través de la API. Cada capa solo conoce a la que tiene debajo.
+El backend sirve el frontend desde el mismo origen, y el cliente solo se comunica con el servidor a través de la API. Cada capa solo conoce a la que tiene debajo. Es el mismo recorte que en C# (API, Shared/Domain, Infrastructure, Client), con nombres en español.
 
 ### Recorrido de una petición
 
-`POST /api/usuarios` → `usuario_controller` valida la entrada con `UsuarioEntrada` → crea un `AgregarUsuarioCommand` → lo ejecuta `AgregarUsuarioUseCase` → guarda la entidad `Usuario` en el `RepositorioUsuarios`. Si el nick ya existe, el use case lanza `UsuarioYaExiste` y `usuario_handler` lo convierte en un `409`.
+`POST /api/auth/registro` → `auth_controller` valida la entrada → crea un `RegistrarUsuarioCommand` → lo ejecuta `RegistrarUsuarioUseCase` → guarda la entidad `Usuario` en el repositorio. Si el email ya existe, el use case lanza `UsuarioYaExiste` y el handler lo convierte en un `409`.
 
 ### Convención de nombres
 
-- Las carpetas de capa siguen el PDF y van en español: `servidor`, `cliente`, `api_rest`, `logica`, `datos`, `presentacion`, `comunicacion`.
-- Las carpetas de patrón van en inglés: `controllers`, `handlers`, `schemas`, `dependencies`, `use_cases`, `commands`, `queries`, `entities`, `enums`, `exceptions`, `repositories`.
-- Un archivo por clase, con el patrón como sufijo: `agregar_usuario_use_case.py`, `agregar_usuario_command.py`, `usuario_controller.py`…
-- **Commands** modifican el estado (agregar, eliminar). **Queries** solo consultan (listar, activo, número).
+- Las carpetas empiezan por mayúscula y dicen qué hay dentro: `PruebasUseCase`, `DominioUseCases`, `ApiRestControllers`…
+- Las capas van en español (`Cliente`, `Servidor`, `Dominio`, `Infraestructura`) y los patrones en inglés (`UseCases`, `Controllers`, `Repositories`).
+- Un archivo por clase, con el patrón como sufijo: `registrar_usuario_use_case.py`, `usuario_controller.py`…
+- **Commands** modifican el estado. **Queries** solo consultan.
 
 ## Estructura
 
 ```
 Procesos2627/
-├── .github/workflows/ci.yml          # Integración continua
-├── cliente/                          # FRONTEND
+├── Cliente/                              # CLIENT / APP
 │   ├── index.html
-│   ├── css/estilos.css
-│   └── js/
-│       ├── presentacion/             # Capa de presentación (GUI)
-│       │   └── controlWeb.js
-│       ├── comunicacion/             # Cliente de comunicación con el servidor
-│       │   ├── clienteRest.js
-│       │   └── clienteHttp.js
-│       └── inicio.js                 # Crea las instancias y arranca la vista
-├── servidor/                         # BACKEND
-│   ├── aplicacion.py                 # Monta la app FastAPI
-│   ├── api_rest/                     # CAPA API
-│   │   ├── controllers/              # Endpoints HTTP
-│   │   ├── handlers/                 # Excepciones de dominio → respuestas HTTP
-│   │   ├── schemas/                  # Modelos de entrada y salida
-│   │   └── dependencies/             # Inyección de use cases y repositorios
-│   ├── api_ws/                       # CAPA API (WebSocket)
-│   │   ├── controllers/
-│   │   └── gestor_conexiones.py
-│   ├── logica/                       # CAPA LÓGICA
-│   │   ├── use_cases/                # Un caso de uso por archivo
-│   │   ├── commands/                 # Datos de entrada de operaciones que modifican
-│   │   ├── queries/                  # Datos de entrada de consultas
-│   │   ├── entities/                 # Usuario
-│   │   ├── enums/                    # Rol, EstadoUsuario
-│   │   └── exceptions/               # Errores de dominio
-│   └── datos/                        # CAPA DE DATOS
-│       └── repositories/
-│           ├── repositorio_usuarios.py            # Interfaz
-│           ├── repositorio_usuarios_memoria.py    # Implementación en memoria
-│           └── repositorio_usuarios_servicio.py   # BBDD externa (hito 3)
-├── pruebas/
-│   ├── conftest.py                   # Fixtures compartidas
-│   ├── logica/                       # Pruebas unitarias de los use cases
-│   └── api/                          # Pruebas de los controllers
-├── main.py                           # Punto de entrada
+│   ├── ClienteImg/
+│   ├── ClienteShared/                    # Colores, estilos y textos
+│   └── ClienteJs/
+│       ├── ClientePresentacion/          # Páginas y componentes
+│       │   └── PresentacionVistas/
+│       ├── ClienteComunicacion/          # Cliente HTTP hacia la API
+│       └── inicio.js
+├── Servidor/
+│   ├── aplicacion.py
+│   ├── ApiRest/                          # API REST
+│   │   ├── ApiRestControllers/
+│   │   ├── ApiRestHandlers/
+│   │   ├── ApiRestSchemas/
+│   │   └── ApiRestDependencies/
+│   ├── ApiWs/
+│   │   └── ApiWsControllers/
+│   ├── Dominio/                          # SHARED / DOMAIN
+│   │   ├── DominioEntities/
+│   │   ├── DominioEnums/
+│   │   ├── DominioExceptions/
+│   │   ├── DominioCommands/
+│   │   ├── DominioQueries/
+│   │   └── DominioUseCases/
+│   └── Infraestructura/                  # INFRASTRUCTURE
+│       ├── base_datos_sqlite.py
+│       ├── registro_actividad.py
+│       ├── InfraestructuraRepositories/
+│       ├── InfraestructuraMigraciones/MigracionesVersiones/
+│       └── aplicacion.db                 # Archivo local, no se sube a git
+├── Pruebas/
+│   ├── PruebasApi/
+│   ├── PruebasUseCase/
+│   └── PruebasDatos/
+├── main.py                               # Punto de entrada
 ├── Dockerfile
 ├── .env.example
 ├── requirements.txt
@@ -98,14 +93,14 @@ Procesos2627/
 
 ### Añadir una funcionalidad nueva
 
-1. `logica/commands/` o `logica/queries/`: el objeto con los datos de entrada.
-2. `logica/use_cases/`: la regla de negocio.
-3. `logica/exceptions/`: los errores nuevos, si los hay.
-4. `api_rest/schemas/`: la entrada y salida de la API.
-5. `api_rest/dependencies/`: el proveedor del use case.
-6. `api_rest/controllers/`: el endpoint.
-7. `api_rest/handlers/`: la traducción de los errores nuevos a HTTP.
-8. `pruebas/logica/` y `pruebas/api/`: sus pruebas.
+1. `DominioCommands/` o `DominioQueries/`: el objeto con los datos de entrada.
+2. `DominioUseCases/`: la regla de negocio.
+3. `DominioExceptions/`: los errores nuevos, si los hay.
+4. `ApiRestSchemas/`: la entrada y salida de la API.
+5. `ApiRestDependencies/`: el proveedor del use case.
+6. `ApiRestControllers/`: el endpoint.
+7. `ApiRestHandlers/`: la traducción de los errores nuevos a HTTP.
+8. `PruebasUseCase/` y `PruebasApi/`: sus pruebas.
 
 ## Ejecución en local
 
@@ -149,7 +144,9 @@ URL pública: _pendiente_
 
 ## Acceso como administrador
 
-Pendiente (hito 3). Las credenciales de prueba se enviarán junto con la entrega.
+Si `ADMIN_EMAIL` y `ADMIN_PASSWORD` están definidos en `.env` y todavía no hay un administrador, el arranque crea esa cuenta o, si el email ya existe, solo le asigna el rol. La contraseña no se sube al repositorio.
+
+El administrador lista los usuarios y puede eliminar cualquiera. Un usuario normal solo ve su cuenta y solo puede eliminar la suya. `estado = activo` significa que la cuenta puede entrar, no que tenga una sesión abierta.
 
 ## API REST
 
