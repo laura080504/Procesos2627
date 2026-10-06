@@ -10,6 +10,7 @@ from servidor.api_rest.dependencies.usuario_dependencies import (
 from servidor.api_rest.schemas.numero_usuarios_salida import NumeroUsuariosSalida
 from servidor.api_rest.schemas.usuario_activo_salida import UsuarioActivoSalida
 from servidor.api_rest.schemas.usuario_salida import UsuarioSalida
+from servidor.infraestructura.registro_actividad import registro_actividad
 from servidor.dominio.commands.eliminar_usuario_command import EliminarUsuarioCommand
 from servidor.dominio.entities.usuario import Usuario
 from servidor.dominio.queries.numero_usuarios_query import NumeroUsuariosQuery
@@ -59,3 +60,4 @@ def eliminar_usuario(
             email=email, solicitante_email=solicitante.email, solicitante_rol=solicitante.rol
         )
     )
+    registro_actividad.eliminacion(solicitante.email, email.strip().lower())

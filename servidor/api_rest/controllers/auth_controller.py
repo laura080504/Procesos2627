@@ -17,6 +17,7 @@ from servidor.api_rest.schemas.recuperacion_salida import RecuperacionSalida
 from servidor.api_rest.schemas.registro_entrada import RegistroEntrada
 from servidor.api_rest.schemas.usuario_salida import UsuarioSalida
 from servidor.configuracion import Configuracion
+from servidor.infraestructura.registro_actividad import registro_actividad
 from servidor.dominio.commands.cerrar_sesion_command import CerrarSesionCommand
 from servidor.dominio.commands.iniciar_sesion_command import IniciarSesionCommand
 from servidor.dominio.commands.registrar_usuario_command import RegistrarUsuarioCommand
@@ -37,9 +38,11 @@ def registrar(
     datos: RegistroEntrada,
     use_case: RegistrarUsuarioUseCase = Depends(crear_registrar_usuario_use_case),
 ):
-    return use_case.ejecutar(
+    usuario = use_case.ejecutar(
         RegistrarUsuarioCommand(email=datos.email, nick=datos.nick, contrasena=datos.contrasena)
     )
+    registro_actividad.alta(usuario.email)
+    return usuario
 
 
 @router.post("/inicio-sesion", response_model=UsuarioSalida)
@@ -50,6 +53,7 @@ def iniciar_sesion(
     configuracion: Configuracion = Depends(obtener_configuracion),
 ):
     resultado = use_case.ejecutar(IniciarSesionCommand(email=datos.email, contrasena=datos.contrasena))
+    registro_actividad.inicio(resultado.usuario.email)
     response.set_cookie(
         key=configuracion.nombre_cookie_sesion,
         value=resultado.sesion.token,
@@ -70,6 +74,7 @@ def cerrar_sesion(
 ):
     if token:
         use_case.ejecutar(CerrarSesionCommand(token=token))
+        registro_actividad.cierre()
     response.delete_cookie(configuracion.nombre_cookie_sesion)
 
 

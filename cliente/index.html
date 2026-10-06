@@ -195,13 +195,25 @@
             </section>
 
             <section id="vistaUsuarios" class="tarjeta" hidden>
-                <h1><span data-texto="usuarios">Usuarios</span> (<span id="numeroUsuarios">0</span>)</h1>
-                <p class="sesion-actual">
-                    <span id="usuarioActual"></span>
-                    <button id="botonCerrarSesion" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
+                <div id="vistaAdministrador">
+                    <h1><span data-texto="usuarios">Usuarios</span> (<span id="numeroUsuarios">0</span>)</h1>
+                    <p class="sesion-actual">
+                        <span id="usuarioActual"></span>
+                        <span class="botones-linea">
+                            <button id="botonCerrarSesion" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
+                            <button id="botonEliminarSesion" type="button" data-texto="eliminarCuenta">Eliminar cuenta</button>
+                        </span>
+                    </p>
+                    <button id="botonRefrescar" type="button" data-texto="refrescar">Refrescar</button>
+                    <ul id="listaUsuarios"></ul>
+                </div>
+                <p id="vistaCuenta" class="sesion-actual" hidden>
+                    <span id="cuentaActual"></span>
+                    <span class="botones-linea">
+                        <button id="botonCerrarSesionCuenta" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
+                        <button id="botonEliminarCuenta" type="button" data-texto="eliminarCuenta">Eliminar cuenta</button>
+                    </span>
                 </p>
-                <button id="botonRefrescar" class="enviar" type="button" data-texto="refrescar">Refrescar</button>
-                <ul id="listaUsuarios"></ul>
             </section>
 
         </main>

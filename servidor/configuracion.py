@@ -9,6 +9,7 @@ class Configuracion:
     cookie_segura: bool
     ruta_datos: str
     motor_datos: str
+    nivel_registro: str = "INFO"
     admin_email: str | None = None
     admin_contrasena: str | None = field(default=None, repr=False)
     nombre_cookie_sesion: str = "sesion"
@@ -18,6 +19,9 @@ def cargar_configuracion() -> Configuracion:
     motor = os.getenv("DATOS_MOTOR", "sqlite")
     if motor not in {"sqlite", "memoria"}:
         raise ValueError("DATOS_MOTOR debe ser sqlite o memoria.")
+    nivel = os.getenv("LOG_NIVEL", "INFO").upper()
+    if nivel not in {"DEBUG", "INFO", "WARNING", "ERROR"}:
+        raise ValueError("LOG_NIVEL debe ser DEBUG, INFO, WARNING o ERROR.")
     admin_email = os.getenv("ADMIN_EMAIL", "").strip().lower()
     admin_contrasena = os.getenv("ADMIN_PASSWORD", "")
     if bool(admin_email) != bool(admin_contrasena):
@@ -29,6 +33,7 @@ def cargar_configuracion() -> Configuracion:
         cookie_segura=os.getenv("COOKIE_SEGURA", "false").lower() == "true",
         ruta_datos=os.getenv("DATOS_RUTA", "servidor/infraestructura/aplicacion.db"),
         motor_datos=motor,
+        nivel_registro=nivel,
         admin_email=admin_email or None,
         admin_contrasena=admin_contrasena or None,
     )
