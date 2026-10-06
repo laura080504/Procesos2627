@@ -180,9 +180,14 @@ class ControlWeb {
     }
 
     async refrescarUsuarios() {
+        const esAdministrador = this.usuarioActual.rol === "administrador";
+        if (!esAdministrador) {
+            this.vistaUsuarios.pintar([this.usuarioActual], this.usuarioActual.email, false);
+            return;
+        }
         try {
             const usuarios = await this.rest.obtenerUsuarios();
-            this.vistaUsuarios.pintar(usuarios, this.usuarioActual.email);
+            this.vistaUsuarios.pintar(usuarios, this.usuarioActual.email, true);
         } catch (error) {
             this.gestionarError(error);
         }

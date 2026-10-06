@@ -8,16 +8,27 @@
     white-space: nowrap;
 }
 
-#botonCerrarSesion,
+#botonRefrescar,
 #listaUsuarios button {
     border: 1px solid currentColor;
-    background: transparent;
-    color: inherit;
+    background: #fff;
+    color: var(--rojo-logo);
     border-radius: 999px;
     padding: 0.25rem 0.75rem;
     font: inherit;
     font-size: 0.8rem;
     cursor: pointer;
+}
+
+#botonRefrescar {
+    display: block;
+    margin: 0.9rem auto 0;
+}
+
+#botonRefrescar:focus-visible,
+#listaUsuarios button:focus-visible {
+    outline: 2px solid var(--rojo-logo);
+    outline-offset: 2px;
 }
 
 #listaUsuarios {
@@ -38,4 +49,34 @@
 
 body.oscuro #listaUsuarios li {
     border-bottom-color: rgba(255, 255, 255, 0.28);
+}
+
+#vistaCuenta[hidden],
+#vistaAdministrador[hidden] {
+    display: none;
+}
+
+.botones-linea {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.botones-linea button {
+    flex: 0 0 auto;
+    border: 1px solid var(--rojo-logo);
+    background: #fff;
+    color: var(--rojo-logo);
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.botones-linea button:focus-visible {
+    outline: 2px solid var(--rojo-logo);
+    outline-offset: 2px;
 }

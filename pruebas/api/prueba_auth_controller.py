@@ -1,4 +1,6 @@
-from pruebas.datos_prueba import CONTRASENA
+import logging
+
+from pruebas.conftest import CONTRASENA
 
 REGISTRO = {"email": "nuevo@ejemplo.com", "nick": "nuevo", "contrasena": "contrasena-segura"}
 
@@ -31,6 +33,15 @@ def prueba_inicio_sesion_correcto_crea_cookie_httponly(cliente, usuario_registra
     assert respuesta.status_code == 200
     assert respuesta.json()["email"] == usuario_registrado.email
     assert "httponly" in respuesta.headers["set-cookie"].lower()
+
+
+def prueba_el_inicio_no_registra_la_contrasena(cliente, usuario_registrado, caplog):
+    with caplog.at_level(logging.INFO, logger="servidor"):
+        cliente.post(
+            "/api/auth/inicio-sesion", json={"email": usuario_registrado.email, "contrasena": CONTRASENA}
+        )
+    assert CONTRASENA not in caplog.text
+    assert usuario_registrado.email in caplog.text
 
 
 def prueba_inicio_sesion_incorrecto_devuelve_401(cliente, usuario_registrado):
