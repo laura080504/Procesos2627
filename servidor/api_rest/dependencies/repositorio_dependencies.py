@@ -1,4 +1,7 @@
-from servidor.api_rest.dependencies.configuracion_dependencies import obtener_configuracion
+from servidor.api_rest.dependencies.configuracion_dependencies import (
+    obtener_configuracion,
+    obtener_hasher_contrasenas,
+)
 from servidor.configuracion import Configuracion
 from servidor.infraestructura.base_datos_sqlite import BaseDatosSqlite
 from servidor.infraestructura.repositories.repositorio_recuperaciones import RepositorioRecuperaciones
@@ -10,6 +13,7 @@ from servidor.infraestructura.repositories.repositorio_sesiones_sqlite import Re
 from servidor.infraestructura.repositories.repositorio_usuarios import RepositorioUsuarios
 from servidor.infraestructura.repositories.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
 from servidor.infraestructura.repositories.repositorio_usuarios_sqlite import RepositorioUsuariosSqlite
+from servidor.dominio.use_cases.asegurar_administrador_use_case import AsegurarAdministradorUseCase
 
 
 def crear_repositorios(
@@ -33,6 +37,10 @@ def crear_repositorios(
 
 _configuracion = obtener_configuracion()
 _repositorio_usuarios, _repositorio_sesiones, _repositorio_recuperaciones = crear_repositorios(_configuracion)
+if _configuracion.admin_email and _configuracion.admin_contrasena:
+    AsegurarAdministradorUseCase(_repositorio_usuarios, obtener_hasher_contrasenas()).ejecutar(
+        _configuracion.admin_email, _configuracion.admin_contrasena
+    )
 
 
 def obtener_repositorio_usuarios() -> RepositorioUsuarios:

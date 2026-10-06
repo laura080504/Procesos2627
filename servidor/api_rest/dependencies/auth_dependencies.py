@@ -16,6 +16,8 @@ from servidor.infraestructura.repositories.repositorio_recuperaciones import Rep
 from servidor.infraestructura.repositories.repositorio_sesiones import RepositorioSesiones
 from servidor.infraestructura.repositories.repositorio_usuarios import RepositorioUsuarios
 from servidor.dominio.entities.usuario import Usuario
+from servidor.dominio.enums.rol import Rol
+from servidor.dominio.exceptions.permiso_insuficiente import PermisoInsuficiente
 from servidor.dominio.exceptions.sesion_no_valida import SesionNoValida
 from servidor.dominio.queries.obtener_usuario_sesion_query import ObtenerUsuarioSesionQuery
 from servidor.dominio.services.hasher_contrasenas import HasherContrasenas
@@ -92,3 +94,9 @@ def obtener_usuario_actual(
     if not token:
         raise SesionNoValida()
     return use_case.ejecutar(ObtenerUsuarioSesionQuery(token=token))
+
+
+def obtener_administrador(usuario: Usuario = Depends(obtener_usuario_actual)) -> Usuario:
+    if usuario.rol != Rol.ADMINISTRADOR:
+        raise PermisoInsuficiente()
+    return usuario
