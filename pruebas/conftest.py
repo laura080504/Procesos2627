@@ -1,19 +1,19 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from servidor.api_rest.dependencies.configuracion_dependencies import obtener_hasher_contrasenas
-from servidor.api_rest.dependencies.repositorio_dependencies import (
+from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_hasher_contrasenas
+from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
     obtener_repositorio_recuperaciones,
     obtener_repositorio_sesiones,
     obtener_repositorio_usuarios,
 )
-from servidor.aplicacion import aplicacion
-from servidor.dominio.entities.usuario import Usuario
-from servidor.dominio.enums.rol import Rol
-from servidor.dominio.services.hasher_contrasenas import HasherContrasenas
-from servidor.infraestructura.repositories.repositorio_recuperaciones_memoria import RepositorioRecuperacionesMemoria
-from servidor.infraestructura.repositories.repositorio_sesiones_memoria import RepositorioSesionesMemoria
-from servidor.infraestructura.repositories.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
+from Servidor.aplicacion import aplicacion
+from Servidor.Dominio.DominioEntities.usuario import Usuario
+from Servidor.Dominio.DominioEnums.rol import Rol
+from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones_memoria import RepositorioRecuperacionesMemoria
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones_memoria import RepositorioSesionesMemoria
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
 
 CONTRASENA = "contrasena-segura"
 

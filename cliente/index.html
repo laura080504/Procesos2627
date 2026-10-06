@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Procesos 26-27</title>
-    <link rel="stylesheet" href="shared/colores.css">
-    <link rel="stylesheet" href="shared/pagina.css">
-    <link rel="stylesheet" href="shared/dialogo.css">
-    <link rel="stylesheet" href="shared/formulario.css">
-    <link rel="stylesheet" href="shared/usuarios.css">
-    <link rel="stylesheet" href="shared/avisos.css">
+    <link rel="stylesheet" href="ClienteShared/colores.css">
+    <link rel="stylesheet" href="ClienteShared/pagina.css">
+    <link rel="stylesheet" href="ClienteShared/dialogo.css">
+    <link rel="stylesheet" href="ClienteShared/formulario.css">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css">
+    <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
     <div class="escena">
@@ -35,7 +35,7 @@
         <p id="mensaje" role="status" hidden></p>
 
         <main class="panel">
-            <img class="logo" src="img/logo-perfil.webp" alt="Universidad de Castilla-La Mancha">
+            <img class="logo" src="ClienteImg/logo-perfil.webp" alt="Universidad de Castilla-La Mancha">
 
             <section id="vistaInicioSesion" class="tarjeta" hidden>
                 <h1 data-texto="login">Login</h1>
@@ -219,18 +219,18 @@
         </main>
     </div>
 
-    <script src="js/comunicacion/errorApi.js"></script>
-    <script src="js/comunicacion/clienteHttp.js"></script>
-    <script src="js/comunicacion/clienteRest.js"></script>
-    <script src="shared/textosInterfaz.js"></script>
-    <script src="js/presentacion/dictadoVoz.js"></script>
-    <script src="js/presentacion/vistas/vistaBarraHerramientas.js"></script>
-    <script src="js/presentacion/vistas/vistaCabecera.js"></script>
-    <script src="js/presentacion/vistas/vistaInicioSesion.js"></script>
-    <script src="js/presentacion/vistas/vistaRegistro.js"></script>
-    <script src="js/presentacion/vistas/vistaRecuperacion.js"></script>
-    <script src="js/presentacion/vistas/vistaUsuarios.js"></script>
-    <script src="js/presentacion/controlWeb.js"></script>
-    <script src="js/inicio.js"></script>
+    <script src="ClienteJs/ClienteComunicacion/errorApi.js"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteHttp.js"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteRest.js"></script>
+    <script src="ClienteShared/textosInterfaz.js"></script>
+    <script src="ClienteJs/ClientePresentacion/dictadoVoz.js"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js"></script>
+    <script src="ClienteJs/inicio.js"></script>
 </body>
 </html>

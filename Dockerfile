@@ -6,8 +6,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
-COPY servidor ./servidor
-COPY cliente ./cliente
+COPY Servidor ./Servidor
+COPY Cliente ./Cliente
 
 ENV HOST=0.0.0.0
 ENV PORT=8080

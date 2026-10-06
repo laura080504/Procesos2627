@@ -19,16 +19,16 @@ Estructura base de una aplicación SaaS organizada en capas y con gestión de us
 ```
 FRONT (navegador)                         BACK (servidor FastAPI)
 ┌─────────────────────────┐               ┌───────────────────────────────────┐
-│ cliente / App           │               │ API      controllers → handlers   │
-│   presentacion          │               │          schemas, dependencies    │
-│   comunicacion          │── HTTP/WS ───▶│               │                   │
+│ Cliente                 │               │ ApiRest  Controllers → Handlers   │
+│   ClientePresentacion   │               │          Schemas, Dependencies    │
+│   ClienteComunicacion   │── HTTP/WS ───▶│               │                   │
 └─────────────────────────┘               │               ▼                   │
-                                          │ DOMINIO  use_cases, entities,     │
-                                          │          enums, exceptions        │
+                                          │ Dominio  UseCases, Entities,      │
+                                          │          Enums, Exceptions        │
                                           │               │                   │
                                           │               ▼                   │
-                                          │ INFRA    repositories, sqlite,    │
-                                          │          migraciones              ┼──▶ aplicacion.db
+                                          │ Infra    Repositories, sqlite,    │
+                                          │          Migraciones              ┼──▶ aplicacion.db
                                           └───────────────────────────────────┘
 ```
 
@@ -40,8 +40,8 @@ El backend sirve el frontend desde el mismo origen, y el cliente solo se comunic
 
 ### Convención de nombres
 
-- Las carpetas de capa van en español: `cliente`, `api_rest`, `dominio`, `infraestructura`, `presentacion`, `comunicacion`.
-- Las carpetas de patrón van en inglés: `controllers`, `handlers`, `schemas`, `dependencies`, `use_cases`, `commands`, `queries`, `entities`, `enums`, `exceptions`, `repositories`.
+- Las carpetas empiezan por mayúscula y dicen qué hay dentro: `PruebasUseCase`, `DominioUseCases`, `ApiRestControllers`…
+- Las capas van en español (`Cliente`, `Servidor`, `Dominio`, `Infraestructura`) y los patrones en inglés (`UseCases`, `Controllers`, `Repositories`).
 - Un archivo por clase, con el patrón como sufijo: `registrar_usuario_use_case.py`, `usuario_controller.py`…
 - **Commands** modifican el estado. **Queries** solo consultan.
 
@@ -49,39 +49,42 @@ El backend sirve el frontend desde el mismo origen, y el cliente solo se comunic
 
 ```
 Procesos2627/
-├── cliente/                          # CLIENT / APP
+├── Cliente/                              # CLIENT / APP
 │   ├── index.html
-│   ├── shared/                       # Colores, estilos y textos de la interfaz
-│   └── js/
-│       ├── presentacion/             # Páginas y componentes (el equivalente a Razor)
-│       ├── comunicacion/             # Cliente HTTP hacia la API
+│   ├── ClienteImg/
+│   ├── ClienteShared/                    # Colores, estilos y textos
+│   └── ClienteJs/
+│       ├── ClientePresentacion/          # Páginas y componentes
+│       │   └── PresentacionVistas/
+│       ├── ClienteComunicacion/          # Cliente HTTP hacia la API
 │       └── inicio.js
-├── servidor/
+├── Servidor/
 │   ├── aplicacion.py
-│   ├── api_rest/                     # API (controllers)
-│   │   ├── controllers/
-│   │   ├── handlers/
-│   │   ├── schemas/                  # DTOs de entrada y salida
-│   │   └── dependencies/
-│   ├── api_ws/
-│   ├── dominio/                      # SHARED / DOMAIN
-│   │   ├── entities/
-│   │   ├── enums/
-│   │   ├── exceptions/
-│   │   ├── commands/
-│   │   ├── queries/
-│   │   └── use_cases/
-│   └── infraestructura/              # INFRASTRUCTURE
+│   ├── ApiRest/                          # API REST
+│   │   ├── ApiRestControllers/
+│   │   ├── ApiRestHandlers/
+│   │   ├── ApiRestSchemas/
+│   │   └── ApiRestDependencies/
+│   ├── ApiWs/
+│   │   └── ApiWsControllers/
+│   ├── Dominio/                          # SHARED / DOMAIN
+│   │   ├── DominioEntities/
+│   │   ├── DominioEnums/
+│   │   ├── DominioExceptions/
+│   │   ├── DominioCommands/
+│   │   ├── DominioQueries/
+│   │   └── DominioUseCases/
+│   └── Infraestructura/                  # INFRASTRUCTURE
 │       ├── base_datos_sqlite.py
 │       ├── registro_actividad.py
-│       ├── repositories/
-│       ├── migraciones/versiones/
-│       └── aplicacion.db             # Archivo local, no se sube a git
-├── pruebas/
-│   ├── api/
-│   ├── dominio/
-│   └── datos/
-├── main.py                           # Punto de entrada
+│       ├── InfraestructuraRepositories/
+│       ├── InfraestructuraMigraciones/MigracionesVersiones/
+│       └── aplicacion.db                 # Archivo local, no se sube a git
+├── Pruebas/
+│   ├── PruebasApi/
+│   ├── PruebasUseCase/
+│   └── PruebasDatos/
+├── main.py                               # Punto de entrada
 ├── Dockerfile
 ├── .env.example
 ├── requirements.txt
@@ -90,14 +93,14 @@ Procesos2627/
 
 ### Añadir una funcionalidad nueva
 
-1. `dominio/commands/` o `dominio/queries/`: el objeto con los datos de entrada.
-2. `dominio/use_cases/`: la regla de negocio.
-3. `dominio/exceptions/`: los errores nuevos, si los hay.
-4. `api_rest/schemas/`: la entrada y salida de la API.
-5. `api_rest/dependencies/`: el proveedor del use case.
-6. `api_rest/controllers/`: el endpoint.
-7. `api_rest/handlers/`: la traducción de los errores nuevos a HTTP.
-8. `pruebas/dominio/` y `pruebas/api/`: sus pruebas.
+1. `DominioCommands/` o `DominioQueries/`: el objeto con los datos de entrada.
+2. `DominioUseCases/`: la regla de negocio.
+3. `DominioExceptions/`: los errores nuevos, si los hay.
+4. `ApiRestSchemas/`: la entrada y salida de la API.
+5. `ApiRestDependencies/`: el proveedor del use case.
+6. `ApiRestControllers/`: el endpoint.
+7. `ApiRestHandlers/`: la traducción de los errores nuevos a HTTP.
+8. `PruebasUseCase/` y `PruebasApi/`: sus pruebas.
 
 ## Ejecución en local
 
