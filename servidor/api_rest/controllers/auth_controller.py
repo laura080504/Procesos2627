@@ -9,7 +9,7 @@ from servidor.api_rest.dependencies.auth_dependencies import (
     obtener_token_sesion,
     obtener_usuario_actual,
 )
-from servidor.api_rest.dependencies.servicio_dependencies import obtener_configuracion
+from servidor.api_rest.dependencies.configuracion_dependencies import obtener_configuracion
 from servidor.api_rest.schemas.inicio_sesion_entrada import InicioSesionEntrada
 from servidor.api_rest.schemas.nueva_contrasena_entrada import NuevaContrasenaEntrada
 from servidor.api_rest.schemas.recuperacion_entrada import RecuperacionEntrada
@@ -17,17 +17,17 @@ from servidor.api_rest.schemas.recuperacion_salida import RecuperacionSalida
 from servidor.api_rest.schemas.registro_entrada import RegistroEntrada
 from servidor.api_rest.schemas.usuario_salida import UsuarioSalida
 from servidor.configuracion import Configuracion
-from servidor.logica.commands.cerrar_sesion_command import CerrarSesionCommand
-from servidor.logica.commands.iniciar_sesion_command import IniciarSesionCommand
-from servidor.logica.commands.registrar_usuario_command import RegistrarUsuarioCommand
-from servidor.logica.commands.restablecer_contrasena_command import RestablecerContrasenaCommand
-from servidor.logica.commands.solicitar_recuperacion_command import SolicitarRecuperacionCommand
-from servidor.logica.entities.usuario import Usuario
-from servidor.logica.use_cases.cerrar_sesion_use_case import CerrarSesionUseCase
-from servidor.logica.use_cases.iniciar_sesion_use_case import IniciarSesionUseCase
-from servidor.logica.use_cases.registrar_usuario_use_case import RegistrarUsuarioUseCase
-from servidor.logica.use_cases.restablecer_contrasena_use_case import RestablecerContrasenaUseCase
-from servidor.logica.use_cases.solicitar_recuperacion_use_case import SolicitarRecuperacionUseCase
+from servidor.dominio.commands.cerrar_sesion_command import CerrarSesionCommand
+from servidor.dominio.commands.iniciar_sesion_command import IniciarSesionCommand
+from servidor.dominio.commands.registrar_usuario_command import RegistrarUsuarioCommand
+from servidor.dominio.commands.restablecer_contrasena_command import RestablecerContrasenaCommand
+from servidor.dominio.commands.solicitar_recuperacion_command import SolicitarRecuperacionCommand
+from servidor.dominio.entities.usuario import Usuario
+from servidor.dominio.use_cases.cerrar_sesion_use_case import CerrarSesionUseCase
+from servidor.dominio.use_cases.iniciar_sesion_use_case import IniciarSesionUseCase
+from servidor.dominio.use_cases.registrar_usuario_use_case import RegistrarUsuarioUseCase
+from servidor.dominio.use_cases.restablecer_contrasena_use_case import RestablecerContrasenaUseCase
+from servidor.dominio.use_cases.solicitar_recuperacion_use_case import SolicitarRecuperacionUseCase
 
 router = APIRouter(prefix="/api/auth", tags=["autenticación"])
 

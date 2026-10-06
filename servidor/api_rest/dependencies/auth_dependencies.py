@@ -7,24 +7,24 @@ from servidor.api_rest.dependencies.repositorio_dependencies import (
     obtener_repositorio_sesiones,
     obtener_repositorio_usuarios,
 )
-from servidor.api_rest.dependencies.servicio_dependencies import (
+from servidor.api_rest.dependencies.configuracion_dependencies import (
     obtener_configuracion,
     obtener_hasher_contrasenas,
 )
 from servidor.configuracion import Configuracion
-from servidor.datos.repositories.repositorio_recuperaciones import RepositorioRecuperaciones
-from servidor.datos.repositories.repositorio_sesiones import RepositorioSesiones
-from servidor.datos.repositories.repositorio_usuarios import RepositorioUsuarios
-from servidor.logica.entities.usuario import Usuario
-from servidor.logica.exceptions.sesion_no_valida import SesionNoValida
-from servidor.logica.queries.obtener_usuario_sesion_query import ObtenerUsuarioSesionQuery
-from servidor.logica.services.hasher_contrasenas import HasherContrasenas
-from servidor.logica.use_cases.cerrar_sesion_use_case import CerrarSesionUseCase
-from servidor.logica.use_cases.iniciar_sesion_use_case import IniciarSesionUseCase
-from servidor.logica.use_cases.obtener_usuario_sesion_use_case import ObtenerUsuarioSesionUseCase
-from servidor.logica.use_cases.registrar_usuario_use_case import RegistrarUsuarioUseCase
-from servidor.logica.use_cases.restablecer_contrasena_use_case import RestablecerContrasenaUseCase
-from servidor.logica.use_cases.solicitar_recuperacion_use_case import SolicitarRecuperacionUseCase
+from servidor.infraestructura.repositories.repositorio_recuperaciones import RepositorioRecuperaciones
+from servidor.infraestructura.repositories.repositorio_sesiones import RepositorioSesiones
+from servidor.infraestructura.repositories.repositorio_usuarios import RepositorioUsuarios
+from servidor.dominio.entities.usuario import Usuario
+from servidor.dominio.exceptions.sesion_no_valida import SesionNoValida
+from servidor.dominio.queries.obtener_usuario_sesion_query import ObtenerUsuarioSesionQuery
+from servidor.dominio.services.hasher_contrasenas import HasherContrasenas
+from servidor.dominio.use_cases.cerrar_sesion_use_case import CerrarSesionUseCase
+from servidor.dominio.use_cases.iniciar_sesion_use_case import IniciarSesionUseCase
+from servidor.dominio.use_cases.obtener_usuario_sesion_use_case import ObtenerUsuarioSesionUseCase
+from servidor.dominio.use_cases.registrar_usuario_use_case import RegistrarUsuarioUseCase
+from servidor.dominio.use_cases.restablecer_contrasena_use_case import RestablecerContrasenaUseCase
+from servidor.dominio.use_cases.solicitar_recuperacion_use_case import SolicitarRecuperacionUseCase
 
 
 def crear_registrar_usuario_use_case(
