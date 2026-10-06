@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from servidor.infraestructura.migraciones.migrador_sqlite import MigradorSqlite
+from Servidor.Infraestructura.InfraestructuraMigraciones.migrador_sqlite import MigradorSqlite
 
 
 class BaseDatosSqlite:

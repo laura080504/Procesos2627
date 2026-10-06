@@ -31,7 +31,7 @@ def cargar_configuracion() -> Configuracion:
     return Configuracion(
         duracion_sesion=timedelta(hours=float(os.getenv("SESION_DURACION_HORAS", "8"))),
         cookie_segura=os.getenv("COOKIE_SEGURA", "false").lower() == "true",
-        ruta_datos=os.getenv("DATOS_RUTA", "servidor/infraestructura/aplicacion.db"),
+        ruta_datos=os.getenv("DATOS_RUTA", "Servidor/Infraestructura/aplicacion.db"),
         motor_datos=motor,
         nivel_registro=nivel,
         admin_email=admin_email or None,
