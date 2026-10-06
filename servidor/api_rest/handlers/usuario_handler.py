@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
+from servidor.dominio.exceptions.permiso_insuficiente import PermisoInsuficiente
 from servidor.dominio.exceptions.usuario_no_encontrado import UsuarioNoEncontrado
 from servidor.dominio.exceptions.usuario_ya_existe import UsuarioYaExiste
 
@@ -13,6 +14,11 @@ async def usuario_no_encontrado_handler(_: Request, error: UsuarioNoEncontrado) 
     return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(error)})
 
 
+async def permiso_insuficiente_handler(_: Request, error: PermisoInsuficiente) -> JSONResponse:
+    return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"detail": str(error)})
+
+
 def registrar_usuario_handlers(aplicacion: FastAPI) -> None:
     aplicacion.add_exception_handler(UsuarioYaExiste, usuario_ya_existe_handler)
     aplicacion.add_exception_handler(UsuarioNoEncontrado, usuario_no_encontrado_handler)
+    aplicacion.add_exception_handler(PermisoInsuficiente, permiso_insuficiente_handler)
