@@ -1,0 +1,24 @@
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from servidor.dominio.entities.usuario import Usuario
+
+
+class RepositorioUsuarios(ABC):
+    @abstractmethod
+    def insertar(self, usuario: Usuario) -> Usuario: ...
+
+    @abstractmethod
+    def obtener_por_email(self, email: str) -> Usuario | None: ...
+
+    @abstractmethod
+    def obtener_todos(self) -> list[Usuario]: ...
+
+    @abstractmethod
+    def actualizar(self, usuario: Usuario) -> None: ...
+
+    @abstractmethod
+    def eliminar(self, email: str) -> bool: ...

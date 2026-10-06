@@ -1,10 +1,10 @@
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
-from servidor.logica.exceptions.credenciales_invalidas import CredencialesInvalidas
-from servidor.logica.exceptions.cuenta_pendiente import CuentaPendiente
-from servidor.logica.exceptions.recuperacion_no_valida import RecuperacionNoValida
-from servidor.logica.exceptions.sesion_no_valida import SesionNoValida
+from servidor.dominio.exceptions.credenciales_invalidas import CredencialesInvalidas
+from servidor.dominio.exceptions.cuenta_pendiente import CuentaPendiente
+from servidor.dominio.exceptions.recuperacion_no_valida import RecuperacionNoValida
+from servidor.dominio.exceptions.sesion_no_valida import SesionNoValida
 
 
 async def credenciales_invalidas_handler(_: Request, error: CredencialesInvalidas) -> JSONResponse:

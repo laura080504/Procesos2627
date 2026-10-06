@@ -10,14 +10,14 @@ from servidor.api_rest.dependencies.usuario_dependencies import (
 from servidor.api_rest.schemas.numero_usuarios_salida import NumeroUsuariosSalida
 from servidor.api_rest.schemas.usuario_activo_salida import UsuarioActivoSalida
 from servidor.api_rest.schemas.usuario_salida import UsuarioSalida
-from servidor.logica.commands.eliminar_usuario_command import EliminarUsuarioCommand
-from servidor.logica.queries.numero_usuarios_query import NumeroUsuariosQuery
-from servidor.logica.queries.obtener_usuarios_query import ObtenerUsuariosQuery
-from servidor.logica.queries.usuario_activo_query import UsuarioActivoQuery
-from servidor.logica.use_cases.eliminar_usuario_use_case import EliminarUsuarioUseCase
-from servidor.logica.use_cases.numero_usuarios_use_case import NumeroUsuariosUseCase
-from servidor.logica.use_cases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
-from servidor.logica.use_cases.usuario_activo_use_case import UsuarioActivoUseCase
+from servidor.dominio.commands.eliminar_usuario_command import EliminarUsuarioCommand
+from servidor.dominio.queries.numero_usuarios_query import NumeroUsuariosQuery
+from servidor.dominio.queries.obtener_usuarios_query import ObtenerUsuariosQuery
+from servidor.dominio.queries.usuario_activo_query import UsuarioActivoQuery
+from servidor.dominio.use_cases.eliminar_usuario_use_case import EliminarUsuarioUseCase
+from servidor.dominio.use_cases.numero_usuarios_use_case import NumeroUsuariosUseCase
+from servidor.dominio.use_cases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
+from servidor.dominio.use_cases.usuario_activo_use_case import UsuarioActivoUseCase
 
 router = APIRouter(
     prefix="/api/usuarios",

@@ -4,12 +4,12 @@ from servidor.api_rest.dependencies.repositorio_dependencies import (
     obtener_repositorio_sesiones,
     obtener_repositorio_usuarios,
 )
-from servidor.datos.repositories.repositorio_sesiones import RepositorioSesiones
-from servidor.datos.repositories.repositorio_usuarios import RepositorioUsuarios
-from servidor.logica.use_cases.eliminar_usuario_use_case import EliminarUsuarioUseCase
-from servidor.logica.use_cases.numero_usuarios_use_case import NumeroUsuariosUseCase
-from servidor.logica.use_cases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
-from servidor.logica.use_cases.usuario_activo_use_case import UsuarioActivoUseCase
+from servidor.infraestructura.repositories.repositorio_sesiones import RepositorioSesiones
+from servidor.infraestructura.repositories.repositorio_usuarios import RepositorioUsuarios
+from servidor.dominio.use_cases.eliminar_usuario_use_case import EliminarUsuarioUseCase
+from servidor.dominio.use_cases.numero_usuarios_use_case import NumeroUsuariosUseCase
+from servidor.dominio.use_cases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
+from servidor.dominio.use_cases.usuario_activo_use_case import UsuarioActivoUseCase
 
 
 def crear_obtener_usuarios_use_case(

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 
-from servidor.logica.enums.estado_usuario import EstadoUsuario
-from servidor.logica.enums.rol import Rol
+from servidor.dominio.enums.estado_usuario import EstadoUsuario
+from servidor.dominio.enums.rol import Rol
 
 
 class UsuarioSalida(BaseModel):
