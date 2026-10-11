@@ -13,6 +13,7 @@ Estructura base de una aplicación SaaS organizada en capas y con gestión de us
 | pytest | Framework de pruebas estándar en Python, con una sintaxis mínima basada en `assert`. |
 | GitHub Actions | Integración continua integrada en el propio repositorio, sin servicios externos. |
 | Docker | Empaqueta la aplicación para que se ejecute igual en local y en el proveedor cloud. |
+| MongoDB Atlas | Base persistente de la aplicación. Las pruebas usan repositorios en memoria. |
 
 ## Arquitectura
 
@@ -27,8 +28,8 @@ FRONT (navegador)                         BACK (servidor FastAPI)
                                           │          Enums, Exceptions        │
                                           │               │                   │
                                           │               ▼                   │
-                                          │ Infra    Repositories, sqlite,    │
-                                          │          Migraciones              ┼──▶ aplicacion.db
+                                          │ Infra    Repositories, Mongo      │
+                                          │          Atlas                    ┼──▶ MongoDB Atlas
                                           └───────────────────────────────────┘
 ```
 
@@ -75,11 +76,9 @@ Procesos2627/
 │   │   ├── DominioQueries/
 │   │   └── DominioUseCases/
 │   └── Infraestructura/                  # INFRASTRUCTURE
-│       ├── base_datos_sqlite.py
+│       ├── base_datos_mongo.py
 │       ├── registro_actividad.py
-│       ├── InfraestructuraRepositories/
-│       ├── InfraestructuraMigraciones/MigracionesVersiones/
-│       └── aplicacion.db                 # Archivo local, no se sube a git
+│       └── InfraestructuraRepositories/
 ├── Pruebas/
 │   ├── PruebasApi/
 │   ├── PruebasUseCase/
@@ -128,6 +127,11 @@ pytest
 | `HOST` | Interfaz en la que escucha el servidor |
 | `PORT` | Puerto del servidor |
 | `RECARGAR` | `true` para reiniciar el servidor al guardar cambios (solo en desarrollo) |
+| `DATOS_MOTOR` | `mongo` en la app, `memoria` en las pruebas |
+| `MONGO_URI` | Cadena de Atlas (`mongodb+srv://...`), obligatoria si el motor es `mongo`. Puede ir sin usuario y contraseña |
+| `MONGO_USUARIO` | Usuario de Database Access de Atlas, si no va en la URI |
+| `MONGO_CONTRASENA` | Contraseña de ese usuario de Atlas |
+| `MONGO_DB` | Nombre de la base en Atlas. Por defecto `procesos` |
 
 ## Flujo de trabajo (GitHub Flow)
 
