@@ -1,3 +1,7 @@
+import os
+
+os.environ["DATOS_MOTOR"] = "memoria"
+
 import pytest
 from fastapi.testclient import TestClient
 
