@@ -21,6 +21,15 @@ class Configuracion:
     mongo_db: str = "procesos"
     mongo_usuario: str | None = None
     mongo_contrasena: str | None = field(default=None, repr=False)
+    brevo_smtp_servidor: str = "smtp-relay.brevo.com"
+    brevo_smtp_puerto: int = 587
+    brevo_smtp_usuario: str | None = None
+    brevo_smtp_clave: str | None = field(default=None, repr=False)
+    brevo_remitente: str | None = None
+    brevo_remitente_nombre: str = "procesos2627"
+    google_client_id: str | None = None
+    google_client_secret: str | None = field(default=None, repr=False)
+    url_publica: str | None = None
 
 
 def cargar_configuracion() -> Configuracion:
@@ -48,6 +57,11 @@ def cargar_configuracion() -> Configuracion:
         raise ValueError("ADMIN_EMAIL y ADMIN_PASSWORD deben indicarse juntos.")
     if admin_contrasena and not 8 <= len(admin_contrasena) <= 64:
         raise ValueError("ADMIN_PASSWORD debe tener entre 8 y 64 caracteres.")
+    google_client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip() or None
+    google_client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "") or None
+    if bool(google_client_id) != bool(google_client_secret):
+        raise ValueError("GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET deben indicarse juntos.")
+    url_publica = os.getenv("URL_PUBLICA", "").strip().rstrip("/") or None
     return Configuracion(
         duracion_sesion=timedelta(hours=float(os.getenv("SESION_DURACION_HORAS", "8"))),
         cookie_segura=os.getenv("COOKIE_SEGURA", "false").lower() == "true",
@@ -59,6 +73,15 @@ def cargar_configuracion() -> Configuracion:
         mongo_db=mongo_db,
         mongo_usuario=mongo_usuario,
         mongo_contrasena=mongo_contrasena,
+        brevo_smtp_servidor=os.getenv("BREVO_SMTP_SERVIDOR", "smtp-relay.brevo.com"),
+        brevo_smtp_puerto=int(os.getenv("BREVO_SMTP_PUERTO", "587")),
+        brevo_smtp_usuario=os.getenv("BREVO_SMTP_USUARIO", "").strip() or None,
+        brevo_smtp_clave=os.getenv("BREVO_SMTP_CLAVE", "") or None,
+        brevo_remitente=os.getenv("BREVO_REMITENTE", "").strip() or None,
+        brevo_remitente_nombre=os.getenv("BREVO_REMITENTE_NOMBRE", "procesos2627").strip() or "procesos2627",
+        google_client_id=google_client_id,
+        google_client_secret=google_client_secret or None,
+        url_publica=url_publica,
     )
 
 

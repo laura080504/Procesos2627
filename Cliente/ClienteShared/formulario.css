@@ -122,6 +122,11 @@
     white-space: nowrap;
 }
 
+.reenviar {
+    margin: 0.9rem 0 0;
+    text-align: center;
+}
+
 .micro,
 .ver-contrasena {
     padding: 0;

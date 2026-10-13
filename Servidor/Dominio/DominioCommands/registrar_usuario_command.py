@@ -6,3 +6,4 @@ class RegistrarUsuarioCommand:
     email: str
     nick: str
     contrasena: str
+    url_base: str = ""

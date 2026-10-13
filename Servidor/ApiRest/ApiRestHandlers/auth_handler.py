@@ -2,9 +2,12 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from Servidor.Infraestructura.registro_actividad import registro_actividad
+from Servidor.Dominio.DominioExceptions.confirmacion_no_valida import ConfirmacionNoValida
+from Servidor.Dominio.DominioExceptions.correo_no_enviado import CorreoNoEnviado
 from Servidor.Dominio.DominioExceptions.credenciales_invalidas import CredencialesInvalidas
 from Servidor.Dominio.DominioExceptions.cuenta_eliminada import CuentaEliminada
 from Servidor.Dominio.DominioExceptions.cuenta_pendiente import CuentaPendiente
+from Servidor.Dominio.DominioExceptions.cuenta_ya_activa import CuentaYaActiva
 from Servidor.Dominio.DominioExceptions.recuperacion_no_valida import RecuperacionNoValida
 from Servidor.Dominio.DominioExceptions.sesion_no_valida import SesionNoValida
 
@@ -34,9 +37,27 @@ async def recuperacion_no_valida_handler(_: Request, error: RecuperacionNoValida
     return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
 
 
+async def confirmacion_no_valida_handler(_: Request, error: ConfirmacionNoValida) -> JSONResponse:
+    registro_actividad.fallo(type(error).__name__)
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
+
+
+async def cuenta_ya_activa_handler(_: Request, error: CuentaYaActiva) -> JSONResponse:
+    registro_actividad.fallo(type(error).__name__)
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
+
+
+async def correo_no_enviado_handler(_: Request, error: CorreoNoEnviado) -> JSONResponse:
+    registro_actividad.fallo(type(error).__name__)
+    return JSONResponse(status_code=status.HTTP_502_BAD_GATEWAY, content={"detail": str(error)})
+
+
 def registrar_auth_handlers(aplicacion: FastAPI) -> None:
     aplicacion.add_exception_handler(CredencialesInvalidas, credenciales_invalidas_handler)
     aplicacion.add_exception_handler(CuentaPendiente, cuenta_pendiente_handler)
     aplicacion.add_exception_handler(CuentaEliminada, cuenta_eliminada_handler)
     aplicacion.add_exception_handler(SesionNoValida, sesion_no_valida_handler)
     aplicacion.add_exception_handler(RecuperacionNoValida, recuperacion_no_valida_handler)
+    aplicacion.add_exception_handler(ConfirmacionNoValida, confirmacion_no_valida_handler)
+    aplicacion.add_exception_handler(CuentaYaActiva, cuenta_ya_activa_handler)
+    aplicacion.add_exception_handler(CorreoNoEnviado, correo_no_enviado_handler)

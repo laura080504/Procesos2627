@@ -22,3 +22,33 @@ jobs:
 
       - name: Ejecutar pruebas
         run: pytest
+
+  desplegar:
+    name: Desplegar en Cloud Run
+    needs: pruebas
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Autenticar en Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Desplegar
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: procesos2627
+          region: europe-west1
+          source: .
+          flags: --update-env-vars=DATOS_MOTOR=mongo,URL_PUBLICA=https://procesos2627-459073742710.europe-west1.run.app
+
+      - name: Publicar la URL
+        run: |
+          echo "### URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ steps.deploy.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"

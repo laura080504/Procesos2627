@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="ClienteShared/colores.css">
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
-    <link rel="stylesheet" href="ClienteShared/formulario.css">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=8">
+    <link rel="stylesheet" href="ClienteShared/formulario.css?v=9">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=9">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -73,6 +73,7 @@
                         </p>
                     </div>
                     <button class="boton-entrar" type="submit" data-texto="entrar">Entrar</button>
+                    <a class="boton-entrar" href="/api/auth/google" data-texto="entrarGoogle">Entrar con Google</a>
                     <div class="pie-tarjeta">
                         <p>
                             <span data-texto="noRegistrado">¿No estas registrado aún?</span>
@@ -85,6 +86,9 @@
                             </svg>
                         </button>
                     </div>
+                    <p class="reenviar">
+                        <a href="#" id="enlaceReenviar" data-texto="reenviarConfirmacion">Reenviar confirmación</a>
+                    </p>
                 </form>
             </section>
 
@@ -299,19 +303,19 @@
         </main>
     </div>
 
-    <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=8"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=8"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=8"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=8"></script>
-    <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=8"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=8"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js?v=8"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=8"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=8"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=8"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=8"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=8"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=8"></script>
-    <script src="ClienteJs/inicio.js?v=8"></script>
+    <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=9"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=9"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=9"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=9"></script>
+    <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=9"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=9"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js?v=9"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=9"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=9"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=9"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=9"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=9"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=9"></script>
+    <script src="ClienteJs/inicio.js?v=9"></script>
 </body>
 </html>

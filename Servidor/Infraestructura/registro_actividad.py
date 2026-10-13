@@ -11,6 +11,9 @@ class RegistroActividad:
     def inicio(self, email: str) -> None:
         self.logger.info("inicio email=%s", email)
 
+    def confirmacion(self, email: str) -> None:
+        self.logger.info("confirmacion email=%s", email)
+
     def cierre(self) -> None:
         self.logger.info("cierre de sesion")
 
