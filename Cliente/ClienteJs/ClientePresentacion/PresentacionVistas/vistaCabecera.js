@@ -5,8 +5,8 @@ class VistaCabecera {
         document.getElementById("botonCerrarSesionCuenta").addEventListener("click", alCerrarSesion);
     }
 
-    mostrar(usuario) {
-        this.usuarioActual.textContent = `${usuario.nick} (${usuario.email})`;
+    mostrar(usuario, textos) {
+        pintarDatosUsuario(this.usuarioActual, usuario, textos);
     }
 
     ocultar() {

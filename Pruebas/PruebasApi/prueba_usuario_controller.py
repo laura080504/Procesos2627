@@ -1,3 +1,6 @@
+from Pruebas.conftest import CONTRASENA
+
+
 def prueba_rutas_de_usuarios_rechazan_peticiones_sin_sesion(cliente, usuario_registrado):
     assert cliente.get("/api/usuarios").status_code == 401
     assert cliente.get("/api/usuarios/numero").status_code == 401
@@ -27,7 +30,22 @@ def prueba_un_usuario_no_elimina_a_otro(cliente_autenticado, administrador, repo
 
 def prueba_un_administrador_elimina_a_otro(cliente_administrador, usuario_registrado, repositorio_usuarios):
     assert cliente_administrador.delete(f"/api/usuarios/{usuario_registrado.email}").status_code == 204
-    assert repositorio_usuarios.obtener_por_email(usuario_registrado.email) is None
+    assert repositorio_usuarios.obtener_por_email(usuario_registrado.email).estado.value == "eliminado"
+
+
+def prueba_usuario_eliminado_no_inicia_sesion_ni_recupera(cliente_administrador, usuario_registrado):
+    assert cliente_administrador.delete(f"/api/usuarios/{usuario_registrado.email}").status_code == 204
+    inicio = cliente_administrador.post(
+        "/api/auth/inicio-sesion",
+        json={"email": usuario_registrado.email, "contrasena": CONTRASENA},
+    )
+    assert inicio.status_code == 403
+    assert inicio.json()["detail"] == "Usuario eliminado, no puedes iniciar sesión"
+    recuperacion = cliente_administrador.post(
+        "/api/auth/recuperacion", json={"email": usuario_registrado.email}
+    )
+    assert recuperacion.status_code == 403
+    assert recuperacion.json()["detail"] == "Usuario eliminado, no puedes recuperar la contraseña"
 
 
 def prueba_eliminar_usuario_inexistente_devuelve_404(cliente_administrador):

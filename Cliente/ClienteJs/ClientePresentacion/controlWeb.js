@@ -26,6 +26,7 @@ class ControlWeb {
             alEnviar: (email, nick, contrasena) => this.registrar(email, nick, contrasena),
             alIrAInicioSesion: () => this.mostrarInicioSesion(),
             alDictar: (campo) => this.dictar(campo),
+            alNoCoinciden: () => this.mostrarMensaje(this.textos.contrasenasNoCoinciden, true),
         });
         this.vistaRecuperacion = new VistaRecuperacion({
             alSolicitar: (email) => this.solicitarRecuperacion(email),
@@ -72,6 +73,9 @@ class ControlWeb {
         this.vistaRegistro.aplicarTextos(this.textos);
         this.vistaRecuperacion.aplicarTextos(this.textos);
         this.vistaUsuarios.aplicarTextos(this.textos);
+        if (this.usuarioActual) {
+            this.cabecera.mostrar(this.usuarioActual, this.textos);
+        }
     }
 
     dictar(campo) {
@@ -124,7 +128,7 @@ class ControlWeb {
 
     async mostrarPanel() {
         this.ocultarVistas();
-        this.cabecera.mostrar(this.usuarioActual);
+        this.cabecera.mostrar(this.usuarioActual, this.textos);
         this.vistaUsuarios.mostrar();
         await this.refrescarUsuarios();
     }
@@ -135,6 +139,10 @@ class ControlWeb {
             this.mostrarInicioSesion();
             this.mostrarMensaje(this.textos.cuentaCreada);
         } catch (error) {
+            if (error.estado === 409) {
+                this.mostrarMensaje(this.textos.emailYaRegistrado, true);
+                return;
+            }
             this.mostrarMensaje(error.message, true);
         }
     }
@@ -145,7 +153,7 @@ class ControlWeb {
             this.vistaRecuperacion.mostrarNuevaContrasena(recuperacion.token);
             this.mostrarMensaje(this.textos.introduceNuevaContrasena);
         } catch (error) {
-            this.mostrarMensaje(error.message, true);
+            this.mostrarMensaje(this.mensajeCuentaEliminada(error, true) || error.message, true);
         }
     }
 
@@ -155,7 +163,7 @@ class ControlWeb {
             this.mostrarInicioSesion();
             this.mostrarMensaje(this.textos.contrasenaActualizada);
         } catch (error) {
-            this.mostrarMensaje(error.message, true);
+            this.mostrarMensaje(this.mensajeCuentaEliminada(error, true) || error.message, true);
         }
     }
 
@@ -165,8 +173,15 @@ class ControlWeb {
             this.limpiarMensaje();
             await this.mostrarPanel();
         } catch (error) {
-            this.mostrarMensaje(error.message, true);
+            this.mostrarMensaje(this.mensajeCuentaEliminada(error, false) || error.message, true);
         }
+    }
+
+    mensajeCuentaEliminada(error, esRecuperacion) {
+        if (error.estado !== 403 || !/eliminado/i.test(error.message || "")) {
+            return "";
+        }
+        return esRecuperacion ? this.textos.usuarioEliminadoRecuperar : this.textos.usuarioEliminado;
     }
 
     async cerrarSesion() {

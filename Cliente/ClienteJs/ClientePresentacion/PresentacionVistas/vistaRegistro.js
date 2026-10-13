@@ -1,21 +1,28 @@
 class VistaRegistro {
-    constructor({ alEnviar, alIrAInicioSesion, alDictar }) {
+    constructor({ alEnviar, alIrAInicioSesion, alDictar, alNoCoinciden }) {
         this.seccion = document.getElementById("vistaRegistro");
         this.formulario = document.getElementById("formularioRegistro");
         this.campoActivo = this.formulario.email;
+        this.alNoCoinciden = alNoCoinciden;
 
         this.formulario.addEventListener("submit", (evento) => {
             evento.preventDefault();
             const datos = new FormData(this.formulario);
-            alEnviar(datos.get("email").trim(), datos.get("nick").trim(), datos.get("contrasena"));
+            const contrasena = datos.get("contrasena");
+            if (contrasena !== datos.get("confirmar")) {
+                this.alNoCoinciden();
+                return;
+            }
+            alEnviar(datos.get("email").trim(), datos.get("nick").trim(), contrasena);
         });
         document.getElementById("enlaceInicioSesion").addEventListener("click", (evento) => {
             evento.preventDefault();
             alIrAInicioSesion();
         });
         document.getElementById("botonVozRegistro").addEventListener("click", () => alDictar(this.campoActivo));
-        this.botonVer = this.formulario.querySelector(".ver-contrasena");
-        this.botonVer.addEventListener("click", () => this.alternarContrasena());
+        this.formulario.querySelectorAll(".ver-contrasena").forEach((boton) => {
+            boton.addEventListener("click", () => this.alternarContrasena(boton));
+        });
         this.formulario.querySelectorAll("input").forEach((campo) => {
             campo.addEventListener("focus", () => {
                 this.campoActivo = campo;
@@ -26,21 +33,23 @@ class VistaRegistro {
     aplicarTextos(textos) {
         this.textos = textos;
         aplicarTextos(this.seccion, textos);
-        this.actualizarEtiqueta();
+        this.actualizarEtiquetas();
     }
 
-    alternarContrasena() {
-        const campo = this.formulario.contrasena;
+    alternarContrasena(boton) {
+        const campo = boton.closest(".linea").querySelector("input");
         campo.type = campo.type === "password" ? "text" : "password";
-        this.actualizarEtiqueta();
+        this.actualizarEtiquetas();
     }
 
-    actualizarEtiqueta() {
+    actualizarEtiquetas() {
         if (!this.textos) {
             return;
         }
-        const visible = this.formulario.contrasena.type === "text";
-        this.botonVer.setAttribute("aria-label", visible ? this.textos.ocultarContrasena : this.textos.verContrasena);
+        this.formulario.querySelectorAll(".ver-contrasena").forEach((boton) => {
+            const visible = boton.closest(".linea").querySelector("input").type === "text";
+            boton.setAttribute("aria-label", visible ? this.textos.ocultarContrasena : this.textos.verContrasena);
+        });
     }
 
     mostrar() {
@@ -50,7 +59,9 @@ class VistaRegistro {
     ocultar() {
         this.seccion.hidden = true;
         this.formulario.reset();
-        this.formulario.contrasena.type = "password";
-        this.actualizarEtiqueta();
+        this.formulario.querySelectorAll("input[name='contrasena'], input[name='confirmar']").forEach((campo) => {
+            campo.type = "password";
+        });
+        this.actualizarEtiquetas();
     }
 }

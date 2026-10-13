@@ -4,6 +4,7 @@ class VistaUsuarios {
         this.vistaAdministrador = document.getElementById("vistaAdministrador");
         this.vistaCuenta = document.getElementById("vistaCuenta");
         this.cuentaActual = document.getElementById("cuentaActual");
+        this.contadorUsuarios = document.getElementById("contadorUsuarios");
         this.lista = document.getElementById("listaUsuarios");
         this.numeroUsuarios = document.getElementById("numeroUsuarios");
         this.botonRefrescar = document.getElementById("botonRefrescar");
@@ -41,23 +42,35 @@ class VistaUsuarios {
         this.esAdministrador = esAdministrador;
         this.vistaAdministrador.hidden = !esAdministrador;
         this.vistaCuenta.hidden = esAdministrador;
+        this.contadorUsuarios.hidden = !esAdministrador;
         this.lista.innerHTML = "";
         if (!esAdministrador) {
             const usuario = usuarios[0];
-            this.cuentaActual.textContent = usuario ? `${usuario.nick} (${usuario.email})` : "";
+            if (usuario) {
+                pintarDatosUsuario(this.cuentaActual, usuario, this.textos);
+            } else {
+                this.cuentaActual.replaceChildren();
+            }
             return;
         }
         usuarios.forEach((usuario) => {
             const elemento = document.createElement("li");
             const texto = document.createElement("span");
-            texto.textContent = `${usuario.nick} · ${usuario.email}`;
-
-            const boton = document.createElement("button");
-            boton.type = "button";
-            boton.textContent = this.textos.eliminar;
-            boton.addEventListener("click", () => this.alEliminar(usuario.email));
-
-            elemento.append(texto, boton);
+            texto.className = "usuario-ficha";
+            pintarDatosUsuario(texto, usuario, this.textos);
+            elemento.append(texto);
+            const acciones = document.createElement("span");
+            acciones.className = "acciones-usuario";
+            if (usuario.estado !== "eliminado") {
+                const boton = document.createElement("button");
+                boton.type = "button";
+                boton.textContent = this.textos.eliminar;
+                boton.addEventListener("click", () => this.alEliminar(usuario.email));
+                acciones.append(boton);
+            }
+            if (acciones.childNodes.length) {
+                elemento.append(acciones);
+            }
             this.lista.appendChild(elemento);
         });
         this.numeroUsuarios.textContent = usuarios.length;

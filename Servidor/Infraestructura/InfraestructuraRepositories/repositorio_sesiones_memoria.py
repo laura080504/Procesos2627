@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones import RepositorioSesiones
-
-if TYPE_CHECKING:
-    from Servidor.Dominio.DominioEntities.sesion import Sesion
+from Servidor.Dominio.DominioEntities.sesion import Sesion
 
 
 class RepositorioSesionesMemoria(RepositorioSesiones):

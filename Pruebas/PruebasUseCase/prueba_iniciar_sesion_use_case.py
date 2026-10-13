@@ -1,4 +1,4 @@
-﻿from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -6,6 +6,7 @@ from Pruebas.conftest import CONTRASENA
 from Servidor.Dominio.DominioCommands.iniciar_sesion_command import IniciarSesionCommand
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
 from Servidor.Dominio.DominioExceptions.credenciales_invalidas import CredencialesInvalidas
+from Servidor.Dominio.DominioExceptions.cuenta_eliminada import CuentaEliminada
 from Servidor.Dominio.DominioExceptions.cuenta_pendiente import CuentaPendiente
 from Servidor.Dominio.DominioUseCases.iniciar_sesion_use_case import IniciarSesionUseCase
 
@@ -35,4 +36,10 @@ def prueba_email_desconocido_lanza_error(use_case):
 def prueba_cuenta_pendiente_no_puede_iniciar_sesion(use_case, usuario_registrado):
     usuario_registrado.estado = EstadoUsuario.PENDIENTE
     with pytest.raises(CuentaPendiente):
+        use_case.ejecutar(IniciarSesionCommand(usuario_registrado.email, CONTRASENA))
+
+
+def prueba_cuenta_eliminada_no_puede_iniciar_sesion(use_case, usuario_registrado):
+    usuario_registrado.estado = EstadoUsuario.ELIMINADO
+    with pytest.raises(CuentaEliminada, match="Usuario eliminado, no puedes iniciar sesión"):
         use_case.ejecutar(IniciarSesionCommand(usuario_registrado.email, CONTRASENA))
