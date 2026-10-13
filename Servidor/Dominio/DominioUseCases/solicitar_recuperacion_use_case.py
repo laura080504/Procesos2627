@@ -1,10 +1,12 @@
-﻿import secrets
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Dominio.DominioCommands.solicitar_recuperacion_command import SolicitarRecuperacionCommand
 from Servidor.Dominio.DominioEntities.recuperacion import Recuperacion
+from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
+from Servidor.Dominio.DominioExceptions.cuenta_eliminada import CuentaEliminada
 from Servidor.Dominio.DominioExceptions.usuario_no_encontrado import UsuarioNoEncontrado
 
 
@@ -21,8 +23,11 @@ class SolicitarRecuperacionUseCase:
 
     def ejecutar(self, command: SolicitarRecuperacionCommand) -> Recuperacion:
         email = command.email.strip().lower()
-        if self.repositorio_usuarios.obtener_por_email(email) is None:
+        usuario = self.repositorio_usuarios.obtener_por_email(email)
+        if usuario is None:
             raise UsuarioNoEncontrado(email)
+        if usuario.estado == EstadoUsuario.ELIMINADO:
+            raise CuentaEliminada(email, "Usuario eliminado, no puedes recuperar la contraseña")
         self.repositorio_recuperaciones.eliminar_por_email(email)
         recuperacion = Recuperacion(
             token=secrets.token_urlsafe(32),

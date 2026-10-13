@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
-
-if TYPE_CHECKING:
-    from Servidor.Dominio.DominioEntities.recuperacion import Recuperacion
+from Servidor.Dominio.DominioEntities.recuperacion import Recuperacion
 
 
 class RepositorioRecuperacionesMemoria(RepositorioRecuperaciones):
@@ -25,3 +21,10 @@ class RepositorioRecuperacionesMemoria(RepositorioRecuperaciones):
     def eliminar_por_email(self, email: str) -> None:
         for token in [t for t, r in self._recuperaciones.items() if r.email == email]:
             del self._recuperaciones[token]
+
+    def actualizar_email(self, email_actual: str, email_nuevo: str) -> None:
+        for token, recuperacion in list(self._recuperaciones.items()):
+            if recuperacion.email == email_actual:
+                self._recuperaciones[token] = Recuperacion(
+                    token=recuperacion.token, email=email_nuevo, expira_en=recuperacion.expira_en
+                )

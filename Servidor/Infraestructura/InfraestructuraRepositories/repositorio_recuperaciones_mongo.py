@@ -29,6 +29,12 @@ class RepositorioRecuperacionesMongo(RepositorioRecuperaciones):
     def eliminar_por_email(self, email: str) -> None:
         self.base_datos.coleccion("recuperaciones").delete_many({"email": email})
 
+    def actualizar_email(self, email_actual: str, email_nuevo: str) -> None:
+        self.base_datos.coleccion("recuperaciones").update_many(
+            {"email": email_actual},
+            {"$set": {"email": email_nuevo}},
+        )
+
     def _a_recuperacion(self, documento: dict) -> Recuperacion:
         return Recuperacion(
             token=documento["_id"],

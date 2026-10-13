@@ -1,4 +1,4 @@
-﻿from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Dominio.DominioCommands.registrar_usuario_command import RegistrarUsuarioCommand
 from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioExceptions.usuario_ya_existe import UsuarioYaExiste
@@ -12,11 +12,17 @@ class RegistrarUsuarioUseCase:
 
     def ejecutar(self, command: RegistrarUsuarioCommand) -> Usuario:
         email = command.email.strip().lower()
+        nick = command.nick.strip()
         if self.repositorio_usuarios.obtener_por_email(email):
             raise UsuarioYaExiste(email)
-        usuario = Usuario(
-            email=email,
-            nick=command.nick.strip(),
-            contrasena_hash=self.hasher.hashear(command.contrasena),
+        self.repositorio_usuarios.insertar(
+            Usuario(
+                email=email,
+                nick=nick,
+                contrasena_hash=self.hasher.hashear(command.contrasena),
+            )
         )
-        return self.repositorio_usuarios.insertar(usuario)
+        guardado = self.repositorio_usuarios.obtener_por_email(email)
+        if guardado is None:
+            raise RuntimeError(f"No se ha podido guardar el usuario {email}")
+        return guardado

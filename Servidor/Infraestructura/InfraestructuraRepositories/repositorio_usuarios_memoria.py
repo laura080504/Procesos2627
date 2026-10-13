@@ -26,5 +26,9 @@ class RepositorioUsuariosMemoria(RepositorioUsuarios):
         if usuario.email in self._usuarios:
             self._usuarios[usuario.email] = usuario
 
+    def cambiar_email(self, email_actual: str, usuario: Usuario) -> None:
+        self._usuarios.pop(email_actual, None)
+        self._usuarios[usuario.email] = usuario
+
     def eliminar(self, email: str) -> bool:
         return self._usuarios.pop(email, None) is not None

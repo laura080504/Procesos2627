@@ -26,6 +26,7 @@ class ControlWeb {
             alEnviar: (email, nick, contrasena) => this.registrar(email, nick, contrasena),
             alIrAInicioSesion: () => this.mostrarInicioSesion(),
             alDictar: (campo) => this.dictar(campo),
+            alNoCoinciden: () => this.mostrarMensaje(this.textos.contrasenasNoCoinciden, true),
         });
         this.vistaRecuperacion = new VistaRecuperacion({
             alSolicitar: (email) => this.solicitarRecuperacion(email),
@@ -36,6 +37,13 @@ class ControlWeb {
         this.vistaUsuarios = new VistaUsuarios({
             alEliminar: (email) => this.eliminarUsuario(email),
             alRefrescar: () => this.refrescarUsuarios(),
+            alEditar: () => this.mostrarEditarDatos(this.usuarioActual),
+            alEditarUsuario: (usuario) => this.mostrarEditarDatos(usuario),
+        });
+        this.vistaEditarDatos = new VistaEditarDatos({
+            alGuardar: (datos) => this.guardarEdicion(datos),
+            alVolver: () => this.mostrarPanel(),
+            alNoCoinciden: () => this.mostrarMensaje(this.textos.contrasenasNoCoinciden, true),
         });
         this.aplicarIdioma();
     }
@@ -72,6 +80,10 @@ class ControlWeb {
         this.vistaRegistro.aplicarTextos(this.textos);
         this.vistaRecuperacion.aplicarTextos(this.textos);
         this.vistaUsuarios.aplicarTextos(this.textos);
+        this.vistaEditarDatos.aplicarTextos(this.textos);
+        if (this.usuarioActual) {
+            this.cabecera.mostrar(this.usuarioActual, this.textos);
+        }
     }
 
     dictar(campo) {
@@ -100,6 +112,7 @@ class ControlWeb {
         this.vistaRegistro.ocultar();
         this.vistaRecuperacion.ocultar();
         this.vistaUsuarios.ocultar();
+        this.vistaEditarDatos.ocultar();
     }
 
     mostrarInicioSesion() {
@@ -124,9 +137,51 @@ class ControlWeb {
 
     async mostrarPanel() {
         this.ocultarVistas();
-        this.cabecera.mostrar(this.usuarioActual);
+        this.cabecera.mostrar(this.usuarioActual, this.textos);
         this.vistaUsuarios.mostrar();
         await this.refrescarUsuarios();
+    }
+
+    mostrarEditarDatos(usuario) {
+        const propio = usuario.email === this.usuarioActual.email;
+        this.ocultarVistas();
+        this.vistaEditarDatos.mostrar(usuario, { propio });
+    }
+
+    async guardarEdicion(datos) {
+        if (!datos.propio) {
+            if (!datos.hacerAdmin) {
+                await this.mostrarPanel();
+                return;
+            }
+            await this.asignarAdministrador(this.vistaEditarDatos.usuario.email);
+            return;
+        }
+        await this.editarDatos(datos.email, datos.nick, datos.contrasena);
+    }
+
+    async editarDatos(email, nick, contrasena) {
+        try {
+            this.usuarioActual = await this.rest.editarDatos(email, nick, contrasena);
+            await this.mostrarPanel();
+            this.mostrarMensaje(this.textos.datosActualizados);
+        } catch (error) {
+            if (error.estado === 409) {
+                this.mostrarMensaje(this.textos.emailYaRegistrado, true);
+                return;
+            }
+            this.gestionarError(error);
+        }
+    }
+
+    async asignarAdministrador(email) {
+        try {
+            await this.rest.asignarAdministrador(email);
+            await this.mostrarPanel();
+            this.mostrarMensaje(this.textos.rolActualizado);
+        } catch (error) {
+            this.gestionarError(error);
+        }
     }
 
     async registrar(email, nick, contrasena) {
@@ -135,6 +190,10 @@ class ControlWeb {
             this.mostrarInicioSesion();
             this.mostrarMensaje(this.textos.cuentaCreada);
         } catch (error) {
+            if (error.estado === 409) {
+                this.mostrarMensaje(this.textos.emailYaRegistrado, true);
+                return;
+            }
             this.mostrarMensaje(error.message, true);
         }
     }
@@ -145,7 +204,7 @@ class ControlWeb {
             this.vistaRecuperacion.mostrarNuevaContrasena(recuperacion.token);
             this.mostrarMensaje(this.textos.introduceNuevaContrasena);
         } catch (error) {
-            this.mostrarMensaje(error.message, true);
+            this.mostrarMensaje(this.mensajeCuentaEliminada(error, true) || error.message, true);
         }
     }
 
@@ -155,7 +214,7 @@ class ControlWeb {
             this.mostrarInicioSesion();
             this.mostrarMensaje(this.textos.contrasenaActualizada);
         } catch (error) {
-            this.mostrarMensaje(error.message, true);
+            this.mostrarMensaje(this.mensajeCuentaEliminada(error, true) || error.message, true);
         }
     }
 
@@ -165,8 +224,15 @@ class ControlWeb {
             this.limpiarMensaje();
             await this.mostrarPanel();
         } catch (error) {
-            this.mostrarMensaje(error.message, true);
+            this.mostrarMensaje(this.mensajeCuentaEliminada(error, false) || error.message, true);
         }
+    }
+
+    mensajeCuentaEliminada(error, esRecuperacion) {
+        if (error.estado !== 403 || !/eliminado/i.test(error.message || "")) {
+            return "";
+        }
+        return esRecuperacion ? this.textos.usuarioEliminadoRecuperar : this.textos.usuarioEliminado;
     }
 
     async cerrarSesion() {

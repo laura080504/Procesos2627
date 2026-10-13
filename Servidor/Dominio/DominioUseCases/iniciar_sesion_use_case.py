@@ -1,4 +1,4 @@
-﻿import secrets
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones import RepositorioSesiones
@@ -7,6 +7,7 @@ from Servidor.Dominio.DominioCommands.iniciar_sesion_command import IniciarSesio
 from Servidor.Dominio.DominioEntities.sesion import Sesion
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
 from Servidor.Dominio.DominioExceptions.credenciales_invalidas import CredencialesInvalidas
+from Servidor.Dominio.DominioExceptions.cuenta_eliminada import CuentaEliminada
 from Servidor.Dominio.DominioExceptions.cuenta_pendiente import CuentaPendiente
 from Servidor.Dominio.DominioResults.inicio_sesion_resultado import InicioSesionResultado
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
@@ -28,7 +29,11 @@ class IniciarSesionUseCase:
     def ejecutar(self, command: IniciarSesionCommand) -> InicioSesionResultado:
         email = command.email.strip().lower()
         usuario = self.repositorio_usuarios.obtener_por_email(email)
-        if usuario is None or not self.hasher.verificar(command.contrasena, usuario.contrasena_hash):
+        if usuario is None:
+            raise CredencialesInvalidas()
+        if usuario.estado == EstadoUsuario.ELIMINADO:
+            raise CuentaEliminada(email)
+        if not self.hasher.verificar(command.contrasena, usuario.contrasena_hash):
             raise CredencialesInvalidas()
         if usuario.estado == EstadoUsuario.PENDIENTE:
             raise CuentaPendiente(email)

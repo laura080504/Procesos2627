@@ -1,8 +1,10 @@
-﻿from datetime import timedelta
+from datetime import timedelta
 
 import pytest
 
 from Servidor.Dominio.DominioCommands.solicitar_recuperacion_command import SolicitarRecuperacionCommand
+from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
+from Servidor.Dominio.DominioExceptions.cuenta_eliminada import CuentaEliminada
 from Servidor.Dominio.DominioExceptions.usuario_no_encontrado import UsuarioNoEncontrado
 from Servidor.Dominio.DominioUseCases.solicitar_recuperacion_use_case import SolicitarRecuperacionUseCase
 
@@ -28,3 +30,10 @@ def prueba_una_nueva_solicitud_invalida_la_anterior(use_case, usuario_registrado
 def prueba_email_desconocido_lanza_error(use_case):
     with pytest.raises(UsuarioNoEncontrado):
         use_case.ejecutar(SolicitarRecuperacionCommand("nadie@ejemplo.com"))
+
+
+def prueba_usuario_eliminado_no_puede_recuperar(use_case, usuario_registrado, repositorio_recuperaciones):
+    usuario_registrado.estado = EstadoUsuario.ELIMINADO
+    with pytest.raises(CuentaEliminada, match="no puedes recuperar la contraseña"):
+        use_case.ejecutar(SolicitarRecuperacionCommand(usuario_registrado.email))
+    assert repositorio_recuperaciones._recuperaciones == {}

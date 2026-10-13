@@ -2,20 +2,27 @@ from fastapi import APIRouter, Depends, status
 
 from Servidor.ApiRest.ApiRestDependencies.auth_dependencies import obtener_administrador, obtener_usuario_actual
 from Servidor.ApiRest.ApiRestDependencies.usuario_dependencies import (
+    crear_asignar_administrador_use_case,
+    crear_editar_datos_use_case,
     crear_eliminar_usuario_use_case,
     crear_numero_usuarios_use_case,
     crear_obtener_usuarios_use_case,
     crear_usuario_activo_use_case,
 )
+from Servidor.ApiRest.ApiRestSchemas.editar_datos_entrada import EditarDatosEntrada
 from Servidor.ApiRest.ApiRestSchemas.numero_usuarios_salida import NumeroUsuariosSalida
 from Servidor.ApiRest.ApiRestSchemas.usuario_activo_salida import UsuarioActivoSalida
 from Servidor.ApiRest.ApiRestSchemas.usuario_salida import UsuarioSalida
 from Servidor.Infraestructura.registro_actividad import registro_actividad
+from Servidor.Dominio.DominioCommands.asignar_administrador_command import AsignarAdministradorCommand
+from Servidor.Dominio.DominioCommands.editar_datos_command import EditarDatosCommand
 from Servidor.Dominio.DominioCommands.eliminar_usuario_command import EliminarUsuarioCommand
 from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioQueries.numero_usuarios_query import NumeroUsuariosQuery
 from Servidor.Dominio.DominioQueries.obtener_usuarios_query import ObtenerUsuariosQuery
 from Servidor.Dominio.DominioQueries.usuario_activo_query import UsuarioActivoQuery
+from Servidor.Dominio.DominioUseCases.asignar_administrador_use_case import AsignarAdministradorUseCase
+from Servidor.Dominio.DominioUseCases.editar_datos_use_case import EditarDatosUseCase
 from Servidor.Dominio.DominioUseCases.eliminar_usuario_use_case import EliminarUsuarioUseCase
 from Servidor.Dominio.DominioUseCases.numero_usuarios_use_case import NumeroUsuariosUseCase
 from Servidor.Dominio.DominioUseCases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
@@ -32,12 +39,43 @@ def obtener_usuarios(
     return use_case.ejecutar(ObtenerUsuariosQuery())
 
 
+@router.patch("/me", response_model=UsuarioSalida)
+def editar_datos(
+    datos: EditarDatosEntrada,
+    solicitante: Usuario = Depends(obtener_usuario_actual),
+    use_case: EditarDatosUseCase = Depends(crear_editar_datos_use_case),
+):
+    usuario = use_case.ejecutar(
+        EditarDatosCommand(
+            solicitante_email=solicitante.email,
+            email=datos.email,
+            nick=datos.nick,
+            contrasena=datos.contrasena,
+        )
+    )
+    registro_actividad.edicion(solicitante.email, usuario.email)
+    return usuario
+
+
 @router.get("/numero", response_model=NumeroUsuariosSalida)
 def numero_usuarios(
     _: Usuario = Depends(obtener_administrador),
     use_case: NumeroUsuariosUseCase = Depends(crear_numero_usuarios_use_case),
 ):
     return NumeroUsuariosSalida(numero=use_case.ejecutar(NumeroUsuariosQuery()))
+
+
+@router.post("/{email}/administrador", response_model=UsuarioSalida)
+def asignar_administrador(
+    email: str,
+    solicitante: Usuario = Depends(obtener_administrador),
+    use_case: AsignarAdministradorUseCase = Depends(crear_asignar_administrador_use_case),
+):
+    usuario = use_case.ejecutar(
+        AsignarAdministradorCommand(email=email, solicitante_email=solicitante.email)
+    )
+    registro_actividad.asignacion_rol(solicitante.email, usuario.email)
+    return usuario
 
 
 @router.get("/{email}/activo", response_model=UsuarioActivoSalida)
