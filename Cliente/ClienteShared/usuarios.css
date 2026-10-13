@@ -5,7 +5,7 @@
     gap: 1rem;
     margin: 1.25rem 0 0;
     font-size: 1rem;
-    white-space: nowrap;
+    white-space: normal;
 }
 
 #botonRefrescar,
@@ -44,7 +44,21 @@
     gap: 1rem;
     padding: 0.75rem 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.22);
-    white-space: nowrap;
+    white-space: normal;
+}
+
+.usuario-ficha,
+#usuarioActual,
+#cuentaActual {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+}
+
+.usuario-meta {
+    font-size: 0.85rem;
+    opacity: 0.85;
 }
 
 body.oscuro #listaUsuarios li {
@@ -60,8 +74,16 @@ body.oscuro #listaUsuarios li {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     white-space: nowrap;
+}
+
+.acciones-usuario {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.4rem;
 }
 
 .botones-linea button {

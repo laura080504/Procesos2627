@@ -1,11 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
-
-if TYPE_CHECKING:
-    from Servidor.Dominio.DominioEntities.recuperacion import Recuperacion
+from Servidor.Dominio.DominioEntities.recuperacion import Recuperacion
 
 
 class RepositorioRecuperacionesMemoria(RepositorioRecuperaciones):

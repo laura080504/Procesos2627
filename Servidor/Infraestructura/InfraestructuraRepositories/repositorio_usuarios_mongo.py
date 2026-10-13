@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from pymongo.errors import DuplicateKeyError
+
 from Servidor.Infraestructura.base_datos_mongo import BaseDatosMongo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
 from Servidor.Dominio.DominioEnums.rol import Rol
+from Servidor.Dominio.DominioExceptions.usuario_ya_existe import UsuarioYaExiste
 
 
 class RepositorioUsuariosMongo(RepositorioUsuarios):
@@ -12,8 +15,15 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
         self.base_datos = base_datos
 
     def insertar(self, usuario: Usuario) -> Usuario:
-        self.base_datos.coleccion("usuarios").insert_one(self._a_documento(usuario))
-        return usuario
+        coleccion = self.base_datos.coleccion("usuarios")
+        try:
+            coleccion.insert_one(self._a_documento(usuario))
+        except DuplicateKeyError as error:
+            raise UsuarioYaExiste(usuario.email) from error
+        documento = coleccion.find_one({"_id": usuario.email})
+        if documento is None:
+            raise RuntimeError(f"No se ha podido guardar el usuario {usuario.email}")
+        return self._a_usuario(documento)
 
     def obtener_por_email(self, email: str) -> Usuario | None:
         documento = self.base_datos.coleccion("usuarios").find_one({"_id": email})
@@ -24,7 +34,7 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
         return [self._a_usuario(documento) for documento in documentos]
 
     def actualizar(self, usuario: Usuario) -> None:
-        self.base_datos.coleccion("usuarios").update_one(
+        resultado = self.base_datos.coleccion("usuarios").update_one(
             {"_id": usuario.email},
             {
                 "$set": {
@@ -35,6 +45,8 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
                 }
             },
         )
+        if resultado.matched_count == 0:
+            raise RuntimeError(f"No se ha podido actualizar el usuario {usuario.email}")
 
     def eliminar(self, email: str) -> bool:
         resultado = self.base_datos.coleccion("usuarios").delete_one({"_id": email})
@@ -55,5 +67,5 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
             nick=documento["nick"],
             contrasena_hash=documento["contrasena_hash"],
             rol=Rol(documento["rol"]),
-            estado=EstadoUsuario(documento["estado"]),
+            estado=EstadoUsuario(documento.get("estado", EstadoUsuario.ACTIVO)),
         )

@@ -4,7 +4,7 @@ const TEXTOS = {
         login: "Login",
         registro: "Registro",
         email: "Email",
-        nick: "Nick",
+        nick: "Usuario",
         contrasena: "Contraseña",
         recordarme: "Recuerdame",
         olvidaste: "¿Olvidaste la contraseña?",
@@ -16,6 +16,14 @@ const TEXTOS = {
         iniciaSesion: "Inicia sesión",
         crearCuenta: "Crear cuenta",
         usuarios: "Usuarios",
+        gestionUsuarios: "Gestión de usuarios",
+        etiquetaRol: "Rol",
+        etiquetaEstado: "Estado",
+        rolUsuario: "usuario",
+        rolAdministrador: "administrador",
+        estadoActivo: "activo",
+        estadoPendiente: "pendiente",
+        estadoEliminado: "eliminado",
         refrescar: "Refrescar",
         cerrarSesion: "Cerrar sesión",
         eliminar: "Eliminar",
@@ -26,6 +34,9 @@ const TEXTOS = {
         verContrasena: "Mostrar contraseña",
         ocultarContrasena: "Ocultar contraseña",
         cuentaCreada: "Cuenta creada. Ya puedes iniciar sesión",
+        emailYaRegistrado: "Este correo ya está registrado",
+        usuarioEliminado: "Usuario eliminado, no puedes iniciar sesión",
+        usuarioEliminadoRecuperar: "Usuario eliminado, no puedes recuperar la contraseña",
         sesionCerrada: "Sesión cerrada",
         cuentaEliminada: "Tu cuenta ha sido eliminada",
         sesionCaducada: "Tu sesión ha caducado. Vuelve a iniciar sesión",
@@ -47,7 +58,7 @@ const TEXTOS = {
         login: "Login",
         registro: "Sign up",
         email: "Email",
-        nick: "Nick",
+        nick: "Username",
         contrasena: "Password",
         recordarme: "Remember me",
         olvidaste: "Forgot your password?",
@@ -59,6 +70,14 @@ const TEXTOS = {
         iniciaSesion: "Sign in",
         crearCuenta: "Create account",
         usuarios: "Users",
+        gestionUsuarios: "User management",
+        etiquetaRol: "Role",
+        etiquetaEstado: "Status",
+        rolUsuario: "user",
+        rolAdministrador: "administrator",
+        estadoActivo: "active",
+        estadoPendiente: "pending",
+        estadoEliminado: "deleted",
         refrescar: "Refresh",
         cerrarSesion: "Log out",
         eliminar: "Delete",
@@ -69,6 +88,9 @@ const TEXTOS = {
         verContrasena: "Show password",
         ocultarContrasena: "Hide password",
         cuentaCreada: "Account created. You can sign in now",
+        emailYaRegistrado: "This email is already registered",
+        usuarioEliminado: "Deleted user, you cannot sign in",
+        usuarioEliminadoRecuperar: "Deleted user, you cannot reset the password",
         sesionCerrada: "Session closed",
         cuentaEliminada: "Your account has been deleted",
         sesionCaducada: "Your session has expired. Sign in again",
@@ -86,6 +108,32 @@ const TEXTOS = {
         vozNoDisponible: "Voice dictation is not available in this browser",
     },
 };
+
+function datosUsuario(usuario, textos) {
+    const rol = usuario.rol === "administrador" ? textos.rolAdministrador : textos.rolUsuario;
+    const estados = {
+        activo: textos.estadoActivo,
+        pendiente: textos.estadoPendiente,
+        eliminado: textos.estadoEliminado,
+    };
+    const estado = estados[usuario.estado] || usuario.estado || textos.estadoActivo;
+    return {
+        nombre: `${usuario.nick} (${usuario.email})`,
+        meta: `${textos.etiquetaRol}: ${rol} · ${textos.etiquetaEstado}: ${estado}`,
+    };
+}
+
+function pintarDatosUsuario(nodo, usuario, textos) {
+    const datos = datosUsuario(usuario, textos);
+    nodo.replaceChildren();
+    const nombre = document.createElement("span");
+    nombre.className = "usuario-nombre";
+    nombre.textContent = datos.nombre;
+    const meta = document.createElement("span");
+    meta.className = "usuario-meta";
+    meta.textContent = datos.meta;
+    nodo.append(nombre, meta);
+}
 
 function aplicarTextos(raiz, textos) {
     raiz.querySelectorAll("[data-texto]").forEach((nodo) => {

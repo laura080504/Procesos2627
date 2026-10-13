@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=8">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -102,9 +102,9 @@
                         </span>
                     </label>
                     <label class="campo">
-                        <span data-texto="nick">Nick</span>
+                        <span data-texto="nick">Usuario</span>
                         <span class="linea">
-                            <input name="nick" type="text" required maxlength="30" autocomplete="nickname">
+                            <input name="nick" type="text" required maxlength="30" autocomplete="username">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
                                 <path d="M5.5 19c1.2-3 3.4-4.5 6.5-4.5s5.3 1.5 6.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
@@ -115,6 +115,18 @@
                         <span data-texto="contrasena">Contraseña</span>
                         <span class="linea">
                             <input name="contrasena" type="password" required minlength="8" maxlength="64" autocomplete="new-password">
+                            <button class="ver-contrasena" type="button" data-etiqueta="verContrasena" aria-label="Mostrar contraseña">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 20l3.2-.6L19 7.6 16.4 5 4.6 16.8 4 20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+                                    <path d="M13.8 7.6l2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                                </svg>
+                            </button>
+                        </span>
+                    </label>
+                    <label class="campo">
+                        <span data-texto="confirmarContrasena">Repite la contraseña</span>
+                        <span class="linea">
+                            <input name="confirmar" type="password" required minlength="8" maxlength="64" autocomplete="new-password">
                             <button class="ver-contrasena" type="button" data-etiqueta="verContrasena" aria-label="Mostrar contraseña">
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M4 20l3.2-.6L19 7.6 16.4 5 4.6 16.8 4 20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
@@ -195,8 +207,11 @@
             </section>
 
             <section id="vistaUsuarios" class="tarjeta" hidden>
+                <h1>
+                    <span data-texto="gestionUsuarios">Gestión de usuarios</span>
+                    <span id="contadorUsuarios"> (<span id="numeroUsuarios">0</span>)</span>
+                </h1>
                 <div id="vistaAdministrador">
-                    <h1><span data-texto="usuarios">Usuarios</span> (<span id="numeroUsuarios">0</span>)</h1>
                     <p class="sesion-actual">
                         <span id="usuarioActual"></span>
                         <span class="botones-linea">
@@ -219,18 +234,18 @@
         </main>
     </div>
 
-    <script src="ClienteJs/ClienteComunicacion/errorApi.js"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteHttp.js"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteRest.js"></script>
-    <script src="ClienteShared/textosInterfaz.js"></script>
-    <script src="ClienteJs/ClientePresentacion/dictadoVoz.js"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js"></script>
-    <script src="ClienteJs/inicio.js"></script>
+    <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=8"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=8"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=8"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=8"></script>
+    <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=8"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=8"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js?v=8"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=8"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=8"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=8"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=8"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=8"></script>
+    <script src="ClienteJs/inicio.js?v=8"></script>
 </body>
 </html>

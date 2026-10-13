@@ -16,9 +16,16 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones_m
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones_mongo import RepositorioSesionesMongo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_mongo import RepositorioUsuariosMongo
+from Servidor.Dominio.DominioCommands.registrar_usuario_command import RegistrarUsuarioCommand
+from Servidor.Dominio.DominioCommands.restablecer_contrasena_command import RestablecerContrasenaCommand
 from Servidor.Dominio.DominioEntities.recuperacion import Recuperacion
 from Servidor.Dominio.DominioEntities.sesion import Sesion
 from Servidor.Dominio.DominioEntities.usuario import Usuario
+from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
+from Servidor.Dominio.DominioEnums.rol import Rol
+from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
+from Servidor.Dominio.DominioUseCases.registrar_usuario_use_case import RegistrarUsuarioUseCase
+from Servidor.Dominio.DominioUseCases.restablecer_contrasena_use_case import RestablecerContrasenaUseCase
 
 
 def _configuracion(motor: str, mongo_uri: str | None = None) -> Configuracion:
@@ -62,6 +69,49 @@ def prueba_usuarios_sesiones_y_recuperaciones_se_guardan_en_mongo():
 
     assert usuarios.eliminar(laura.email) is True
     assert usuarios.obtener_por_email(laura.email) is None
+
+
+def prueba_el_registro_persiste_usuario_rol_y_estado_en_mongo():
+    usuarios, _, _ = _repositorios_mongo()
+    hasher = HasherContrasenas(rondas=4)
+    creado = RegistrarUsuarioUseCase(usuarios, hasher).ejecutar(
+        RegistrarUsuarioCommand("laura@ejemplo.com", "laura", "contrasena-segura")
+    )
+    guardado = usuarios.obtener_por_email("laura@ejemplo.com")
+    documento = usuarios.base_datos.coleccion("usuarios").find_one({"_id": "laura@ejemplo.com"})
+
+    assert creado.nick == "laura"
+    assert guardado is not None
+    assert guardado.nick == "laura"
+    assert guardado.rol == Rol.USUARIO
+    assert guardado.estado == EstadoUsuario.ACTIVO
+    assert hasher.verificar("contrasena-segura", guardado.contrasena_hash)
+    assert documento["nick"] == "laura"
+    assert documento["rol"] == "usuario"
+    assert documento["estado"] == "activo"
+
+
+def prueba_restablecer_contrasena_persiste_el_hash_en_mongo():
+    usuarios, sesiones, recuperaciones = _repositorios_mongo()
+    hasher = HasherContrasenas(rondas=4)
+    RegistrarUsuarioUseCase(usuarios, hasher).ejecutar(
+        RegistrarUsuarioCommand("laura@ejemplo.com", "laura", "contrasena-segura")
+    )
+    recuperaciones.guardar(
+        Recuperacion(
+            "token-valido",
+            "laura@ejemplo.com",
+            datetime.now(timezone.utc) + timedelta(minutes=15),
+        )
+    )
+    RestablecerContrasenaUseCase(usuarios, recuperaciones, sesiones, hasher).ejecutar(
+        RestablecerContrasenaCommand("token-valido", "nueva-segura")
+    )
+    guardado = usuarios.obtener_por_email("laura@ejemplo.com")
+    documento = usuarios.base_datos.coleccion("usuarios").find_one({"_id": "laura@ejemplo.com"})
+    assert hasher.verificar("nueva-segura", guardado.contrasena_hash)
+    assert hasher.verificar("nueva-segura", documento["contrasena_hash"])
+    assert not hasher.verificar("contrasena-segura", documento["contrasena_hash"])
 
 
 def prueba_el_motor_mongo_exige_uri():

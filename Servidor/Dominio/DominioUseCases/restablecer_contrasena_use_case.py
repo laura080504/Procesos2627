@@ -1,9 +1,11 @@
-﻿from datetime import datetime, timezone
+from datetime import datetime, timezone
 
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones import RepositorioSesiones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Dominio.DominioCommands.restablecer_contrasena_command import RestablecerContrasenaCommand
+from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
+from Servidor.Dominio.DominioExceptions.cuenta_eliminada import CuentaEliminada
 from Servidor.Dominio.DominioExceptions.recuperacion_no_valida import RecuperacionNoValida
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
 
@@ -32,8 +34,14 @@ class RestablecerContrasenaUseCase:
         if usuario is None:
             self.repositorio_recuperaciones.eliminar(recuperacion.token)
             raise RecuperacionNoValida()
+        if usuario.estado == EstadoUsuario.ELIMINADO:
+            self.repositorio_recuperaciones.eliminar(recuperacion.token)
+            raise CuentaEliminada(usuario.email, "Usuario eliminado, no puedes recuperar la contraseña")
 
         usuario.contrasena_hash = self.hasher.hashear(command.contrasena)
         self.repositorio_usuarios.actualizar(usuario)
+        guardado = self.repositorio_usuarios.obtener_por_email(usuario.email)
+        if guardado is None or not self.hasher.verificar(command.contrasena, guardado.contrasena_hash):
+            raise RuntimeError(f"No se ha podido actualizar la contraseña de {usuario.email}")
         self.repositorio_recuperaciones.eliminar(recuperacion.token)
         self.repositorio_sesiones.eliminar_por_email(recuperacion.email)
