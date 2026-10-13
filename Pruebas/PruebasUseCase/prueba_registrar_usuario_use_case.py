@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 
 from Servidor.Dominio.DominioCommands.registrar_usuario_command import RegistrarUsuarioCommand
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
@@ -30,7 +30,20 @@ def prueba_normaliza_el_email(use_case):
     assert usuario.email == "laura@ejemplo.com"
 
 
-def prueba_no_permite_email_duplicado(use_case):
-    use_case.ejecutar(RegistrarUsuarioCommand("laura@ejemplo.com", "laura", "contrasena-segura"))
-    with pytest.raises(UsuarioYaExiste):
+def prueba_no_permite_email_duplicado(use_case, repositorio_usuarios, hasher):
+    original = use_case.ejecutar(RegistrarUsuarioCommand("laura@ejemplo.com", "laura", "contrasena-segura"))
+    with pytest.raises(UsuarioYaExiste, match="ya está registrado"):
         use_case.ejecutar(RegistrarUsuarioCommand("LAURA@ejemplo.com", "otra", "otra-contrasena"))
+    guardado = repositorio_usuarios.obtener_por_email("laura@ejemplo.com")
+    assert guardado.nick == original.nick
+    assert guardado.contrasena_hash == original.contrasena_hash
+    assert hasher.verificar("contrasena-segura", guardado.contrasena_hash)
+
+
+def prueba_no_permite_registrar_si_el_email_esta_eliminado(use_case, repositorio_usuarios):
+    usuario = use_case.ejecutar(RegistrarUsuarioCommand("laura@ejemplo.com", "laura", "contrasena-segura"))
+    usuario.estado = EstadoUsuario.ELIMINADO
+    repositorio_usuarios.actualizar(usuario)
+    with pytest.raises(UsuarioYaExiste):
+        use_case.ejecutar(RegistrarUsuarioCommand("laura@ejemplo.com", "nueva", "nueva-segura"))
+    assert repositorio_usuarios.obtener_por_email("laura@ejemplo.com").nick == "laura"

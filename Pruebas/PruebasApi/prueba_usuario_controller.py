@@ -1,8 +1,13 @@
+from Pruebas.conftest import CONTRASENA
+
+
 def prueba_rutas_de_usuarios_rechazan_peticiones_sin_sesion(cliente, usuario_registrado):
     assert cliente.get("/api/usuarios").status_code == 401
     assert cliente.get("/api/usuarios/numero").status_code == 401
     assert cliente.get(f"/api/usuarios/{usuario_registrado.email}/activo").status_code == 401
     assert cliente.delete(f"/api/usuarios/{usuario_registrado.email}").status_code == 401
+    assert cliente.patch("/api/usuarios/me", json={"email": usuario_registrado.email, "nick": "laura"}).status_code == 401
+    assert cliente.post(f"/api/usuarios/{usuario_registrado.email}/administrador").status_code == 401
 
 
 def prueba_un_usuario_no_lista_usuarios(cliente_autenticado):
@@ -27,7 +32,22 @@ def prueba_un_usuario_no_elimina_a_otro(cliente_autenticado, administrador, repo
 
 def prueba_un_administrador_elimina_a_otro(cliente_administrador, usuario_registrado, repositorio_usuarios):
     assert cliente_administrador.delete(f"/api/usuarios/{usuario_registrado.email}").status_code == 204
-    assert repositorio_usuarios.obtener_por_email(usuario_registrado.email) is None
+    assert repositorio_usuarios.obtener_por_email(usuario_registrado.email).estado.value == "eliminado"
+
+
+def prueba_usuario_eliminado_no_inicia_sesion_ni_recupera(cliente_administrador, usuario_registrado):
+    assert cliente_administrador.delete(f"/api/usuarios/{usuario_registrado.email}").status_code == 204
+    inicio = cliente_administrador.post(
+        "/api/auth/inicio-sesion",
+        json={"email": usuario_registrado.email, "contrasena": CONTRASENA},
+    )
+    assert inicio.status_code == 403
+    assert inicio.json()["detail"] == "Usuario eliminado, no puedes iniciar sesión"
+    recuperacion = cliente_administrador.post(
+        "/api/auth/recuperacion", json={"email": usuario_registrado.email}
+    )
+    assert recuperacion.status_code == 403
+    assert recuperacion.json()["detail"] == "Usuario eliminado, no puedes recuperar la contraseña"
 
 
 def prueba_eliminar_usuario_inexistente_devuelve_404(cliente_administrador):
@@ -37,3 +57,35 @@ def prueba_eliminar_usuario_inexistente_devuelve_404(cliente_administrador):
 def prueba_eliminar_usuario_cierra_sus_sesiones(cliente_autenticado, usuario_registrado):
     assert cliente_autenticado.delete(f"/api/usuarios/{usuario_registrado.email}").status_code == 204
     assert cliente_autenticado.get("/api/auth/sesion").status_code == 401
+
+
+def prueba_un_usuario_edita_sus_datos(cliente_autenticado, usuario_registrado, repositorio_usuarios, hasher):
+    email_anterior = usuario_registrado.email
+    respuesta = cliente_autenticado.patch(
+        "/api/usuarios/me",
+        json={"email": "nuevo@ejemplo.com", "nick": "nuevo", "contrasena": "nueva-segura"},
+    )
+    assert respuesta.status_code == 200
+    assert respuesta.json() == {
+        "email": "nuevo@ejemplo.com",
+        "nick": "nuevo",
+        "rol": "usuario",
+        "estado": "activo",
+    }
+    assert repositorio_usuarios.obtener_por_email(email_anterior) is None
+    guardado = repositorio_usuarios.obtener_por_email("nuevo@ejemplo.com")
+    assert hasher.verificar("nueva-segura", guardado.contrasena_hash)
+    sesion = cliente_autenticado.get("/api/auth/sesion")
+    assert sesion.status_code == 200
+    assert sesion.json()["email"] == "nuevo@ejemplo.com"
+
+
+def prueba_un_usuario_no_hace_admin_a_otro(cliente_autenticado, administrador):
+    assert cliente_autenticado.post(f"/api/usuarios/{administrador.email}/administrador").status_code == 403
+
+
+def prueba_un_administrador_hace_admin_a_otro(cliente_administrador, usuario_registrado, repositorio_usuarios):
+    respuesta = cliente_administrador.post(f"/api/usuarios/{usuario_registrado.email}/administrador")
+    assert respuesta.status_code == 200
+    assert respuesta.json()["rol"] == "administrador"
+    assert repositorio_usuarios.obtener_por_email(usuario_registrado.email).rol.value == "administrador"

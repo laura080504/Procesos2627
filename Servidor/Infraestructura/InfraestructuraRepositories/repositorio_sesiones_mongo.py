@@ -29,6 +29,12 @@ class RepositorioSesionesMongo(RepositorioSesiones):
     def eliminar_por_email(self, email: str) -> None:
         self.base_datos.coleccion("sesiones").delete_many({"email": email})
 
+    def actualizar_email(self, email_actual: str, email_nuevo: str) -> None:
+        self.base_datos.coleccion("sesiones").update_many(
+            {"email": email_actual},
+            {"$set": {"email": email_nuevo}},
+        )
+
     def _a_sesion(self, documento: dict) -> Sesion:
         return Sesion(
             token=documento["_id"],

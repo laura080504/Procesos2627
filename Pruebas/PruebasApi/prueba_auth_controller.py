@@ -16,14 +16,34 @@ def prueba_registro_devuelve_el_usuario_sin_contrasena(cliente):
     }
 
 
-def prueba_registro_duplicado_devuelve_409(cliente):
-    cliente.post("/api/auth/registro", json=REGISTRO)
-    assert cliente.post("/api/auth/registro", json=REGISTRO).status_code == 409
+def prueba_registro_guarda_el_usuario_en_el_repositorio(cliente, repositorio_usuarios):
+    assert cliente.post("/api/auth/registro", json=REGISTRO).status_code == 201
+    guardado = repositorio_usuarios.obtener_por_email(REGISTRO["email"])
+    assert guardado is not None
+    assert guardado.nick == REGISTRO["nick"]
+    assert guardado.rol.value == "usuario"
+    assert guardado.estado.value == "activo"
+    assert guardado.contrasena_hash != REGISTRO["contrasena"]
+
+
+def prueba_registro_duplicado_devuelve_409(cliente, repositorio_usuarios):
+    assert cliente.post("/api/auth/registro", json=REGISTRO).status_code == 201
+    original = repositorio_usuarios.obtener_por_email(REGISTRO["email"])
+    respuesta = cliente.post(
+        "/api/auth/registro",
+        json={**REGISTRO, "nick": "otro", "contrasena": "otra-segura"},
+    )
+    assert respuesta.status_code == 409
+    assert respuesta.json()["detail"] == "Este correo ya está registrado"
+    guardado = repositorio_usuarios.obtener_por_email(REGISTRO["email"])
+    assert guardado.nick == original.nick
+    assert guardado.contrasena_hash == original.contrasena_hash
 
 
 def prueba_registro_con_datos_no_validos_devuelve_422(cliente):
     assert cliente.post("/api/auth/registro", json={**REGISTRO, "email": "no-es-email"}).status_code == 422
     assert cliente.post("/api/auth/registro", json={**REGISTRO, "contrasena": "corta"}).status_code == 422
+    assert cliente.post("/api/auth/registro", json={**REGISTRO, "nick": "   "}).status_code == 422
 
 
 def prueba_inicio_sesion_correcto_crea_cookie_httponly(cliente, usuario_registrado):
@@ -90,6 +110,16 @@ def prueba_nueva_contrasena_cambia_el_acceso_y_cierra_la_sesion(cliente_autentic
         ).status_code
         == 200
     )
+
+
+def prueba_nueva_contrasena_queda_guardada_en_el_repositorio(
+    cliente, usuario_registrado, repositorio_usuarios, hasher
+):
+    token = cliente.post("/api/auth/recuperacion", json={"email": usuario_registrado.email}).json()["token"]
+    assert cliente.post("/api/auth/nueva-contrasena", json={"token": token, "contrasena": "nueva-segura"}).status_code == 204
+    guardado = repositorio_usuarios.obtener_por_email(usuario_registrado.email)
+    assert hasher.verificar("nueva-segura", guardado.contrasena_hash)
+    assert not hasher.verificar(CONTRASENA, guardado.contrasena_hash)
 
 
 def prueba_nueva_contrasena_con_token_invalido_devuelve_400(cliente):
