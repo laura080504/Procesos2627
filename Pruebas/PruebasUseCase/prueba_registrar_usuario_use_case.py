@@ -15,7 +15,7 @@ def use_case(repositorio_usuarios, hasher):
 def prueba_registra_usuario_con_valores_por_defecto(use_case, repositorio_usuarios):
     usuario = use_case.ejecutar(RegistrarUsuarioCommand("laura@ejemplo.com", "laura", "contrasena-segura"))
     assert usuario.rol == Rol.USUARIO
-    assert usuario.estado == EstadoUsuario.ACTIVO
+    assert usuario.estado == EstadoUsuario.PENDIENTE
     assert repositorio_usuarios.obtener_por_email("laura@ejemplo.com") == usuario
 
 

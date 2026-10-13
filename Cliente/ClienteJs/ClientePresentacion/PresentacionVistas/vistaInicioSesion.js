@@ -1,5 +1,5 @@
 class VistaInicioSesion {
-    constructor({ alEnviar, alIrARegistro, alRecuperar, alDictar }) {
+        constructor({ alEnviar, alIrARegistro, alRecuperar, alReenviar, alDictar }) {
         this.seccion = document.getElementById("vistaInicioSesion");
         this.formulario = document.getElementById("formularioInicioSesion");
         this.campoActivo = this.formulario.email;
@@ -22,6 +22,10 @@ class VistaInicioSesion {
         document.getElementById("enlaceRecuperar").addEventListener("click", (evento) => {
             evento.preventDefault();
             alRecuperar();
+        });
+        document.getElementById("enlaceReenviar").addEventListener("click", (evento) => {
+            evento.preventDefault();
+            alReenviar(this.formulario.email.value.trim());
         });
         document.getElementById("botonVozLogin").addEventListener("click", () => alDictar(this.campoActivo));
         this.botonVer = this.formulario.querySelector(".ver-contrasena");

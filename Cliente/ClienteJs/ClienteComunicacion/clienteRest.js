@@ -54,4 +54,12 @@ class ClienteRest {
     restablecerContrasena(token, contrasena) {
         return this.clienteHttp.peticion("POST", "/auth/nueva-contrasena", { token, contrasena });
     }
+
+    confirmarCuenta(token) {
+        return this.clienteHttp.peticion("POST", "/auth/confirmar", { token });
+    }
+
+    reenviarConfirmacion(email) {
+        return this.clienteHttp.peticion("POST", "/auth/reenviar-confirmacion", { email });
+    }
 }
