@@ -20,6 +20,7 @@ class ControlWeb {
             alEnviar: (email, contrasena) => this.iniciarSesion(email, contrasena),
             alIrARegistro: () => this.mostrarRegistro(),
             alRecuperar: () => this.mostrarRecuperacion(),
+            alReenviar: (email) => this.reenviarConfirmacion(email),
             alDictar: (campo) => this.dictar(campo),
         });
         this.vistaRegistro = new VistaRegistro({
@@ -53,11 +54,54 @@ class ControlWeb {
     }
 
     async iniciar() {
+        const params = new URLSearchParams(location.search);
+        const confirmar = params.get("confirmar");
+        const aviso = params.get("aviso");
+        if (confirmar || aviso) {
+            history.replaceState({}, "", location.pathname);
+        }
+        const avisoPendiente = await this.avisoInicial(confirmar, aviso);
         try {
             this.usuarioActual = await this.rest.obtenerSesion();
             await this.mostrarPanel();
         } catch {
             this.mostrarInicioSesion();
+        }
+        if (avisoPendiente) {
+            this.mostrarMensaje(avisoPendiente.texto, avisoPendiente.error);
+        }
+    }
+
+    async avisoInicial(confirmar, aviso) {
+        if (confirmar) {
+            try {
+                await this.rest.confirmarCuenta(confirmar);
+                return { texto: this.textos.cuentaConfirmada, error: false };
+            } catch (error) {
+                return { texto: error.message, error: true };
+            }
+        }
+        const avisos = {
+            "google-no-configurado": this.textos.googleNoConfigurado,
+            "google-error": this.textos.googleError,
+            "cuenta-eliminada": this.textos.usuarioEliminado,
+        };
+        if (avisos[aviso]) {
+            return { texto: avisos[aviso], error: true };
+        }
+        return null;
+    }
+
+    async reenviarConfirmacion(email) {
+        if (!email) {
+            this.mostrarMensaje(this.textos.emailParaReenviar, true);
+            return;
+        }
+        try {
+            await this.rest.reenviarConfirmacion(email);
+            this.mostrarMensaje(this.textos.correoReenviado);
+        } catch (error) {
+            this.mostrarMensaje(error.message, true);
         }
     }
 
