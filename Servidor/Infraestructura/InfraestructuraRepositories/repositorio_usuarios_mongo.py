@@ -48,6 +48,14 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
         if resultado.matched_count == 0:
             raise RuntimeError(f"No se ha podido actualizar el usuario {usuario.email}")
 
+    def cambiar_email(self, email_actual: str, usuario: Usuario) -> None:
+        coleccion = self.base_datos.coleccion("usuarios")
+        try:
+            coleccion.insert_one(self._a_documento(usuario))
+        except DuplicateKeyError as error:
+            raise UsuarioYaExiste(usuario.email) from error
+        coleccion.delete_one({"_id": email_actual})
+
     def eliminar(self, email: str) -> bool:
         resultado = self.base_datos.coleccion("usuarios").delete_one({"_id": email})
         return resultado.deleted_count > 0

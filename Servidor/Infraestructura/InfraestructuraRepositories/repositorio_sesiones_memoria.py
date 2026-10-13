@@ -21,3 +21,10 @@ class RepositorioSesionesMemoria(RepositorioSesiones):
     def eliminar_por_email(self, email: str) -> None:
         for token in [t for t, s in self._sesiones.items() if s.email == email]:
             del self._sesiones[token]
+
+    def actualizar_email(self, email_actual: str, email_nuevo: str) -> None:
+        for token, sesion in list(self._sesiones.items()):
+            if sesion.email == email_actual:
+                self._sesiones[token] = Sesion(
+                    token=sesion.token, email=email_nuevo, expira_en=sesion.expira_en
+                )

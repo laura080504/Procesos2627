@@ -17,6 +17,12 @@ class RegistroActividad:
     def eliminacion(self, solicitante: str, objetivo: str) -> None:
         self.logger.info("eliminacion solicitante=%s objetivo=%s", solicitante, objetivo)
 
+    def edicion(self, solicitante: str, objetivo: str) -> None:
+        self.logger.info("edicion solicitante=%s objetivo=%s", solicitante, objetivo)
+
+    def asignacion_rol(self, solicitante: str, objetivo: str) -> None:
+        self.logger.info("asignacion_rol solicitante=%s objetivo=%s", solicitante, objetivo)
+
     def fallo(self, tipo: str) -> None:
         self.logger.error("error tipo=%s", tipo)
 
