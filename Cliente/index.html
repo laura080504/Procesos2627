@@ -206,6 +206,69 @@
                 </form>
             </section>
 
+            <section id="vistaEditarDatos" class="tarjeta" hidden>
+                <h1 data-texto="editarTitulo">Editar datos</h1>
+                <form id="formularioEditarDatos">
+                    <label class="campo">
+                        <span data-texto="email">Email</span>
+                        <span class="linea">
+                            <input name="email" type="email" required autocomplete="email">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+                                <path d="M4 7l8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+                            </svg>
+                        </span>
+                    </label>
+                    <label class="campo">
+                        <span data-texto="nick">Usuario</span>
+                        <span class="linea">
+                            <input name="nick" type="text" required maxlength="30" autocomplete="username">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+                                <path d="M5.5 19c1.2-3 3.4-4.5 6.5-4.5s5.3 1.5 6.5 4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+                            </svg>
+                        </span>
+                    </label>
+                    <p id="rolEditar" class="usuario-meta" hidden></p>
+                    <label id="campoHacerAdmin" class="recordar campo-admin" hidden>
+                        <input id="hacerAdministrador" name="hacerAdministrador" type="checkbox">
+                        <span data-texto="hacerAdministrador">Hacer admin</span>
+                    </label>
+                    <div id="camposContrasenaEditar">
+                    <label class="campo">
+                        <span data-texto="nuevaContrasenaOpcional">Nueva contraseña (opcional)</span>
+                        <span class="linea">
+                            <input name="contrasena" type="password" minlength="8" maxlength="64" autocomplete="new-password">
+                            <button class="ver-contrasena" type="button" data-etiqueta="verContrasena" aria-label="Mostrar contraseña">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 20l3.2-.6L19 7.6 16.4 5 4.6 16.8 4 20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+                                    <path d="M13.8 7.6l2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                                </svg>
+                            </button>
+                        </span>
+                    </label>
+                    <label class="campo">
+                        <span data-texto="confirmarContrasena">Repite la contraseña</span>
+                        <span class="linea">
+                            <input name="confirmar" type="password" minlength="8" maxlength="64" autocomplete="new-password">
+                            <button class="ver-contrasena" type="button" data-etiqueta="verContrasena" aria-label="Mostrar contraseña">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M4 20l3.2-.6L19 7.6 16.4 5 4.6 16.8 4 20z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+                                    <path d="M13.8 7.6l2.6 2.6" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+                                </svg>
+                            </button>
+                        </span>
+                    </label>
+                    </div>
+                    <button class="boton-entrar" type="submit" data-texto="guardarCambios">Guardar cambios</button>
+                    <div class="pie-tarjeta">
+                        <p>
+                            <a href="#" id="enlaceVolverEditar" data-texto="volverGestion">Volver</a>
+                        </p>
+                    </div>
+                </form>
+            </section>
+
             <section id="vistaUsuarios" class="tarjeta" hidden>
                 <h1>
                     <span data-texto="gestionUsuarios">Gestión de usuarios</span>
@@ -215,6 +278,7 @@
                     <p class="sesion-actual">
                         <span id="usuarioActual"></span>
                         <span class="botones-linea">
+                            <button id="botonEditarDatos" type="button" data-texto="editarDatos">Editar datos</button>
                             <button id="botonCerrarSesion" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
                             <button id="botonEliminarSesion" type="button" data-texto="eliminarCuenta">Eliminar cuenta</button>
                         </span>
@@ -225,6 +289,7 @@
                 <p id="vistaCuenta" class="sesion-actual" hidden>
                     <span id="cuentaActual"></span>
                     <span class="botones-linea">
+                        <button id="botonEditarCuenta" type="button" data-texto="editarDatos">Editar datos</button>
                         <button id="botonCerrarSesionCuenta" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
                         <button id="botonEliminarCuenta" type="button" data-texto="eliminarCuenta">Eliminar cuenta</button>
                     </span>
@@ -245,6 +310,7 @@
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=8"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=8"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=8"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=8"></script>
     <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=8"></script>
     <script src="ClienteJs/inicio.js?v=8"></script>
 </body>

@@ -19,3 +19,6 @@ class RepositorioSesiones(ABC):
 
     @abstractmethod
     def eliminar_por_email(self, email: str) -> None: ...
+
+    @abstractmethod
+    def actualizar_email(self, email_actual: str, email_nuevo: str) -> None: ...

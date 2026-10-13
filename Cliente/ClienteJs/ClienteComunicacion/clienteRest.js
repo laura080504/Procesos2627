@@ -35,6 +35,18 @@ class ClienteRest {
         return this.clienteHttp.peticion("DELETE", `/usuarios/${encodeURIComponent(email)}`);
     }
 
+    editarDatos(email, nick, contrasena) {
+        const cuerpo = { email, nick };
+        if (contrasena) {
+            cuerpo.contrasena = contrasena;
+        }
+        return this.clienteHttp.peticion("PATCH", "/usuarios/me", cuerpo);
+    }
+
+    asignarAdministrador(email) {
+        return this.clienteHttp.peticion("POST", `/usuarios/${encodeURIComponent(email)}/administrador`);
+    }
+
     solicitarRecuperacion(email) {
         return this.clienteHttp.peticion("POST", "/auth/recuperacion", { email });
     }

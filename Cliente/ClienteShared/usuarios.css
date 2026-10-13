@@ -61,6 +61,24 @@
     opacity: 0.85;
 }
 
+.campo-admin {
+    margin-top: 1.15rem;
+}
+
+#campoHacerAdmin[hidden],
+#camposContrasenaEditar[hidden],
+#rolEditar[hidden] {
+    display: none;
+}
+
+#hacerAdministrador:disabled {
+    cursor: default;
+}
+
+#formularioEditarDatos input:read-only {
+    opacity: 0.75;
+}
+
 body.oscuro #listaUsuarios li {
     border-bottom-color: rgba(255, 255, 255, 0.28);
 }

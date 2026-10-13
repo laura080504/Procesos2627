@@ -16,6 +16,7 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones_m
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones_mongo import RepositorioSesionesMongo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_mongo import RepositorioUsuariosMongo
+from Servidor.Dominio.DominioCommands.editar_datos_command import EditarDatosCommand
 from Servidor.Dominio.DominioCommands.registrar_usuario_command import RegistrarUsuarioCommand
 from Servidor.Dominio.DominioCommands.restablecer_contrasena_command import RestablecerContrasenaCommand
 from Servidor.Dominio.DominioEntities.recuperacion import Recuperacion
@@ -24,6 +25,7 @@ from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
 from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
+from Servidor.Dominio.DominioUseCases.editar_datos_use_case import EditarDatosUseCase
 from Servidor.Dominio.DominioUseCases.registrar_usuario_use_case import RegistrarUsuarioUseCase
 from Servidor.Dominio.DominioUseCases.restablecer_contrasena_use_case import RestablecerContrasenaUseCase
 
@@ -112,6 +114,26 @@ def prueba_restablecer_contrasena_persiste_el_hash_en_mongo():
     assert hasher.verificar("nueva-segura", guardado.contrasena_hash)
     assert hasher.verificar("nueva-segura", documento["contrasena_hash"])
     assert not hasher.verificar("contrasena-segura", documento["contrasena_hash"])
+
+
+def prueba_editar_datos_cambia_email_en_mongo():
+    usuarios, sesiones, recuperaciones = _repositorios_mongo()
+    hasher = HasherContrasenas(rondas=4)
+    RegistrarUsuarioUseCase(usuarios, hasher).ejecutar(
+        RegistrarUsuarioCommand("laura@ejemplo.com", "laura", "contrasena-segura")
+    )
+    sesiones.guardar(
+        Sesion("token-sesion", "laura@ejemplo.com", datetime.now(timezone.utc) + timedelta(hours=1))
+    )
+    EditarDatosUseCase(usuarios, sesiones, recuperaciones, hasher).ejecutar(
+        EditarDatosCommand("laura@ejemplo.com", "nuevo@ejemplo.com", "nuevo")
+    )
+    assert usuarios.obtener_por_email("laura@ejemplo.com") is None
+    guardado = usuarios.obtener_por_email("nuevo@ejemplo.com")
+    documento = usuarios.base_datos.coleccion("usuarios").find_one({"_id": "nuevo@ejemplo.com"})
+    assert guardado.nick == "nuevo"
+    assert documento["nick"] == "nuevo"
+    assert sesiones.obtener("token-sesion").email == "nuevo@ejemplo.com"
 
 
 def prueba_el_motor_mongo_exige_uri():
