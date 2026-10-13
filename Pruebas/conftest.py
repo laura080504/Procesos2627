@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 
 from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_hasher_contrasenas
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
+    obtener_enviador_correo,
+    obtener_repositorio_confirmaciones,
     obtener_repositorio_recuperaciones,
     obtener_repositorio_sesiones,
     obtener_repositorio_usuarios,
@@ -15,6 +17,10 @@ from Servidor.aplicacion import aplicacion
 from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
+from Servidor.Infraestructura.enviador_correo_memoria import EnviadorCorreoMemoria
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_confirmaciones_memoria import (
+    RepositorioConfirmacionesMemoria,
+)
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones_memoria import RepositorioRecuperacionesMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones_memoria import RepositorioSesionesMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
@@ -35,6 +41,16 @@ def repositorio_sesiones():
 @pytest.fixture
 def repositorio_recuperaciones():
     return RepositorioRecuperacionesMemoria()
+
+
+@pytest.fixture
+def repositorio_confirmaciones():
+    return RepositorioConfirmacionesMemoria()
+
+
+@pytest.fixture
+def enviador_correo():
+    return EnviadorCorreoMemoria()
 
 
 @pytest.fixture
@@ -62,10 +78,12 @@ def administrador(repositorio_usuarios, hasher):
 
 
 @pytest.fixture
-def cliente(repositorio_usuarios, repositorio_sesiones, repositorio_recuperaciones, hasher):
+def cliente(repositorio_usuarios, repositorio_sesiones, repositorio_recuperaciones, repositorio_confirmaciones, enviador_correo, hasher):
     aplicacion.dependency_overrides[obtener_repositorio_usuarios] = lambda: repositorio_usuarios
     aplicacion.dependency_overrides[obtener_repositorio_sesiones] = lambda: repositorio_sesiones
     aplicacion.dependency_overrides[obtener_repositorio_recuperaciones] = lambda: repositorio_recuperaciones
+    aplicacion.dependency_overrides[obtener_repositorio_confirmaciones] = lambda: repositorio_confirmaciones
+    aplicacion.dependency_overrides[obtener_enviador_correo] = lambda: enviador_correo
     aplicacion.dependency_overrides[obtener_hasher_contrasenas] = lambda: hasher
     with TestClient(aplicacion) as cliente_http:
         yield cliente_http

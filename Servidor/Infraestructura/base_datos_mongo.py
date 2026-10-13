@@ -45,6 +45,7 @@ class BaseDatosMongo:
         try:
             self.base["sesiones"].create_index("email")
             self.base["recuperaciones"].create_index("email")
+            self.base["confirmaciones"].create_index("email")
         except OperationFailure as error:
             if error.code == 8000 or "auth" in str(error).lower():
                 raise ValueError(

@@ -6,6 +6,9 @@ import pytest
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import crear_repositorios
 from Servidor.configuracion import Configuracion
 from Servidor.Infraestructura.base_datos_mongo import BaseDatosMongo, uri_con_credenciales
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_confirmaciones_memoria import (
+    RepositorioConfirmacionesMemoria,
+)
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones_memoria import (
     RepositorioRecuperacionesMemoria,
 )
@@ -86,11 +89,11 @@ def prueba_el_registro_persiste_usuario_rol_y_estado_en_mongo():
     assert guardado is not None
     assert guardado.nick == "laura"
     assert guardado.rol == Rol.USUARIO
-    assert guardado.estado == EstadoUsuario.ACTIVO
+    assert guardado.estado == EstadoUsuario.PENDIENTE
     assert hasher.verificar("contrasena-segura", guardado.contrasena_hash)
     assert documento["nick"] == "laura"
     assert documento["rol"] == "usuario"
-    assert documento["estado"] == "activo"
+    assert documento["estado"] == "pendiente"
 
 
 def prueba_restablecer_contrasena_persiste_el_hash_en_mongo():
@@ -151,10 +154,11 @@ def prueba_cargar_configuracion_mongo_sin_uri_falla(monkeypatch):
 
 
 def prueba_el_motor_memoria_no_pide_mongo():
-    usuarios, sesiones, recuperaciones = crear_repositorios(_configuracion("memoria"))
+    usuarios, sesiones, recuperaciones, confirmaciones = crear_repositorios(_configuracion("memoria"))
     assert isinstance(usuarios, RepositorioUsuariosMemoria)
     assert isinstance(sesiones, RepositorioSesionesMemoria)
     assert isinstance(recuperaciones, RepositorioRecuperacionesMemoria)
+    assert isinstance(confirmaciones, RepositorioConfirmacionesMemoria)
 
 
 def prueba_un_motor_desconocido_falla():
