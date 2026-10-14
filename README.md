@@ -140,10 +140,7 @@ pytest
 | `COOKIE_SEGURA` | `true` en Cloud Run, para que la cookie solo viaje por HTTPS |
 | `ADMIN_EMAIL` | Correo del primer administrador. Se crea al arrancar si todavía no hay uno |
 | `ADMIN_PASSWORD` | Contraseña de ese administrador, entre 8 y 64 caracteres |
-| `BREVO_SMTP_SERVIDOR` | Servidor SMTP. Con Brevo, `smtp-relay.brevo.com` |
-| `BREVO_SMTP_PUERTO` | Puerto SMTP. Con Brevo, `587` |
-| `BREVO_SMTP_USUARIO` | Usuario SMTP de Brevo |
-| `BREVO_SMTP_CLAVE` | Clave SMTP de Brevo. No se sube al repositorio |
+| `BREVO_API_CLAVE` | Clave API de Brevo. El correo sale por HTTPS y no depende de la IP. No se sube al repositorio |
 | `BREVO_REMITENTE` | Correo verificado en Brevo desde el que sale la confirmación |
 | `BREVO_REMITENTE_NOMBRE` | Nombre que ve quien recibe el correo |
 | `GOOGLE_CLIENT_ID` | Identificador del cliente OAuth de Google. Vacío hasta crearlo |
@@ -152,7 +149,7 @@ pytest
 
 ## Confirmación por correo
 
-El alta deja la cuenta en `pendiente`. El servidor envía un enlace `{URL}/?confirmar={token}` que caduca a las 24 horas. La página llama a `POST /api/auth/confirmar` y, si el token es válido, pasa la cuenta a `activo`. Hasta ese momento el inicio de sesión responde `403` con el mensaje de cuenta pendiente.
+El alta deja la cuenta en `pendiente`. El servidor envía el correo con la API de Brevo por HTTPS, así que la lista de IPs del SMTP no interviene. El enlace es `{URL}/?confirmar={token}` y caduca a las 24 horas. La página llama a `POST /api/auth/confirmar` y, si el token es válido, pasa la cuenta a `activo`. Hasta ese momento el inicio de sesión responde `403` con el mensaje de cuenta pendiente.
 
 Si el correo no llega, en el login se escribe el mismo email y se pulsa **Reenviar confirmación**. El enlace anterior deja de valer. Una cuenta ya activa o eliminada no recibe otro correo.
 
@@ -186,7 +183,7 @@ La misma dirección sale al final de la ejecución, en la pestaña Actions del r
 
 La autenticación usa el secreto `GCP_CREDENTIALS` de GitHub: el JSON de una cuenta de servicio del mismo proyecto, con los roles Cloud Run Source Developer, Service Usage Consumer y Service Account User. Esa clave no se sube al repositorio.
 
-El despliegue deja `DATOS_MOTOR=mongo` y `URL_PUBLICA` con la URL de arriba. `COOKIE_SEGURA=true` va en la imagen. El resto de variables (Mongo, administrador, Brevo y Google) se configuran una vez en el servicio de Cloud Run y se conservan en los despliegues siguientes. En Brevo, la restricción por IP solo deja enviar desde las direcciones autorizadas: el correo de confirmación en Cloud Run necesita que esa restricción esté desactivada, porque la IP de salida del servicio cambia.
+El despliegue deja `DATOS_MOTOR=mongo` y `URL_PUBLICA` con la URL de arriba. `COOKIE_SEGURA=true` va en la imagen. El resto de variables (Mongo, administrador, Brevo y Google) se configuran una vez en el servicio de Cloud Run y se conservan en los despliegues siguientes.
 
 ## Acceso como administrador
 

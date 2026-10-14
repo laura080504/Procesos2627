@@ -1,39 +1,41 @@
-import smtplib
-from email.message import EmailMessage
+import json
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from Servidor.Dominio.DominioExceptions.correo_no_enviado import CorreoNoEnviado
 from Servidor.Infraestructura.enviador_correo import EnviadorCorreo
 
+URL_API = "https://api.brevo.com/v3/smtp/email"
+
 
 class EnviadorCorreoBrevo(EnviadorCorreo):
-    def __init__(
-        self,
-        servidor: str,
-        puerto: int,
-        usuario: str | None,
-        clave: str | None,
-        remitente: str | None,
-        nombre: str,
-    ):
-        self.servidor = servidor
-        self.puerto = puerto
-        self.usuario = usuario
-        self.clave = clave
+    def __init__(self, api_clave: str | None, remitente: str | None, nombre: str):
+        self.api_clave = api_clave
         self.remitente = remitente
         self.nombre = nombre
 
     def enviar(self, destino: str, asunto: str, cuerpo: str) -> None:
-        if not self.usuario or not self.clave or not self.remitente:
+        if not self.api_clave or not self.remitente:
             raise CorreoNoEnviado("El envío de correo no está configurado")
-        mensaje = EmailMessage()
-        mensaje["From"] = f"{self.nombre} <{self.remitente}>"
-        mensaje["To"] = destino
-        mensaje["Subject"] = asunto
-        mensaje.set_content(cuerpo)
+        peticion = Request(
+            URL_API,
+            data=json.dumps(
+                {
+                    "sender": {"name": self.nombre, "email": self.remitente},
+                    "to": [{"email": destino}],
+                    "subject": asunto,
+                    "textContent": cuerpo,
+                }
+            ).encode(),
+            method="POST",
+            headers={
+                "accept": "application/json",
+                "content-type": "application/json",
+                "api-key": self.api_clave,
+            },
+        )
         try:
-            with smtplib.SMTP(self.servidor, self.puerto, timeout=30) as smtp:
-                smtp.starttls()
-                smtp.login(self.usuario, self.clave)
-                smtp.send_message(mensaje)
-        except (OSError, smtplib.SMTPException) as error:
+            with urlopen(peticion, timeout=30):
+                return
+        except (HTTPError, URLError, TimeoutError, OSError) as error:
             raise CorreoNoEnviado("No se ha podido enviar el correo de confirmación") from error

@@ -27,6 +27,7 @@ class Configuracion:
     brevo_smtp_clave: str | None = field(default=None, repr=False)
     brevo_remitente: str | None = None
     brevo_remitente_nombre: str = "procesos2627"
+    brevo_api_clave: str | None = field(default=None, repr=False)
     google_client_id: str | None = None
     google_client_secret: str | None = field(default=None, repr=False)
     url_publica: str | None = None
@@ -79,6 +80,7 @@ def cargar_configuracion() -> Configuracion:
         brevo_smtp_clave=os.getenv("BREVO_SMTP_CLAVE", "") or None,
         brevo_remitente=os.getenv("BREVO_REMITENTE", "").strip() or None,
         brevo_remitente_nombre=os.getenv("BREVO_REMITENTE_NOMBRE", "procesos2627").strip() or "procesos2627",
+        brevo_api_clave=os.getenv("BREVO_API_CLAVE", "") or None,
         google_client_id=google_client_id,
         google_client_secret=google_client_secret or None,
         url_publica=url_publica,
