@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from Servidor.ApiRest.ApiRestControllers.auth_controller import router as auth_router
+from Servidor.ApiRest.ApiRestControllers.prueba_controller import router as prueba_router
 from Servidor.ApiRest.ApiRestControllers.usuario_controller import router as usuario_router
 from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_configuracion
 from Servidor.ApiRest.ApiRestHandlers.auth_handler import registrar_auth_handlers
@@ -19,6 +20,7 @@ aplicacion = FastAPI(title="Procesos 26-27")
 
 aplicacion.include_router(auth_router)
 aplicacion.include_router(usuario_router)
+aplicacion.include_router(prueba_router)
 aplicacion.include_router(websocket_router)
 
 registrar_auth_handlers(aplicacion)
