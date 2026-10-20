@@ -265,9 +265,12 @@ class ControlWeb {
     async iniciarSesion(email, contrasena) {
         try {
             this.usuarioActual = await this.rest.iniciarSesion(email, contrasena);
+            this.vistaInicioSesion.mostrarReenvio(false);
             this.limpiarMensaje();
             await this.mostrarPanel();
         } catch (error) {
+            const pendiente = error.estado === 403 && /pendiente/i.test(error.message || "");
+            this.vistaInicioSesion.mostrarReenvio(pendiente);
             this.mostrarMensaje(this.mensajeCuentaEliminada(error, false) || error.message, true);
         }
     }
