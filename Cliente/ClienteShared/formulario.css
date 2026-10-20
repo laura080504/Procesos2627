@@ -99,6 +99,7 @@
 
 .boton-entrar {
     display: block;
+    width: fit-content;
     margin: 1.4rem auto 0;
     min-width: 12rem;
     padding: 0.7rem 2rem;
@@ -108,9 +109,58 @@
     color: var(--rojo-logo);
     font: inherit;
     font-weight: 650;
+    text-align: center;
     text-decoration: none;
     cursor: pointer;
 }
+
+.acciones-login {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 0.6rem;
+    position: relative;
+    width: 100%;
+    margin: 1.4rem auto 0;
+    padding-inline: 1.75rem;
+    box-sizing: border-box;
+}
+
+.acciones-login .micro {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.acciones-login .boton-entrar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0.7rem 0.4rem;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+
+.marca-google {
+    font-weight: 700;
+}
+
+.tarjeta a.boton-entrar {
+    color: var(--rojo-logo);
+}
+
+.marca-google span:nth-child(1) { color: #4285f4; }
+.marca-google span:nth-child(2),
+.marca-google span:nth-child(6) { color: #ea4335; }
+.marca-google span:nth-child(3) { color: #fbbc05; }
+.marca-google span:nth-child(4) { color: #4285f4; }
+.marca-google span:nth-child(5) { color: #34a853; }
 
 .pie-tarjeta {
     display: flex;
@@ -122,9 +172,13 @@
     white-space: nowrap;
 }
 
-.reenviar {
-    margin: 0.9rem 0 0;
+.aviso-pendiente {
+    margin-top: 1rem;
     text-align: center;
+}
+
+.aviso-pendiente p {
+    margin: 0;
 }
 
 .micro,

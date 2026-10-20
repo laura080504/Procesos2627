@@ -23,8 +23,8 @@ class VistaInicioSesion {
             evento.preventDefault();
             alRecuperar();
         });
-        document.getElementById("enlaceReenviar").addEventListener("click", (evento) => {
-            evento.preventDefault();
+        this.avisoPendiente = document.getElementById("avisoPendiente");
+        document.getElementById("enlaceReenviar").addEventListener("click", () => {
             alReenviar(this.formulario.email.value.trim());
         });
         document.getElementById("botonVozLogin").addEventListener("click", () => alDictar(this.campoActivo));
@@ -57,8 +57,13 @@ class VistaInicioSesion {
         this.botonVer.setAttribute("aria-label", visible ? this.textos.ocultarContrasena : this.textos.verContrasena);
     }
 
+    mostrarReenvio(visible) {
+        this.avisoPendiente.hidden = !visible;
+    }
+
     mostrar() {
         this.seccion.hidden = false;
+        this.mostrarReenvio(false);
         const email = localStorage.getItem("emailRecordado");
         if (email) {
             this.formulario.email.value = email;
@@ -68,6 +73,7 @@ class VistaInicioSesion {
 
     ocultar() {
         this.seccion.hidden = true;
+        this.mostrarReenvio(false);
         this.formulario.reset();
         this.formulario.contrasena.type = "password";
         this.actualizarEtiqueta();
