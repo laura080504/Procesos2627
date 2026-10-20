@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="ClienteShared/colores.css">
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
-    <link rel="stylesheet" href="ClienteShared/formulario.css?v=10">
+    <link rel="stylesheet" href="ClienteShared/formulario.css?v=14">
     <link rel="stylesheet" href="ClienteShared/usuarios.css?v=10">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
@@ -72,12 +72,13 @@
                             <a href="#" id="enlaceRecuperar" data-texto="recuperar">Recuperar</a>
                         </p>
                     </div>
-                    <button class="boton-entrar" type="submit" data-texto="entrar">Entrar</button>
-                    <div class="pie-tarjeta">
-                        <p>
-                            <span data-texto="noRegistrado">¿No estas registrado aún?</span>
-                            <a href="#" id="enlaceRegistro" data-texto="creaCuenta">Crea una cuenta</a>
-                        </p>
+                    <div class="acciones-login">
+                        <button class="boton-entrar" type="submit" data-texto="entrar">Entrar</button>
+                        <a class="boton-entrar" href="/api/auth/google">
+                            <span data-texto="entrarCon">Entrar con</span>
+                            <span class="marca-google" aria-label="Google"><span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></span>
+                        </a>
+                        <a class="boton-entrar" href="#" id="enlaceRegistro" data-texto="creaCuenta">Crea una cuenta</a>
                         <button id="botonVozLogin" class="micro" type="button" data-etiqueta="dictar" aria-label="Dictar">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
                                 <rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
@@ -85,9 +86,10 @@
                             </svg>
                         </button>
                     </div>
-                    <p class="reenviar">
-                        <a href="#" id="enlaceReenviar" data-texto="reenviarConfirmacion">Reenviar confirmación</a>
-                    </p>
+                    <div id="avisoPendiente" class="aviso-pendiente" hidden>
+                        <p data-texto="cuentaPendienteAyuda">Tu cuenta está pendiente de confirmar. Revisa el correo. Si no lo encuentras, reenvía el enlace.</p>
+                        <button id="enlaceReenviar" class="enviar" type="button" data-texto="reenviarCorreo">Reenviar el correo</button>
+                    </div>
                 </form>
             </section>
 
@@ -305,16 +307,16 @@
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=10"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=10"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=13"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=10"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=13"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=10"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=13"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>
