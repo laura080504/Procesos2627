@@ -1,4 +1,5 @@
 from Pruebas.conftest import CONTRASENA
+from Servidor.Dominio.DominioEnums.rol import Rol
 
 
 def prueba_rutas_de_usuarios_rechazan_peticiones_sin_sesion(cliente, usuario_registrado):
@@ -7,7 +8,7 @@ def prueba_rutas_de_usuarios_rechazan_peticiones_sin_sesion(cliente, usuario_reg
     assert cliente.get(f"/api/usuarios/{usuario_registrado.email}/activo").status_code == 401
     assert cliente.delete(f"/api/usuarios/{usuario_registrado.email}").status_code == 401
     assert cliente.patch("/api/usuarios/me", json={"email": usuario_registrado.email, "nick": "laura"}).status_code == 401
-    assert cliente.post(f"/api/usuarios/{usuario_registrado.email}/administrador").status_code == 401
+    assert cliente.post(f"/api/usuarios/{usuario_registrado.email}/profesor").status_code == 401
 
 
 def prueba_un_usuario_no_lista_usuarios(cliente_autenticado):
@@ -80,12 +81,31 @@ def prueba_un_usuario_edita_sus_datos(cliente_autenticado, usuario_registrado, r
     assert sesion.json()["email"] == "nuevo@ejemplo.com"
 
 
-def prueba_un_usuario_no_hace_admin_a_otro(cliente_autenticado, administrador):
-    assert cliente_autenticado.post(f"/api/usuarios/{administrador.email}/administrador").status_code == 403
+def prueba_un_usuario_no_hace_profesor_a_otro(cliente_autenticado, administrador):
+    assert cliente_autenticado.post(f"/api/usuarios/{administrador.email}/profesor").status_code == 403
 
 
-def prueba_un_administrador_hace_admin_a_otro(cliente_administrador, usuario_registrado, repositorio_usuarios):
-    respuesta = cliente_administrador.post(f"/api/usuarios/{usuario_registrado.email}/administrador")
+def prueba_un_profesor_no_asigna_el_cargo(cliente_administrador, usuario_registrado, repositorio_usuarios):
+    assert cliente_administrador.post(f"/api/usuarios/{usuario_registrado.email}/profesor").status_code == 403
+    assert repositorio_usuarios.obtener_por_email(usuario_registrado.email).rol == Rol.USUARIO
+
+
+def prueba_un_profesor_no_elimina_a_otro_profesor(cliente_administrador, superadministrador, repositorio_usuarios):
+    assert cliente_administrador.delete(f"/api/usuarios/{superadministrador.email}").status_code == 403
+    assert repositorio_usuarios.obtener_por_email(superadministrador.email).estado.value == "activo"
+
+
+def prueba_el_superadministrador_asigna_profesor(
+    cliente_superadministrador, usuario_registrado, repositorio_usuarios
+):
+    respuesta = cliente_superadministrador.post(f"/api/usuarios/{usuario_registrado.email}/profesor")
     assert respuesta.status_code == 200
-    assert respuesta.json()["rol"] == "administrador"
-    assert repositorio_usuarios.obtener_por_email(usuario_registrado.email).rol.value == "administrador"
+    assert respuesta.json()["rol"] == "profesor"
+    assert repositorio_usuarios.obtener_por_email(usuario_registrado.email).rol.value == "profesor"
+
+
+def prueba_el_superadministrador_elimina_a_un_profesor(
+    cliente_superadministrador, administrador, repositorio_usuarios
+):
+    assert cliente_superadministrador.delete(f"/api/usuarios/{administrador.email}").status_code == 204
+    assert repositorio_usuarios.obtener_por_email(administrador.email).estado.value == "eliminado"

@@ -5,7 +5,7 @@ from Servidor.Dominio.DominioUseCases.asegurar_administrador_use_case import Ase
 def prueba_crea_el_primer_administrador_solo_una_vez(repositorio_usuarios, hasher):
     use_case = AsegurarAdministradorUseCase(repositorio_usuarios, hasher)
     use_case.ejecutar("admin@ejemplo.com", "contrasena-segura")
-    assert repositorio_usuarios.obtener_por_email("admin@ejemplo.com").rol == Rol.ADMINISTRADOR
+    assert repositorio_usuarios.obtener_por_email("admin@ejemplo.com").rol == Rol.SUPERADMINISTRADOR
 
     use_case.ejecutar("otro@ejemplo.com", "contrasena-segura")
     assert repositorio_usuarios.obtener_por_email("otro@ejemplo.com") is None
@@ -17,5 +17,5 @@ def prueba_si_la_cuenta_ya_existe_conserva_la_contrasena(repositorio_usuarios, u
         usuario_registrado.email, "otra-contrasena"
     )
     guardado = repositorio_usuarios.obtener_por_email(usuario_registrado.email)
-    assert guardado.rol == Rol.ADMINISTRADOR
+    assert guardado.rol == Rol.SUPERADMINISTRADOR
     assert guardado.contrasena_hash == hash_anterior

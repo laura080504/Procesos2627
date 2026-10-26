@@ -8,7 +8,8 @@
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=14">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=10">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=14">
+    <link rel="stylesheet" href="ClienteShared/agenda.css?v=16">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -237,7 +238,7 @@
                     <p id="rolEditar" class="usuario-meta" hidden></p>
                     <label id="campoHacerAdmin" class="recordar campo-admin" hidden>
                         <input id="hacerAdministrador" name="hacerAdministrador" type="checkbox">
-                        <span data-texto="hacerAdministrador">Hacer admin</span>
+                        <span data-texto="hacerAdministrador">Hacer profesor</span>
                     </label>
                     <div id="camposContrasenaEditar">
                     <label class="campo">
@@ -276,7 +277,7 @@
 
             <section id="vistaUsuarios" class="tarjeta" hidden>
                 <h1>
-                    <span data-texto="gestionUsuarios">Gestión de usuarios</span>
+                    <span id="tituloVistaUsuarios">Gestión de usuarios</span>
                     <span id="contadorUsuarios"> (<span id="numeroUsuarios">0</span>)</span>
                 </h1>
                 <div id="vistaAdministrador">
@@ -291,32 +292,121 @@
                     <button id="botonRefrescar" type="button" data-texto="refrescar">Refrescar</button>
                     <ul id="listaUsuarios"></ul>
                 </div>
-                <p id="vistaCuenta" class="sesion-actual" hidden>
+                <div id="vistaCuenta" class="perfil-estudiante" hidden>
+                    <button id="botonVolverAgenda" type="button" data-texto="volverAgenda">Volver a la agenda</button>
                     <span id="cuentaActual"></span>
+                    <div id="resumenCurso" class="resumen-curso" hidden>
+                        <p id="cursoAlumno"></p>
+                        <p id="creditosAprobados"></p>
+                        <p id="mediaCarrera"></p>
+                        <div class="tarta-fila">
+                            <svg id="graficoCurso" viewBox="0 0 42 42" aria-hidden="true"></svg>
+                            <ul id="leyendaCurso"></ul>
+                        </div>
+                    </div>
                     <span class="botones-linea">
                         <button id="botonEditarCuenta" type="button" data-texto="editarDatos">Editar datos</button>
                         <button id="botonCerrarSesionCuenta" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
                         <button id="botonEliminarCuenta" type="button" data-texto="eliminarCuenta">Eliminar cuenta</button>
                     </span>
-                </p>
+                </div>
             </section>
 
         </main>
+
+        <section id="vistaAgenda" class="agenda" hidden>
+            <header class="agenda-barra">
+                <h1 data-texto="tituloAgenda">Tu Agenda Estudiantil UCLM</h1>
+                <div class="agenda-herramientas">
+                    <button id="botonVozAgenda" type="button" data-etiqueta="leerPantalla" aria-label="Leer lo que hay en pantalla">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+                            <path d="M6 11a6 6 0 0 0 12 0M12 17v3M9 20h6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+                        </svg>
+                    </button>
+                    <button id="botonTemaAgenda" type="button" data-etiqueta="cambiarTema" aria-label="Cambiar tema">
+                        <svg class="icono-sol" viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+                            <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M4.8 4.8l1.6 1.6M17.6 17.6l1.6 1.6M19.2 4.8l-1.6 1.6M6.4 17.6l-1.6 1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+                        </svg>
+                        <svg class="icono-luna" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M15.5 3.5a8.2 8.2 0 1 0 5 12.2A7 7 0 0 1 15.5 3.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+                        </svg>
+                    </button>
+                    <button id="botonIdiomaAgenda" type="button" data-etiqueta="cambiarIdioma" aria-label="Cambiar idioma">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
+                            <path d="M7 9h6M10 9c0 3-2.2 5-5 6M8 12.5c1.2 1.4 2.6 2.3 4.5 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path>
+                            <path d="M14 16l2.2-6 2.2 6M14.7 14.2h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+                        </svg>
+                        <span data-texto="codigo">ES</span>
+                    </button>
+                    <button id="botonPerfil" class="perfil" type="button" data-etiqueta="abrirPerfil" aria-label="Abrir tu cuenta">
+                        <span class="avatar">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+                                <path d="M5.5 19.2c1.2-3 3.4-4.4 6.5-4.4s5.3 1.4 6.5 4.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+                            </svg>
+                        </span>
+                        <span id="nickAgenda"></span>
+                    </button>
+                </div>
+            </header>
+            <div class="agenda-cuerpo">
+                <section class="agenda-horario" aria-label="Horario">
+                    <div class="calendario-nav">
+                        <button id="semanaAnterior" type="button" aria-label="Semana anterior">&lsaquo;</button>
+                        <h2 id="tituloSemana"></h2>
+                        <button id="semanaSiguiente" type="button" aria-label="Semana siguiente">&rsaquo;</button>
+                    </div>
+                    <div id="rejillaHorario"></div>
+                </section>
+                <section class="agenda-lista">
+                    <label class="buscador">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+                            <path d="M16 16.5L20 20.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                        </svg>
+                        <input id="buscadorAsignatura" type="search" placeholder="Nombre Asignatura" autocomplete="off">
+                    </label>
+                    <p id="sinAsignaturas" data-texto="sinAsignaturas" hidden>Ninguna asignatura coincide con la búsqueda</p>
+                    <ul id="listaAsignaturas"></ul>
+                    <div id="fichaAsignatura" class="ficha-asignatura" hidden>
+                        <button id="volverAsignaturas" type="button">
+                            <span class="flecha-volver" aria-hidden="true">&lsaquo;</span>
+                            <span data-texto="volverAsignaturas">Asignaturas</span>
+                        </button>
+                        <div id="fichaContenido"></div>
+                    </div>
+                </section>
+                <section class="agenda-calendario">
+                    <div class="calendario-nav">
+                        <button id="mesAnterior" type="button" aria-label="Mes anterior">&lsaquo;</button>
+                        <select id="mesAgenda" aria-label="Mes"></select>
+                        <select id="anioAgenda" aria-label="Año"></select>
+                        <button id="mesSiguiente" type="button" aria-label="Mes siguiente">&rsaquo;</button>
+                    </div>
+                    <div id="diasSemanaAgenda" class="dias-semana"></div>
+                    <div id="rejillaAgenda" class="rejilla"></div>
+                </section>
+            </div>
+        </section>
     </div>
 
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=10"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=13"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=17"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=20"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=13"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=13"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=15"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=11"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=11"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=19"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>

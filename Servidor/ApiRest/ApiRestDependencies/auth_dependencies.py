@@ -145,7 +145,13 @@ def obtener_usuario_actual(
     return use_case.ejecutar(ObtenerUsuarioSesionQuery(token=token))
 
 
-def obtener_administrador(usuario: Usuario = Depends(obtener_usuario_actual)) -> Usuario:
-    if usuario.rol != Rol.ADMINISTRADOR:
+def obtener_gestor(usuario: Usuario = Depends(obtener_usuario_actual)) -> Usuario:
+    if usuario.rol not in (Rol.PROFESOR, Rol.SUPERADMINISTRADOR):
+        raise PermisoInsuficiente()
+    return usuario
+
+
+def obtener_superadministrador(usuario: Usuario = Depends(obtener_usuario_actual)) -> Usuario:
+    if usuario.rol != Rol.SUPERADMINISTRADOR:
         raise PermisoInsuficiente()
     return usuario

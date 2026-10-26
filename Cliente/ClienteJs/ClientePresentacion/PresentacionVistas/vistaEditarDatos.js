@@ -71,17 +71,16 @@ class VistaEditarDatos {
         this.formulario.email.value = usuario.email;
         this.formulario.nick.value = usuario.nick;
         const propio = opciones.propio;
-        const esAdmin = usuario.rol === "administrador";
-        const puedeMarcarAdmin = !propio && !esAdmin;
+        const puedeAsignar = Boolean(opciones.puedeAsignarProfesor);
         this.formulario.email.readOnly = !propio;
         this.formulario.nick.readOnly = !propio;
         this.camposContrasena.hidden = !propio;
-        this.campoAdmin.hidden = propio && !esAdmin;
-        this.casillaAdmin.checked = esAdmin;
-        this.casillaAdmin.disabled = !puedeMarcarAdmin;
+        this.campoAdmin.hidden = !puedeAsignar;
+        this.casillaAdmin.checked = false;
+        this.casillaAdmin.disabled = !puedeAsignar;
         this.rol.hidden = true;
         this.rol.textContent = "";
-        this.botonGuardar.hidden = !propio && esAdmin;
+        this.botonGuardar.hidden = !propio && !puedeAsignar;
         this.formulario.querySelectorAll("input[name='contrasena'], input[name='confirmar']").forEach((campo) => {
             campo.type = "password";
         });

@@ -26,4 +26,22 @@ class DictadoVoz {
             alError();
         }
     }
+
+    leer(texto, idioma, alError) {
+        const sintesis = window.speechSynthesis;
+        if (!sintesis || !texto) {
+            alError();
+            return;
+        }
+        sintesis.cancel();
+        const frase = new SpeechSynthesisUtterance(texto);
+        frase.lang = idioma === "en" ? "en-US" : "es-ES";
+        frase.onerror = (evento) => {
+            if (evento.error === "interrupted" || evento.error === "canceled") {
+                return;
+            }
+            alError();
+        };
+        sintesis.speak(frase);
+    }
 }
