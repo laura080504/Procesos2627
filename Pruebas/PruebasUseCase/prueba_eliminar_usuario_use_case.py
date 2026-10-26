@@ -44,7 +44,7 @@ def prueba_elimina_tambien_las_recuperaciones(
 
 def prueba_eliminar_inexistente_lanza_error(use_case):
     with pytest.raises(UsuarioNoEncontrado):
-        use_case.ejecutar(EliminarUsuarioCommand("nadie@ejemplo.com", "admin@ejemplo.com", Rol.ADMINISTRADOR))
+        use_case.ejecutar(EliminarUsuarioCommand("nadie@ejemplo.com", "admin@ejemplo.com", Rol.PROFESOR))
 
 
 def prueba_un_usuario_no_elimina_a_otro(use_case, usuario_registrado, repositorio_usuarios, hasher):
@@ -54,3 +54,53 @@ def prueba_un_usuario_no_elimina_a_otro(use_case, usuario_registrado, repositori
     with pytest.raises(PermisoInsuficiente):
         use_case.ejecutar(EliminarUsuarioCommand(otro.email, usuario_registrado.email, Rol.USUARIO))
     assert repositorio_usuarios.obtener_por_email(otro.email) is not None
+
+
+def prueba_un_profesor_elimina_a_un_alumno(use_case, usuario_registrado, repositorio_usuarios):
+    use_case.ejecutar(EliminarUsuarioCommand(usuario_registrado.email, "profe@ejemplo.com", Rol.PROFESOR))
+    assert repositorio_usuarios.obtener_por_email(usuario_registrado.email).estado == EstadoUsuario.ELIMINADO
+
+
+def prueba_un_profesor_no_elimina_a_otro_profesor(use_case, repositorio_usuarios, hasher):
+    profesor = repositorio_usuarios.insertar(
+        Usuario(
+            email="profe@ejemplo.com",
+            nick="profe",
+            contrasena_hash=hasher.hashear("contrasena-segura"),
+            rol=Rol.PROFESOR,
+        )
+    )
+    with pytest.raises(PermisoInsuficiente):
+        use_case.ejecutar(EliminarUsuarioCommand(profesor.email, "otro-profe@ejemplo.com", Rol.PROFESOR))
+    assert repositorio_usuarios.obtener_por_email(profesor.email).estado == EstadoUsuario.ACTIVO
+
+
+def prueba_el_superadministrador_elimina_a_un_profesor(use_case, repositorio_usuarios, hasher):
+    profesor = repositorio_usuarios.insertar(
+        Usuario(
+            email="profe@ejemplo.com",
+            nick="profe",
+            contrasena_hash=hasher.hashear("contrasena-segura"),
+            rol=Rol.PROFESOR,
+        )
+    )
+    use_case.ejecutar(
+        EliminarUsuarioCommand(profesor.email, "super@ejemplo.com", Rol.SUPERADMINISTRADOR)
+    )
+    assert repositorio_usuarios.obtener_por_email(profesor.email).estado == EstadoUsuario.ELIMINADO
+
+
+def prueba_nadie_elimina_al_superadministrador(use_case, repositorio_usuarios, hasher):
+    superadmin = repositorio_usuarios.insertar(
+        Usuario(
+            email="super@ejemplo.com",
+            nick="super",
+            contrasena_hash=hasher.hashear("contrasena-segura"),
+            rol=Rol.SUPERADMINISTRADOR,
+        )
+    )
+    with pytest.raises(PermisoInsuficiente):
+        use_case.ejecutar(
+            EliminarUsuarioCommand(superadmin.email, superadmin.email, Rol.SUPERADMINISTRADOR)
+        )
+    assert repositorio_usuarios.obtener_por_email(superadmin.email).estado == EstadoUsuario.ACTIVO

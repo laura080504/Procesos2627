@@ -1,0 +1,683 @@
+body.con-agenda .escena {
+    display: block;
+    padding: 0;
+}
+
+body.con-agenda .panel,
+body.con-agenda .herramientas {
+    display: none;
+}
+
+.agenda {
+    min-height: 100vh;
+    color: #1a1a1a;
+}
+
+.agenda-barra {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.5rem;
+    background: var(--rojo-logo);
+    color: #fff;
+}
+
+.agenda-barra h1 {
+    margin: 0;
+    font-size: clamp(1.15rem, 1.8vw, 1.45rem);
+    font-weight: 650;
+    letter-spacing: 0.01em;
+}
+
+.agenda-herramientas {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+}
+
+.agenda-herramientas button {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.agenda-herramientas svg {
+    width: 22px;
+    height: 22px;
+}
+
+.perfil {
+    flex-direction: column;
+    gap: 0.25rem;
+    max-width: 7.5rem;
+}
+
+.avatar {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--rojo-logo);
+    color: #fff;
+}
+
+.avatar svg {
+    width: 30px;
+    height: 30px;
+}
+
+#nickAgenda {
+    max-width: 7.5rem;
+    overflow: hidden;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.agenda-cuerpo {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.72fr) minmax(460px, 1.35fr);
+    gap: 1.15rem;
+    align-items: start;
+    width: min(1100px, calc(100% - 2rem));
+    margin: 0.9rem auto 2.6rem;
+    padding: 0;
+}
+
+.agenda-horario {
+    grid-column: 1 / -1;
+}
+
+.agenda-lista,
+.agenda-calendario,
+.agenda-horario {
+    min-width: 0;
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 16px 40px rgba(80, 10, 20, 0.12);
+}
+
+.agenda-horario {
+    --alto-hora: 22px;
+    padding: 0.7rem 0.7rem 0.75rem;
+}
+
+#tituloSemana {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 650;
+}
+
+#rejillaHorario {
+    max-height: min(58vh, 460px);
+    overflow: auto;
+}
+
+.horario-marco {
+    display: grid;
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: 0.25rem;
+}
+
+.horario-horas {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    color: #6d5a5e;
+    font-size: 0.68rem;
+}
+
+.horario-hueco {
+    height: 2.3rem;
+}
+
+.horario-hora {
+    height: var(--alto-hora);
+    line-height: 1;
+}
+
+.horario-dias {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 2px;
+}
+
+.horario-dia header {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 2.3rem;
+    background: #fff;
+    color: #6d5a5e;
+    font-size: 0.72rem;
+}
+
+.horario-fecha {
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 0.78rem;
+}
+
+.horario-fecha.hoy {
+    border-radius: 50%;
+    background: var(--rojo-logo);
+    color: #fff;
+    font-weight: 700;
+}
+
+.horario-dia.hoy header {
+    background: #f8e4e8;
+}
+
+.horario-dia.hoy .horario-pista {
+    background-color: rgba(157, 24, 48, 0.08);
+}
+
+.horario-pista {
+    position: relative;
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--alto-hora) - 1px),
+        #f3e4e7 calc(var(--alto-hora) - 1px),
+        #f3e4e7 var(--alto-hora)
+    );
+}
+
+.franja {
+    position: absolute;
+    z-index: 1;
+    overflow: hidden;
+    padding: 0.15rem 0.2rem;
+    border-radius: 6px;
+    color: #fff;
+    font-size: 0.62rem;
+    line-height: 1.15;
+}
+
+.franja strong,
+.franja span {
+    display: -webkit-box;
+    overflow: hidden;
+    font-weight: 650;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.franja span {
+    font-weight: 450;
+    opacity: 0.92;
+    -webkit-line-clamp: 1;
+}
+
+.linea-ahora {
+    position: absolute;
+    right: 0;
+    left: 0;
+    z-index: 2;
+    height: 2px;
+    background: var(--rojo-logo);
+    pointer-events: none;
+}
+
+.linea-ahora::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--rojo-logo);
+}
+
+.agenda-lista {
+    display: flex;
+    flex-direction: column;
+    min-height: 20rem;
+    max-height: calc(100vh - 12rem);
+    padding: 0.7rem 0.55rem 0.55rem;
+}
+
+.buscador[hidden],
+#listaAsignaturas[hidden] {
+    display: none;
+}
+
+.buscador {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0.35rem 0.7rem;
+    padding: 0.55rem 0.8rem;
+    border-radius: 12px;
+    background: #f7f2f3;
+    color: var(--rojo-logo);
+}
+
+.buscador svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+}
+
+.buscador input {
+    width: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #1a1a1a;
+    font: inherit;
+}
+
+.buscador input::placeholder {
+    color: #8a6a70;
+}
+
+#sinAsignaturas {
+    margin: 0.4rem 0.8rem;
+    color: var(--rojo-logo);
+}
+
+#listaAsignaturas {
+    list-style: none;
+    margin: 0;
+    padding: 0 0.2rem;
+    overflow: auto;
+}
+
+#listaAsignaturas li {
+    margin: 0;
+}
+
+.fila-asignatura {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.55rem;
+    width: 100%;
+    padding: 0.32rem 0.35rem;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.fila-asignatura:hover,
+.fila-asignatura:focus-visible {
+    background: #f7f2f3;
+    outline: none;
+}
+
+.insignia {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: #f3e4e7;
+    color: var(--rojo-logo);
+    font-weight: 700;
+}
+
+.asignatura-nombre {
+    font-size: 0.88rem;
+}
+
+.ficha-asignatura {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 0.15rem 0.45rem 0.7rem;
+    overflow: auto;
+}
+
+.ficha-asignatura[hidden] {
+    display: none;
+}
+
+#volverAsignaturas {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 0.35rem;
+    margin: 0 0 0.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--rojo-logo);
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.flecha-volver {
+    color: #1a1a1a;
+    font-size: 1.45rem;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.ficha-cabecera {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+
+.ficha-cabecera .asignatura-nombre {
+    font-size: 0.95rem;
+    font-weight: 650;
+}
+
+.ficha-bloque {
+    margin-top: 0.85rem;
+}
+
+.ficha-titulo {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    color: #6d5a5e;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ficha-persona {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.42rem 0;
+    font-size: 0.88rem;
+}
+
+.ficha-persona .insignia {
+    width: 1.7rem;
+    height: 1.7rem;
+}
+
+.ficha-persona .insignia svg {
+    width: 1rem;
+    height: 1rem;
+}
+
+.ficha-lado {
+    color: #6d5a5e;
+    font-size: 0.82rem;
+}
+
+.ficha-enlaces {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.15rem;
+}
+
+.ficha-enlaces a {
+    color: #1a1a1a;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.ficha-enlaces a:hover,
+.ficha-enlaces a:focus-visible {
+    color: var(--rojo-logo);
+}
+
+.agenda-calendario {
+    padding: 1.15rem 1.25rem 1.45rem;
+}
+
+.calendario-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    margin-bottom: 0.85rem;
+}
+
+.calendario-nav button {
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #1a1a1a;
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.calendario-nav select {
+    border: 1px solid #e4d5d8;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a1a;
+    font: inherit;
+    padding: 0.25rem 0.45rem;
+}
+
+.dias-semana,
+.rejilla {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.rejilla {
+    row-gap: 0.35rem;
+}
+
+.dias-semana {
+    margin-bottom: 0.35rem;
+    color: #6d5a5e;
+    font-size: 0.78rem;
+    text-align: center;
+}
+
+.dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 4.7rem;
+    padding: 0.28rem 0.12rem 0.35rem;
+}
+
+.dia.otro {
+    opacity: 0.38;
+}
+
+.dia.semana-hoy {
+    border-radius: 10px;
+    background: rgba(157, 24, 48, 0.08);
+}
+
+.numero {
+    display: grid;
+    place-items: center;
+    width: 1.55rem;
+    height: 1.55rem;
+    font-size: 0.82rem;
+}
+
+.numero.hoy {
+    border-radius: 50%;
+    background: var(--rojo-logo);
+    color: #fff;
+    font-weight: 700;
+}
+
+.marcas {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    margin-top: 0.12rem;
+}
+
+.fila-marcas {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+    gap: 3px;
+    max-width: 4.6rem;
+}
+
+.estrella {
+    width: 8px;
+    height: 8px;
+    color: var(--rojo-logo);
+}
+
+.punto {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--rojo-logo);
+}
+
+body.oscuro .agenda-lista,
+body.oscuro .agenda-calendario,
+body.oscuro .agenda-horario {
+    background: #2b2b30;
+    color: #f3f3f3;
+    border: 2px solid #c45c6c;
+}
+
+body.oscuro .horario-horas,
+body.oscuro .horario-dia header {
+    background: #2b2b30;
+    color: #c4c4c8;
+}
+
+body.oscuro .horario-dia.hoy header {
+    background: #3d2c31;
+}
+
+body.oscuro .horario-dia.hoy .horario-pista,
+body.oscuro .dia.semana-hoy {
+    background-color: rgba(157, 24, 48, 0.28);
+}
+
+body.oscuro .horario-pista {
+    background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--alto-hora) - 1px),
+        #3a3a40 calc(var(--alto-hora) - 1px),
+        #3a3a40 var(--alto-hora)
+    );
+}
+
+body.oscuro .buscador,
+body.oscuro .calendario-nav select {
+    background: #3a3a40;
+    color: #f3f3f3;
+    border-color: #555;
+}
+
+body.oscuro .buscador input,
+body.oscuro .calendario-nav button {
+    background: transparent;
+    color: #f3f3f3;
+}
+
+body.oscuro .buscador input::placeholder,
+body.oscuro .dias-semana {
+    color: #c4c4c8;
+}
+
+body.oscuro .insignia {
+    background: #4a3438;
+    color: #f3c3cb;
+}
+
+body.oscuro .fila-asignatura:hover,
+body.oscuro .fila-asignatura:focus-visible {
+    background: #3a3a40;
+}
+
+body.oscuro .ficha-titulo,
+body.oscuro .ficha-lado {
+    color: #c4c4c8;
+}
+
+body.oscuro .ficha-enlaces a {
+    color: #f3f3f3;
+}
+
+body.oscuro .ficha-enlaces a:hover,
+body.oscuro .ficha-enlaces a:focus-visible,
+body.oscuro #volverAsignaturas {
+    color: #f3c3cb;
+}
+
+body.oscuro .flecha-volver {
+    color: #f3f3f3;
+}
+
+@media (max-height: 820px) {
+    .agenda-barra {
+        padding: 0.5rem 1rem;
+    }
+
+    .agenda-horario {
+        --alto-hora: 20px;
+    }
+
+    .avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .agenda-lista {
+        min-height: 0;
+        max-height: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .agenda-barra {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .agenda-cuerpo {
+        grid-template-columns: 1fr;
+    }
+
+    .agenda-lista {
+        min-height: 0;
+        max-height: none;
+    }
+}

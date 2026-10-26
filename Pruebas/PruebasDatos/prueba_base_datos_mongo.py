@@ -6,8 +6,14 @@ import pytest
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import crear_repositorios
 from Servidor.configuracion import Configuracion
 from Servidor.Infraestructura.base_datos_mongo import BaseDatosMongo, uri_con_credenciales
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas_memoria import RepositorioAsignaturasMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_confirmaciones_memoria import (
     RepositorioConfirmacionesMemoria,
+)
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_cursos_memoria import RepositorioCursosMemoria
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos_memoria import RepositorioEventosMemoria
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas_memoria import (
+    RepositorioMatriculasMemoria,
 )
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones_memoria import (
     RepositorioRecuperacionesMemoria,
@@ -154,11 +160,17 @@ def prueba_cargar_configuracion_mongo_sin_uri_falla(monkeypatch):
 
 
 def prueba_el_motor_memoria_no_pide_mongo():
-    usuarios, sesiones, recuperaciones, confirmaciones = crear_repositorios(_configuracion("memoria"))
+    usuarios, sesiones, recuperaciones, confirmaciones, cursos, asignaturas, eventos, matriculas = crear_repositorios(
+        _configuracion("memoria")
+    )
     assert isinstance(usuarios, RepositorioUsuariosMemoria)
     assert isinstance(sesiones, RepositorioSesionesMemoria)
     assert isinstance(recuperaciones, RepositorioRecuperacionesMemoria)
     assert isinstance(confirmaciones, RepositorioConfirmacionesMemoria)
+    assert isinstance(cursos, RepositorioCursosMemoria)
+    assert isinstance(asignaturas, RepositorioAsignaturasMemoria)
+    assert isinstance(eventos, RepositorioEventosMemoria)
+    assert isinstance(matriculas, RepositorioMatriculasMemoria)
 
 
 def prueba_un_motor_desconocido_falla():

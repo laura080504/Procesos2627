@@ -72,7 +72,7 @@ def administrador(repositorio_usuarios, hasher):
             email="admin@ejemplo.com",
             nick="admin",
             contrasena_hash=hasher.hashear(CONTRASENA),
-            rol=Rol.ADMINISTRADOR,
+            rol=Rol.PROFESOR,
         )
     )
 
@@ -101,10 +101,32 @@ def cliente_autenticado(cliente, usuario_registrado):
 
 
 @pytest.fixture
+def superadministrador(repositorio_usuarios, hasher):
+    return repositorio_usuarios.insertar(
+        Usuario(
+            email="super@ejemplo.com",
+            nick="super",
+            contrasena_hash=hasher.hashear(CONTRASENA),
+            rol=Rol.SUPERADMINISTRADOR,
+        )
+    )
+
+
+@pytest.fixture
 def cliente_administrador(cliente, administrador):
     respuesta = cliente.post(
         "/api/auth/inicio-sesion",
         json={"email": administrador.email, "contrasena": CONTRASENA},
+    )
+    assert respuesta.status_code == 200
+    return cliente
+
+
+@pytest.fixture
+def cliente_superadministrador(cliente, superadministrador):
+    respuesta = cliente.post(
+        "/api/auth/inicio-sesion",
+        json={"email": superadministrador.email, "contrasena": CONTRASENA},
     )
     assert respuesta.status_code == 200
     return cliente
