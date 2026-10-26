@@ -2,6 +2,7 @@ class ControlWeb {
     constructor(clienteRest) {
         this.rest = clienteRest;
         this.usuarioActual = null;
+        this.matricula = null;
         this.mensaje = document.getElementById("mensaje");
         this.temporizadorAviso = null;
         this.idioma = localStorage.getItem("idioma") === "en" ? "en" : "es";
@@ -40,6 +41,15 @@ class ControlWeb {
             alRefrescar: () => this.refrescarUsuarios(),
             alEditar: () => this.mostrarEditarDatos(this.usuarioActual),
             alEditarUsuario: (usuario) => this.mostrarEditarDatos(usuario),
+            alVolverAgenda: () => this.mostrarAgenda(),
+        });
+        this.vistaAgenda = new VistaAgenda({
+            alBuscar: (nombre) => this.buscarAsignaturas(nombre),
+            alAbrirPerfil: () => this.mostrarPanel(),
+            alCambiarTema: () => this.alternarTema(),
+            alCambiarIdioma: () => this.alternarIdioma(),
+            alLeer: (texto) => this.leerPantalla(texto),
+            alCambiarMes: () => this.cargarMarcas(),
         });
         this.vistaEditarDatos = new VistaEditarDatos({
             alGuardar: (datos) => this.guardarEdicion(datos),
@@ -63,7 +73,7 @@ class ControlWeb {
         const avisoPendiente = await this.avisoInicial(confirmar, aviso);
         try {
             this.usuarioActual = await this.rest.obtenerSesion();
-            await this.mostrarPanel();
+            await this.abrirTrasSesion();
         } catch {
             this.mostrarInicioSesion();
         }
@@ -125,6 +135,7 @@ class ControlWeb {
         this.vistaRecuperacion.aplicarTextos(this.textos);
         this.vistaUsuarios.aplicarTextos(this.textos);
         this.vistaEditarDatos.aplicarTextos(this.textos);
+        this.vistaAgenda.aplicarTextos(this.textos);
         if (this.usuarioActual) {
             this.cabecera.mostrar(this.usuarioActual, this.textos);
         }
@@ -133,6 +144,12 @@ class ControlWeb {
     dictar(campo) {
         this.dictado.dictar(campo, this.idioma, () => {
             this.mostrarMensaje(this.textos.vozNoDisponible, true);
+        });
+    }
+
+    leerPantalla(texto) {
+        this.dictado.leer(texto, this.idioma, () => {
+            this.mostrarMensaje(this.textos.lecturaNoDisponible, true);
         });
     }
 
@@ -157,6 +174,9 @@ class ControlWeb {
         this.vistaRecuperacion.ocultar();
         this.vistaUsuarios.ocultar();
         this.vistaEditarDatos.ocultar();
+        this.vistaAgenda.ocultar();
+        document.body.classList.remove("con-agenda");
+        document.body.classList.remove("en-perfil");
     }
 
     mostrarInicioSesion() {
@@ -179,17 +199,73 @@ class ControlWeb {
         this.vistaRecuperacion.mostrar();
     }
 
+    async abrirTrasSesion() {
+        if (this.esGestion(this.usuarioActual.rol)) {
+            await this.mostrarPanel();
+            return;
+        }
+        await this.mostrarAgenda();
+    }
+
+    async mostrarAgenda() {
+        this.ocultarVistas();
+        document.body.classList.add("con-agenda");
+        this.vistaAgenda.mostrar(this.usuarioActual, this.textos);
+        await this.cargarAgenda();
+    }
+
+    async cargarAgenda() {
+        const periodo = this.vistaAgenda.periodo();
+        try {
+            const [matricula, marcas] = await Promise.all([
+                this.rest.obtenerMatricula(this.vistaAgenda.textoBusqueda()),
+                this.rest.obtenerMarcas(periodo.anio, periodo.mes),
+            ]);
+            this.matricula = matricula;
+            this.vistaAgenda.pintar(matricula.asignaturas, marcas, matricula.horario);
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
+    async cargarMarcas() {
+        const periodo = this.vistaAgenda.periodo();
+        try {
+            const marcas = await this.rest.obtenerMarcas(periodo.anio, periodo.mes);
+            this.vistaAgenda.pintar(this.vistaAgenda.asignaturas, marcas);
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
+    async buscarAsignaturas(nombre) {
+        try {
+            const matricula = await this.rest.obtenerMatricula(nombre);
+            this.vistaAgenda.pintar(matricula.asignaturas, this.vistaAgenda.marcas, matricula.horario);
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
     async mostrarPanel() {
         this.ocultarVistas();
+        document.body.classList.add("en-perfil");
         this.cabecera.mostrar(this.usuarioActual, this.textos);
         this.vistaUsuarios.mostrar();
         await this.refrescarUsuarios();
     }
 
+    esGestion(rol) {
+        return rol === "profesor" || rol === "superadministrador";
+    }
+
     mostrarEditarDatos(usuario) {
         const propio = usuario.email === this.usuarioActual.email;
         this.ocultarVistas();
-        this.vistaEditarDatos.mostrar(usuario, { propio });
+        this.vistaEditarDatos.mostrar(usuario, {
+            propio,
+            puedeAsignarProfesor: !propio && this.usuarioActual.rol === "superadministrador" && usuario.rol === "usuario",
+        });
     }
 
     async guardarEdicion(datos) {
@@ -267,7 +343,7 @@ class ControlWeb {
             this.usuarioActual = await this.rest.iniciarSesion(email, contrasena);
             this.vistaInicioSesion.mostrarReenvio(false);
             this.limpiarMensaje();
-            await this.mostrarPanel();
+            await this.abrirTrasSesion();
         } catch (error) {
             const pendiente = error.estado === 403 && /pendiente/i.test(error.message || "");
             this.vistaInicioSesion.mostrarReenvio(pendiente);
@@ -293,14 +369,20 @@ class ControlWeb {
     }
 
     async refrescarUsuarios() {
-        const esAdministrador = this.usuarioActual.rol === "administrador";
-        if (!esAdministrador) {
-            this.vistaUsuarios.pintar([this.usuarioActual], this.usuarioActual.email, false);
+        const esGestion = this.esGestion(this.usuarioActual.rol);
+        if (!esGestion) {
+            try {
+                this.matricula = await this.rest.obtenerMatricula("");
+            } catch (error) {
+                this.gestionarError(error);
+                return;
+            }
+            this.vistaUsuarios.pintar([this.usuarioActual], this.usuarioActual.email, this.usuarioActual.rol, this.matricula);
             return;
         }
         try {
             const usuarios = await this.rest.obtenerUsuarios();
-            this.vistaUsuarios.pintar(usuarios, this.usuarioActual.email, true);
+            this.vistaUsuarios.pintar(usuarios, this.usuarioActual.email, this.usuarioActual.rol);
         } catch (error) {
             this.gestionarError(error);
         }

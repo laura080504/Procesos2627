@@ -6,7 +6,7 @@ from Servidor.Infraestructura.base_datos_mongo import BaseDatosMongo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
-from Servidor.Dominio.DominioEnums.rol import Rol
+from Servidor.Dominio.DominioEnums.rol import rol_desde_almacen
 from Servidor.Dominio.DominioExceptions.usuario_ya_existe import UsuarioYaExiste
 
 
@@ -74,6 +74,6 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
             email=documento["_id"],
             nick=documento["nick"],
             contrasena_hash=documento["contrasena_hash"],
-            rol=Rol(documento["rol"]),
+            rol=rol_desde_almacen(documento["rol"]),
             estado=EstadoUsuario(documento.get("estado", EstadoUsuario.ACTIVO)),
         )

@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, status
 
-from Servidor.ApiRest.ApiRestDependencies.auth_dependencies import obtener_administrador, obtener_usuario_actual
+from Servidor.ApiRest.ApiRestDependencies.auth_dependencies import (
+    obtener_gestor,
+    obtener_superadministrador,
+    obtener_usuario_actual,
+)
 from Servidor.ApiRest.ApiRestDependencies.usuario_dependencies import (
     crear_asignar_administrador_use_case,
     crear_editar_datos_use_case,
@@ -33,7 +37,7 @@ router = APIRouter(prefix="/api/usuarios", tags=["usuarios"])
 
 @router.get("", response_model=list[UsuarioSalida])
 def obtener_usuarios(
-    _: Usuario = Depends(obtener_administrador),
+    _: Usuario = Depends(obtener_gestor),
     use_case: ObtenerUsuariosUseCase = Depends(crear_obtener_usuarios_use_case),
 ):
     return use_case.ejecutar(ObtenerUsuariosQuery())
@@ -59,20 +63,24 @@ def editar_datos(
 
 @router.get("/numero", response_model=NumeroUsuariosSalida)
 def numero_usuarios(
-    _: Usuario = Depends(obtener_administrador),
+    _: Usuario = Depends(obtener_gestor),
     use_case: NumeroUsuariosUseCase = Depends(crear_numero_usuarios_use_case),
 ):
     return NumeroUsuariosSalida(numero=use_case.ejecutar(NumeroUsuariosQuery()))
 
 
-@router.post("/{email}/administrador", response_model=UsuarioSalida)
-def asignar_administrador(
+@router.post("/{email}/profesor", response_model=UsuarioSalida)
+def asignar_profesor(
     email: str,
-    solicitante: Usuario = Depends(obtener_administrador),
+    solicitante: Usuario = Depends(obtener_superadministrador),
     use_case: AsignarAdministradorUseCase = Depends(crear_asignar_administrador_use_case),
 ):
     usuario = use_case.ejecutar(
-        AsignarAdministradorCommand(email=email, solicitante_email=solicitante.email)
+        AsignarAdministradorCommand(
+            email=email,
+            solicitante_email=solicitante.email,
+            solicitante_rol=solicitante.rol,
+        )
     )
     registro_actividad.asignacion_rol(solicitante.email, usuario.email)
     return usuario
@@ -81,7 +89,7 @@ def asignar_administrador(
 @router.get("/{email}/activo", response_model=UsuarioActivoSalida)
 def usuario_activo(
     email: str,
-    _: Usuario = Depends(obtener_administrador),
+    _: Usuario = Depends(obtener_gestor),
     use_case: UsuarioActivoUseCase = Depends(crear_usuario_activo_use_case),
 ):
     return UsuarioActivoSalida(email=email, activo=use_case.ejecutar(UsuarioActivoQuery(email=email)))

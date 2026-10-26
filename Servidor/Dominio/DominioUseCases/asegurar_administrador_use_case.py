@@ -10,9 +10,13 @@ class AsegurarAdministradorUseCase:
         self.hasher = hasher
 
     def ejecutar(self, email: str, contrasena: str) -> None:
-        if any(usuario.rol == Rol.ADMINISTRADOR for usuario in self.repositorio_usuarios.obtener_todos()):
-            return
         email = email.strip().lower()
+        usuarios = self.repositorio_usuarios.obtener_todos()
+        for usuario in usuarios:
+            if usuario.rol == Rol.PROFESOR and usuario.email != email:
+                self.repositorio_usuarios.actualizar(usuario)
+        if any(usuario.rol == Rol.SUPERADMINISTRADOR for usuario in usuarios):
+            return
         existente = self.repositorio_usuarios.obtener_por_email(email)
         if existente is None:
             self.repositorio_usuarios.insertar(
@@ -20,9 +24,9 @@ class AsegurarAdministradorUseCase:
                     email=email,
                     nick=email.split("@")[0][:30],
                     contrasena_hash=self.hasher.hashear(contrasena),
-                    rol=Rol.ADMINISTRADOR,
+                    rol=Rol.SUPERADMINISTRADOR,
                 )
             )
             return
-        existente.rol = Rol.ADMINISTRADOR
+        existente.rol = Rol.SUPERADMINISTRADOR
         self.repositorio_usuarios.actualizar(existente)
