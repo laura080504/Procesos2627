@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 from Servidor.ApiRest.ApiRestControllers.agenda_controller import router as agenda_router
 from Servidor.ApiRest.ApiRestControllers.auth_controller import router as auth_router
+from Servidor.ApiRest.ApiRestControllers.prueba_controller import router as prueba_router
 from Servidor.ApiRest.ApiRestControllers.usuario_controller import router as usuario_router
 from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_configuracion
 from Servidor.ApiRest.ApiRestHandlers.auth_handler import registrar_auth_handlers
