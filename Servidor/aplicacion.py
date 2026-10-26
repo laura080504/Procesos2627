@@ -22,6 +22,7 @@ aplicacion = FastAPI(title="Procesos 26-27")
 aplicacion.include_router(auth_router)
 aplicacion.include_router(usuario_router)
 aplicacion.include_router(agenda_router)
+aplicacion.include_router(prueba_router)
 aplicacion.include_router(websocket_router)
 
 registrar_auth_handlers(aplicacion)
