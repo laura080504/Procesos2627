@@ -83,6 +83,104 @@ body.oscuro #listaUsuarios li {
     border-bottom-color: rgba(255, 255, 255, 0.28);
 }
 
+#vistaCuenta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+    margin-top: 1.1rem;
+}
+
+#botonVolverAgenda {
+    position: absolute;
+    top: 0.85rem;
+    left: 1rem;
+    z-index: 1;
+    border: 1px solid var(--rojo-logo);
+    background: #fff;
+    color: var(--rojo-logo);
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+#vistaCuenta .botones-linea {
+    justify-content: flex-start;
+}
+
+.resumen-curso {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.55rem;
+    width: 100%;
+}
+
+#resumenCurso[hidden] {
+    display: none;
+}
+
+#cursoAlumno,
+#creditosAprobados,
+#mediaCarrera {
+    margin: 0;
+    font-weight: 650;
+}
+
+.tarta-fila {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+#graficoCurso {
+    width: 84px;
+    height: 84px;
+    flex: 0 0 auto;
+}
+
+#leyendaCurso {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.28rem;
+    font-size: 0.82rem;
+}
+
+#leyendaCurso li {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.muestra-curso {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+}
+
+body.en-perfil .panel {
+    width: 500px;
+    flex-basis: 500px;
+}
+
+body.en-perfil .logo {
+    width: 78px;
+    height: 78px;
+    margin-bottom: -39px;
+}
+
+body.en-perfil .tarjeta {
+    padding: 3rem 1.35rem 1.15rem;
+}
+
+body.en-perfil .tarjeta h1 {
+    font-size: 1.4rem;
+}
 #vistaCuenta[hidden],
 #vistaAdministrador[hidden] {
     display: none;

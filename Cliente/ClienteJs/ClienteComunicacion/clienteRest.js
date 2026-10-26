@@ -44,7 +44,7 @@ class ClienteRest {
     }
 
     asignarAdministrador(email) {
-        return this.clienteHttp.peticion("POST", `/usuarios/${encodeURIComponent(email)}/administrador`);
+        return this.clienteHttp.peticion("POST", `/usuarios/${encodeURIComponent(email)}/profesor`);
     }
 
     solicitarRecuperacion(email) {
@@ -61,5 +61,19 @@ class ClienteRest {
 
     reenviarConfirmacion(email) {
         return this.clienteHttp.peticion("POST", "/auth/reenviar-confirmacion", { email });
+    }
+
+    listarAsignaturas(nombre) {
+        const ruta = nombre ? `/asignaturas?nombre=${encodeURIComponent(nombre)}` : "/asignaturas";
+        return this.clienteHttp.peticion("GET", ruta);
+    }
+
+    obtenerMatricula(nombre) {
+        const ruta = nombre ? `/matricula?nombre=${encodeURIComponent(nombre)}` : "/matricula";
+        return this.clienteHttp.peticion("GET", ruta);
+    }
+
+    obtenerMarcas(anio, mes) {
+        return this.clienteHttp.peticion("GET", `/agenda/marcas?anio=${anio}&mes=${mes}`);
     }
 }

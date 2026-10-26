@@ -22,12 +22,24 @@ class EliminarUsuarioUseCase:
     def ejecutar(self, command: EliminarUsuarioCommand) -> None:
         email = command.email.strip().lower()
         solicitante = command.solicitante_email.strip().lower()
-        if command.solicitante_rol != Rol.ADMINISTRADOR and solicitante != email:
-            raise PermisoInsuficiente()
         usuario = self.repositorio_usuarios.obtener_por_email(email)
         if usuario is None or usuario.estado == EstadoUsuario.ELIMINADO:
             raise UsuarioNoEncontrado(email)
+        if not _puede_eliminar(command.solicitante_rol, solicitante, usuario):
+            raise PermisoInsuficiente()
         usuario.estado = EstadoUsuario.ELIMINADO
         self.repositorio_usuarios.actualizar(usuario)
         self.repositorio_sesiones.eliminar_por_email(email)
         self.repositorio_recuperaciones.eliminar_por_email(email)
+
+
+def _puede_eliminar(rol_solicitante: Rol, email_solicitante: str, objetivo) -> bool:
+    if objetivo.rol == Rol.SUPERADMINISTRADOR:
+        return False
+    if email_solicitante == objetivo.email:
+        return objetivo.rol == Rol.USUARIO
+    if rol_solicitante == Rol.SUPERADMINISTRADOR:
+        return objetivo.rol in (Rol.USUARIO, Rol.PROFESOR)
+    if rol_solicitante == Rol.PROFESOR:
+        return objetivo.rol == Rol.USUARIO
+    return False
