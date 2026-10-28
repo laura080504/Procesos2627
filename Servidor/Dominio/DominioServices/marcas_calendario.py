@@ -7,6 +7,8 @@ class SimboloCalendario:
     codigo: str
     nombre: str
     nombre_ingles: str
+    hora: str
+    lugar: str | None = None
 
 
 @dataclass(frozen=True)

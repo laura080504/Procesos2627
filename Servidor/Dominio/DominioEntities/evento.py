@@ -9,3 +9,5 @@ class Evento:
     fecha: date
     codigo: str
     tipo: TipoEvento
+    hora: str
+    lugar: str | None = None
