@@ -1,0 +1,39 @@
+---
+type: Requisitos
+title: Requisitos del sprint 1
+description: Estado de cada requisito de la especificación comparado con main en 77202eb.
+timestamp: 2026-10-28
+---
+
+# Requisitos
+
+La especificación es la del sprint 1 (apartados 3 a 7). El código es el de `main` en `77202eb`, que ya incluye los pull requests #10 y #11 de la rama `sprint2`.
+
+Cifras de pruebas, el 2026-10-28, en ese árbol: `pytest -q` terminó con 132 passed. `pytest -q Pruebas/PruebasUseCase` terminó con 76 passed.
+
+| ID | Requisito | Estado | Evidencia |
+|----|-----------|--------|-----------|
+| ARQ-01 | Separación cliente-servidor y mismo origen | hecho | `Servidor/aplicacion.py` sirve `Cliente/` con `StaticFiles` en `/`. `clienteHttp.js` llama a `/api` con `credentials: "same-origin"`. No hay cliente de base de datos en `Cliente/`. |
+| ARQ-02 | Capas del backend: API, lógica y datos | hecho | Carpetas `ApiRest`, `Dominio` e `Infraestructura`. Los controllers no contienen las reglas; los casos de uso no importan FastAPI. Ver [arquitectura](arquitectura.md#frontera). |
+| ARQ-03 | Capas del frontend: presentación y comunicación | hecho | `Cliente/ClienteJs/ClientePresentacion/` y `Cliente/ClienteJs/ClienteComunicacion/` (`clienteHttp.js`, `clienteRest.js`, `errorApi.js`). |
+| RF-01 | Registro de usuario local | hecho | `RegistrarUsuarioUseCase` guarda la cuenta en `pendiente` y hashea la contraseña. `POST /api/auth/registro`. Pruebas: `Pruebas/PruebasUseCase/prueba_registrar_usuario_use_case.py` y `prueba_el_registro_deja_la_cuenta_pendiente_hasta_confirmar` en `prueba_auth_controller.py`. |
+| RF-02 | Confirmación de cuenta por correo | hecho | `EmitirConfirmacionUseCase` pide a `EnviadorCorreoBrevo` el envío por la API HTTPS. El enlace caduca a las 24 horas. `POST /api/auth/confirmar` pasa la cuenta a `activo`. Si el envío falla, se borra el alta y la API responde 502. Pruebas: `prueba_confirmar_cuenta_use_case.py`, `prueba_enviador_correo_brevo.py` (el envío real está sustituido por un doble). |
+| RF-03 | Inicio de sesión local | hecho | `IniciarSesionUseCase` y `POST /api/auth/inicio-sesion`. Rechaza contraseña incorrecta, cuenta pendiente y cuenta eliminada. Pruebas: `prueba_iniciar_sesion_use_case.py`. |
+| RF-04 | Inicio de sesión con OAuth | hecho | `GET /api/auth/google` y `GET /api/auth/google/callback`. `IniciarSesionGoogleUseCase` crea la cuenta ya en `activo`, o activa una pendiente. Una cuenta eliminada no entra. Commit `9a03f8e`. Pruebas en `prueba_confirmar_cuenta_use_case.py` y `prueba_google_crea_la_sesion_de_un_usuario_nuevo` en `prueba_auth_controller.py`. |
+| RF-05 | Cierre de sesión | hecho | `CerrarSesionUseCase` borra la sesión y el controller borra la cookie. Pruebas: `prueba_cerrar_sesion_use_case.py` y `prueba_cierre_sesion_invalida_el_token`. |
+| RF-06 | Mantenimiento de la sesión entre recargas | hecho | Cookie `sesion` (`httponly`, `samesite=lax`). `ControlWeb.iniciar` llama a `GET /api/auth/sesion` y, si vale, abre la aplicación. Prueba: `prueba_la_sesion_se_mantiene_entre_peticiones`. |
+| RF-07 | Listar usuarios (administrador) | parcial | `GET /api/usuarios` exige profesor o superadministrador (`obtener_gestor`) y devuelve email, nick, rol y estado. Un usuario normal recibe 403 (`prueba_un_usuario_no_lista_usuarios`). La especificación pide un solo rol administrador. En `main` listan dos roles, desde el pull request #11. Falta ese recorte, o dejar escrito que la decisión [D-11](decisiones.md#d-11-tres-roles) sustituye al requisito. |
+| RF-08 | Comprobar si un usuario está activo (administrador) | parcial | `UsuarioActivoUseCase` responde verdadero solo si el estado es `activo`. Pendiente y eliminado no lo son (`prueba_usuario_activo_use_case.py`). La ruta exige profesor o superadministrador, no un único administrador. Falta lo mismo que en RF-07. |
+| RF-09 | Eliminar usuario | parcial | Un usuario solo borra su propia cuenta, y solo si su rol es usuario. Un profesor borra usuarios. Un superadministrador borra usuarios y profesores. Nadie borra al superadministrador (`eliminar_usuario_use_case.py`, `prueba_eliminar_usuario_use_case.py`). Una cuenta eliminada no inicia sesión. La especificación dice que el administrador puede eliminar a cualquiera. Eso no se cumple con estas tres reglas. |
+| RF-10 | Creación del primer administrador | hecho | Si `ADMIN_EMAIL` y `ADMIN_PASSWORD` están definidos y no hay superadministrador, el arranque lo crea en `activo` o promociona ese email (`AsegurarAdministradorUseCase`, `repositorio_dependencies.py`). No pasa por el correo. Pruebas: `prueba_asegurar_administrador_use_case.py`. El motivo está en el README, sección «Acceso como administrador». El rol que crea hoy es superadministrador ([D-11](decisiones.md#d-11-tres-roles)). |
+| RNF-01 | Persistencia en una base de datos real | hecho | Con `DATOS_MOTOR=mongo` se usan los repositorios mongo. El commit `abc03ff` (pull request #7) sustituye SQLite y no toca `DominioUseCases`. El workflow de despliegue fija `DATOS_MOTOR=mongo`. Las pruebas usan memoria. |
+| RNF-02 | Secretos fuera del código y .env.example | hecho | `configuracion.py` lee el entorno. `.env` está en `.gitignore` y no está en el índice. `.env.example` trae los nombres, sin valores. La lista de nombres está en el [README](../README.md). |
+| RNF-03 | Hash seguro de contraseñas | hecho | `HasherContrasenas` usa bcrypt, 12 rondas. `prueba_la_contrasena_se_guarda_con_hash`. |
+| RNF-04 | Rutas protegidas por sesión y rol | hecho | Sin cookie, `obtener_usuario_actual` lanza `SesionNoValida` (401). Sin rol de gestor, `PermisoInsuficiente` (403). Prueba: `prueba_rutas_de_usuarios_rechazan_peticiones_sin_sesion`. `POST /api/prueba/estado` y `WS /ws` no piden sesión; la especificación obliga a proteger las rutas que requieren usuario, no todas. |
+| RNF-05 | Despliegue en cloud con URL pública | hecho | `.github/workflows/ci.yml`, job `desplegar`, solo en push a `main` y después de `pruebas`. Commit `b0e7946`. La URL está en el README. El 2026-10-28 una petición HEAD a esa URL respondió 200. |
+| RNF-06 | Pruebas unitarias de la lógica (5 o más) | hecho | 76 passed en `Pruebas/PruebasUseCase`, dentro de las 132 de `pytest -q`. Hay casos de error: email duplicado, cuenta pendiente, un usuario que intenta borrar a otro. Comando documentado en el README: `pytest`. |
+| RNF-07 | Manejo de errores con feedback al usuario | hecho | Los handlers devuelven `detail`. `clienteHttp.js` lo convierte en `ErrorApi` y `controlWeb.js` lo muestra con `mostrarMensaje`. Un 422 sin detalle dice que hay que revisar los datos. |
+| RNF-08 | Registro de actividad (log) | hecho | `registro_actividad.py` registra alta, inicio, confirmación, cierre, edición, borrado, cambio de rol y fallo. Lo llaman controllers y handlers. El nivel sale de `LOG_NIVEL`. |
+| PRO-01 | Flujo de trabajo GitHub Flow | parcial | Hay 11 pull requests, todos integrados. No hay rama por cambio: los pull requests #1 a #8 salen de la rama `Sprint-1`, y #10 y #11 de `sprint2`. Tres merges de `Sprint-1` llegaron a `main` sin pull request (`9fdd9b1`, `afb9e67`, `5fb3380`). El commit inicial `91bd639` también está directo en `main`. `git tag` no devolvió etiquetas de hito. |
+| PRO-02 | Integración continua | parcial | `.github/workflows/ci.yml` ejecuta `pytest` en cada pull request a `main` y en cada push a `main`. La API de Actions devolvió 24 ejecuciones: 21 success y 3 failure. El pull request #5 se integró con el paso de pruebas en rojo. Por verificar: si la rama `main` tiene protección que impida el push directo o exija el CI en verde. |
+| PRO-03 | Despliegue continuo | hecho | El job `desplegar` depende de `pruebas` y solo corre en push a `main`. No hay un paso manual en el workflow. Llegó el 2026-10-13, no el primer día; eso se anota en el [hito 1](sprint-1.md#hito-1-esqueleto-y-backend). |
