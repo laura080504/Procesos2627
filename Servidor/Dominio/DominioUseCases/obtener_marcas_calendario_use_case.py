@@ -29,6 +29,8 @@ class ObtenerMarcasCalendarioUseCase:
                         codigo=evento.codigo,
                         nombre=asignatura.nombre if asignatura else evento.codigo,
                         nombre_ingles=asignatura.nombre_ingles if asignatura else evento.codigo,
+                        hora=evento.hora,
+                        lugar=evento.lugar,
                     )
                 )
             marcas.append(MarcaCalendario(dia, simbolos))

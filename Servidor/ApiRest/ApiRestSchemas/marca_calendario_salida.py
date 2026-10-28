@@ -8,6 +8,8 @@ class SimboloCalendarioSalida(BaseModel):
     codigo: str
     nombre: str
     nombre_ingles: str
+    hora: str
+    lugar: str | None = None
 
 
 class MarcaCalendarioSalida(BaseModel):

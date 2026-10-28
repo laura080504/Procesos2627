@@ -24,7 +24,11 @@ def prueba_octubre_lista_cinco_examenes_y_pone_las_estrellas_delante():
     assert por_dia[27] == ["estrella", "punto", "punto"]
     assert por_dia[7] == ["punto"]
     assert len(por_dia) < 20
-    assert all(simbolo.codigo and simbolo.nombre for marca in marcas for simbolo in marca.simbolos)
+    assert all(simbolo.codigo and simbolo.nombre and simbolo.hora for marca in marcas for simbolo in marca.simbolos)
+    once = next(simbolo for marca in marcas for simbolo in marca.simbolos if simbolo.tipo == "estrella")
+    assert once.lugar
+    entrega = next(simbolo for marca in marcas for simbolo in marca.simbolos if simbolo.tipo == "punto")
+    assert entrega.lugar is None
 
 
 def prueba_otro_mes_no_repite_las_marcas_de_octubre():
