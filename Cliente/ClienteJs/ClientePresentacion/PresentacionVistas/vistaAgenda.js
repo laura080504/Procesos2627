@@ -11,6 +11,10 @@ class VistaAgenda {
         this.diasSemana = document.getElementById("diasSemanaAgenda");
         this.ficha = document.getElementById("fichaAsignatura");
         this.fichaContenido = document.getElementById("fichaContenido");
+        this.dialogo = document.getElementById("dialogoDiaAgenda");
+        this.tituloDialogo = document.getElementById("tituloDialogoDia");
+        this.fechaDialogo = document.getElementById("fechaDialogoDia");
+        this.listaDialogo = document.getElementById("listaDialogoDia");
         this.textos = TEXTOS.es;
         this.usuario = null;
         this.asignaturas = [];
@@ -47,6 +51,12 @@ class VistaAgenda {
         document.getElementById("volverAsignaturas").addEventListener("click", () => this.cerrarAsignatura());
         document.getElementById("semanaAnterior").addEventListener("click", () => this.cambiarSemana(-1));
         document.getElementById("semanaSiguiente").addEventListener("click", () => this.cambiarSemana(1));
+        this.dialogo.addEventListener("click", (evento) => {
+            if (evento.target === this.dialogo) {
+                this.dialogo.close();
+            }
+        });
+        this.prepararLeyenda();
         window.addEventListener("resize", () => {
             if (this.seccion.hidden) {
                 return;
@@ -54,6 +64,17 @@ class VistaAgenda {
             clearTimeout(this.redibujo);
             this.redibujo = setTimeout(() => this.pintarHorario(), 120);
         });
+    }
+
+    prepararLeyenda() {
+        const iconos = document.querySelectorAll("#leyendaCalendario .leyenda-icono");
+        if (!iconos.length) {
+            return;
+        }
+        iconos[0].replaceChildren(iconoEstrella());
+        if (iconos[1]) {
+            iconos[1].classList.add("punto");
+        }
     }
 
     mostrar(usuario, textos) {
@@ -190,11 +211,11 @@ class VistaAgenda {
         });
         const marcas = new Map(this.marcasVisibles().map((marca) => [marca.dia, marca.simbolos]));
         const ingles = this.textos.codigo === "EN";
-        const inicio = new Date(anio, mes, 1).getDay();
+        const inicio = desplazamientoLunes(new Date(anio, mes, 1).getDay());
         const diasMes = new Date(anio, mes + 1, 0).getDate();
         const diasPrevios = new Date(anio, mes, 0).getDate();
-        const domingoSemana = new Date(this.hoy.getFullYear(), this.hoy.getMonth(), this.hoy.getDate() - this.hoy.getDay());
-        const despuesSemana = new Date(domingoSemana.getFullYear(), domingoSemana.getMonth(), domingoSemana.getDate() + 7);
+        const lunesSemana = lunesDe(this.hoy);
+        const despuesSemana = new Date(lunesSemana.getFullYear(), lunesSemana.getMonth(), lunesSemana.getDate() + 7);
         const primeraCelda = new Date(anio, mes, 1 - inicio);
         this.rejilla.replaceChildren();
         for (let indice = 0; indice < 42; indice += 1) {
@@ -217,7 +238,7 @@ class VistaAgenda {
                 celda.classList.add("dia-actual");
                 celda.dataset.dia = String(diaMes);
             }
-            if (fechaCelda >= domingoSemana && fechaCelda < despuesSemana) {
+            if (fechaCelda >= lunesSemana && fechaCelda < despuesSemana) {
                 celda.classList.add("semana-hoy");
             }
             numero.textContent = String(diaMes);
@@ -231,13 +252,14 @@ class VistaAgenda {
             }
             celda.append(numero);
             if (deEsteMes && marcas.has(diaMes)) {
+                const simbolos = marcas.get(diaMes);
                 const marcasNodo = document.createElement("span");
                 marcasNodo.className = "marcas";
                 const estrellas = document.createElement("span");
                 const puntos = document.createElement("span");
                 estrellas.className = "fila-marcas";
                 puntos.className = "fila-marcas";
-                marcas.get(diaMes).forEach((simbolo) => {
+                simbolos.forEach((simbolo) => {
                     const icono = simbolo.tipo === "estrella" ? iconoEstrella() : iconoPunto();
                     const nombre = ingles ? simbolo.nombre_ingles : simbolo.nombre;
                     const etiqueta = simbolo.tipo === "estrella" ? this.textos.examen : this.textos.entrega;
@@ -253,9 +275,63 @@ class VistaAgenda {
                     marcasNodo.append(puntos);
                 }
                 celda.append(marcasNodo);
+                celda.classList.add("con-marcas");
+                celda.tabIndex = 0;
+                celda.setAttribute("role", "button");
+                celda.setAttribute("aria-label", `${diaMes} ${this.textos.meses[mes]}`);
+                celda.addEventListener("click", () => this.abrirDialogoDia(diaMes, simbolos));
+                celda.addEventListener("keydown", (evento) => {
+                    if (evento.key === "Enter" || evento.key === " ") {
+                        evento.preventDefault();
+                        this.abrirDialogoDia(diaMes, simbolos);
+                    }
+                });
             }
             this.rejilla.append(celda);
         }
+    }
+
+    abrirDialogoDia(dia, simbolos) {
+        const ingles = this.textos.codigo === "EN";
+        const mes = this.vista.getMonth();
+        const anio = this.vista.getFullYear();
+        this.tituloDialogo.textContent = this.textos.dialogoDia;
+        this.fechaDialogo.textContent = `${dia} ${this.textos.meses[mes]} ${anio}`;
+        this.listaDialogo.replaceChildren();
+        if (!simbolos.length) {
+            const vacio = document.createElement("li");
+            vacio.className = "sin-actividades";
+            vacio.textContent = this.textos.sinActividades;
+            this.listaDialogo.append(vacio);
+        } else {
+            [...simbolos]
+                .sort((a, b) => (a.hora || "").localeCompare(b.hora || "") || a.codigo.localeCompare(b.codigo))
+                .forEach((simbolo) => {
+                    const item = document.createElement("li");
+                    item.className = "actividad-dia";
+                    const cabecera = document.createElement("div");
+                    cabecera.className = "actividad-cabecera";
+                    const icono = simbolo.tipo === "estrella" ? iconoEstrella() : iconoPunto();
+                    const tipo = document.createElement("strong");
+                    tipo.textContent = simbolo.tipo === "estrella" ? this.textos.examen : this.textos.entrega;
+                    const nombre = document.createElement("span");
+                    nombre.className = "actividad-nombre";
+                    nombre.textContent = ingles ? simbolo.nombre_ingles : simbolo.nombre;
+                    cabecera.append(icono, tipo, nombre);
+                    const detalle = document.createElement("p");
+                    detalle.className = "actividad-detalle";
+                    if (simbolo.tipo === "estrella") {
+                        detalle.textContent = simbolo.lugar
+                            ? `${simbolo.hora} · ${simbolo.lugar}`
+                            : simbolo.hora;
+                    } else {
+                        detalle.textContent = `${this.textos.hastaLas} ${simbolo.hora}`;
+                    }
+                    item.append(cabecera, detalle);
+                    this.listaDialogo.append(item);
+                });
+        }
+        this.dialogo.showModal();
     }
 
     marcasVisibles() {
@@ -493,6 +569,10 @@ const TONOS_FRANJA = ["#9d1830", "#7a1528", "#c45c6c", "#5c101c", "#a33d4e", "#8
 function lunesDe(fecha) {
     const delta = fecha.getDay() === 0 ? -6 : 1 - fecha.getDay();
     return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate() + delta);
+}
+
+function desplazamientoLunes(diaJs) {
+    return diaJs === 0 ? 6 : diaJs - 1;
 }
 
 function minutosFranja(hora) {

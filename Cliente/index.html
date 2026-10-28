@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=14">
     <link rel="stylesheet" href="ClienteShared/usuarios.css?v=14">
-    <link rel="stylesheet" href="ClienteShared/agenda.css?v=16">
+    <link rel="stylesheet" href="ClienteShared/agenda.css?v=17">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -316,7 +316,7 @@
 
         <section id="vistaAgenda" class="agenda" hidden>
             <header class="agenda-barra">
-                <h1 data-texto="tituloAgenda">Tu Agenda Estudiantil UCLM</h1>
+                <h1 data-texto="tituloAgenda">Tu Agenda UCLM</h1>
                 <div class="agenda-herramientas">
                     <button id="botonVozAgenda" type="button" data-etiqueta="leerPantalla" aria-label="Leer lo que hay en pantalla">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -367,7 +367,7 @@
                             <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
                             <path d="M16 16.5L20 20.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
                         </svg>
-                        <input id="buscadorAsignatura" type="search" placeholder="Nombre Asignatura" autocomplete="off">
+                        <input id="buscadorAsignatura" type="search" placeholder="Buscar asignatura" autocomplete="off">
                     </label>
                     <p id="sinAsignaturas" data-texto="sinAsignaturas" hidden>Ninguna asignatura coincide con la búsqueda</p>
                     <ul id="listaAsignaturas"></ul>
@@ -388,15 +388,35 @@
                     </div>
                     <div id="diasSemanaAgenda" class="dias-semana"></div>
                     <div id="rejillaAgenda" class="rejilla"></div>
+                    <ul id="leyendaCalendario" class="leyenda-calendario" aria-label="Leyenda">
+                        <li>
+                            <span class="leyenda-icono" aria-hidden="true"></span>
+                            <span data-texto="leyendaExamen">Examen</span>
+                        </li>
+                        <li>
+                            <span class="leyenda-icono punto" aria-hidden="true"></span>
+                            <span data-texto="leyendaEntrega">Entrega</span>
+                        </li>
+                    </ul>
                 </section>
             </div>
+            <dialog id="dialogoDiaAgenda" class="dialogo-dia">
+                <form method="dialog">
+                    <header>
+                        <h2 id="tituloDialogoDia" data-texto="dialogoDia">Actividades del día</h2>
+                        <button type="submit" class="cerrar-dialogo" data-etiqueta="cerrarDialogo" aria-label="Cerrar">&times;</button>
+                    </header>
+                    <p id="fechaDialogoDia" class="fecha-dialogo"></p>
+                    <ul id="listaDialogoDia"></ul>
+                </form>
+            </dialog>
         </section>
     </div>
 
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=17"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=20"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=21"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js?v=10"></script>
@@ -404,7 +424,7 @@
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=15"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=11"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=12"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=11"></script>
     <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=19"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
