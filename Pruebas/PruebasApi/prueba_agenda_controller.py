@@ -21,4 +21,7 @@ def prueba_las_marcas_llegan_con_estrellas_delante(cliente_autenticado):
     assert marcas[11] == ["estrella"] * 5
     assert marcas[16] == ["estrella", "estrella", "punto"]
     assert marcas[27] == ["estrella", "punto", "punto"]
-    assert respuesta.json()[0]["simbolos"][0]["codigo"]
+    simbolo = respuesta.json()[0]["simbolos"][0]
+    assert simbolo["codigo"]
+    assert simbolo["hora"]
+    assert "lugar" in simbolo

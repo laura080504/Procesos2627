@@ -566,6 +566,153 @@ body.con-agenda .herramientas {
     background: var(--rojo-logo);
 }
 
+.dia.con-marcas {
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.dia.con-marcas:hover,
+.dia.con-marcas:focus-visible {
+    outline: 2px solid rgba(157, 24, 48, 0.35);
+    outline-offset: 1px;
+}
+
+.leyenda-calendario {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.1rem;
+    list-style: none;
+    margin: 0.85rem 0 0;
+    padding: 0;
+    color: #6d5a5e;
+    font-size: 0.78rem;
+}
+
+.leyenda-calendario li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.leyenda-icono {
+    display: inline-grid;
+    place-items: center;
+    width: 0.9rem;
+    height: 0.9rem;
+    color: var(--rojo-logo);
+}
+
+.leyenda-icono .estrella {
+    width: 10px;
+    height: 10px;
+}
+
+.leyenda-icono.punto {
+    width: 7px;
+    height: 7px;
+}
+
+.dialogo-dia {
+    width: min(22rem, calc(100vw - 2rem));
+    border: 0;
+    border-radius: 16px;
+    padding: 0;
+    color: #1a1a1a;
+    background: #fff;
+    box-shadow: 0 18px 48px rgba(60, 8, 16, 0.22);
+}
+
+.dialogo-dia::backdrop {
+    background: rgba(30, 12, 16, 0.45);
+}
+
+.dialogo-dia form {
+    margin: 0;
+    padding: 1.1rem 1.2rem 1.2rem;
+}
+
+.dialogo-dia header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.dialogo-dia h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 650;
+}
+
+.cerrar-dialogo {
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #6d5a5e;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.fecha-dialogo {
+    margin: 0.35rem 0 0.9rem;
+    color: #6d5a5e;
+    font-size: 0.9rem;
+}
+
+#listaDialogoDia {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.75rem;
+    max-height: min(50vh, 22rem);
+    overflow: auto;
+}
+
+.actividad-dia {
+    padding: 0.7rem 0.8rem;
+    border-radius: 12px;
+    background: #f8eef0;
+}
+
+.actividad-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.55rem;
+    font-size: 0.92rem;
+}
+
+.actividad-cabecera .estrella {
+    width: 11px;
+    height: 11px;
+}
+
+.actividad-cabecera .punto {
+    width: 7px;
+    height: 7px;
+}
+
+.actividad-nombre {
+    flex: 1 1 100%;
+    font-weight: 500;
+}
+
+.actividad-detalle {
+    margin: 0.35rem 0 0;
+    color: #6d5a5e;
+    font-size: 0.86rem;
+}
+
+.sin-actividades {
+    color: #6d5a5e;
+    font-size: 0.9rem;
+}
+
 body.oscuro .agenda-lista,
 body.oscuro .agenda-calendario,
 body.oscuro .agenda-horario {
@@ -597,6 +744,24 @@ body.oscuro .horario-pista {
         #3a3a40 calc(var(--alto-hora) - 1px),
         #3a3a40 var(--alto-hora)
     );
+}
+
+body.oscuro .leyenda-calendario,
+body.oscuro .fecha-dialogo,
+body.oscuro .actividad-detalle,
+body.oscuro .sin-actividades,
+body.oscuro .cerrar-dialogo {
+    color: #c4c4c8;
+}
+
+body.oscuro .dialogo-dia {
+    background: #2b2b30;
+    color: #f3f3f3;
+    border: 2px solid #c45c6c;
+}
+
+body.oscuro .actividad-dia {
+    background: #3a3a40;
 }
 
 body.oscuro .buscador,
