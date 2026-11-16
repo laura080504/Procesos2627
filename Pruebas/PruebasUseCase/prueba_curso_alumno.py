@@ -45,8 +45,8 @@ def prueba_laura_es_de_primero_porque_es_la_mayoria_de_sus_asignaturas():
     assert resultado.curso == CursoAsignatura.PRIMERO
     assert sum(tramo.porcentaje for tramo in resultado.tramos) == 100
     assert any(tramo.curso == CursoAsignatura.PRIMERO and tramo.cantidad == 4 for tramo in resultado.tramos)
-    assert resultado.creditos_aprobados == 0
-    assert resultado.media is None
+    assert resultado.creditos_aprobados == 30
+    assert resultado.media == 7.0
 
 
 def prueba_laura_ve_los_creditos_aprobados_y_la_media():
@@ -60,3 +60,30 @@ def prueba_laura_ve_los_creditos_aprobados_y_la_media():
     assert matriculas.obtener_notas(EMAIL_LAURA)["42305"] == NOTAS_LAURA["42305"]
     assert resultado.creditos_aprobados == 30
     assert resultado.media == 7.0
+
+
+def prueba_una_cuenta_nueva_recibe_matricula_aleatoria_al_acceder():
+    catalogo = _catalogo()
+    matriculas = RepositorioMatriculasMemoria()
+    asignaturas = RepositorioAsignaturasMemoria()
+    asignaturas.reemplazar(catalogo)
+    email = "nueva@ejemplo.com"
+    resultado = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar(email)
+    codigos = {asignatura.codigo for asignatura in resultado.asignaturas}
+    assert len(codigos) == 6
+    assert all(codigo in {asignatura.codigo for asignatura in catalogo} for codigo in codigos)
+    assert all(nota is not None for nota in matriculas.obtener_notas(email).values())
+    repetido = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar(email)
+    assert {asignatura.codigo for asignatura in repetido.asignaturas} == codigos
+
+
+def prueba_dos_cuentas_nuevas_no_comparten_la_misma_matricula():
+    catalogo = _catalogo()
+    matriculas = RepositorioMatriculasMemoria()
+    asignaturas = RepositorioAsignaturasMemoria()
+    asignaturas.reemplazar(catalogo)
+    una = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar("una@ejemplo.com")
+    otra = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar("otra@ejemplo.com")
+    assert {asignatura.codigo for asignatura in una.asignaturas} != {
+        asignatura.codigo for asignatura in otra.asignaturas
+    }

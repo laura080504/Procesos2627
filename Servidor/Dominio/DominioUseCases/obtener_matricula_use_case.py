@@ -5,7 +5,7 @@ from Servidor.Dominio.DominioEnums.curso_asignatura import CursoAsignatura
 from Servidor.Dominio.DominioServices.curso_alumno import curso_del_alumno
 from Servidor.Dominio.DominioServices.expediente_alumno import expediente_de
 from Servidor.Dominio.DominioServices.horario_asignatura import FranjaHorario, franjas_de
-from Servidor.Dominio.DominioServices.matriculas_muestra import TramoCurso, tramos_de
+from Servidor.Dominio.DominioServices.matriculas_muestra import TramoCurso, asegurar_matricula_de, tramos_de
 from Servidor.Dominio.DominioUseCases.listar_asignaturas_use_case import _plano
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas import RepositorioAsignaturas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
@@ -27,6 +27,7 @@ class ObtenerMatriculaUseCase:
         self.repositorio_asignaturas = repositorio_asignaturas
 
     def ejecutar(self, email: str, nombre: str = "") -> MatriculaAlumno:
+        asegurar_matricula_de(self.repositorio_matriculas, email)
         notas = self.repositorio_matriculas.obtener_notas(email)
         catalogo = self.repositorio_asignaturas.obtener_todas()
         propias = [asignatura for asignatura in catalogo if asignatura.codigo in notas]

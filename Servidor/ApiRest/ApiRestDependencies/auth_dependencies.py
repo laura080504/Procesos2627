@@ -5,6 +5,7 @@ from fastapi import Depends, Request
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
     obtener_enviador_correo,
     obtener_repositorio_confirmaciones,
+    obtener_repositorio_matriculas,
     obtener_repositorio_recuperaciones,
     obtener_repositorio_sesiones,
     obtener_repositorio_usuarios,
@@ -17,6 +18,7 @@ from Servidor.configuracion import Configuracion
 from Servidor.Infraestructura.cliente_google import ClienteGoogle
 from Servidor.Infraestructura.enviador_correo import EnviadorCorreo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_confirmaciones import RepositorioConfirmaciones
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones import RepositorioSesiones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
@@ -51,8 +53,9 @@ def crear_registrar_usuario_use_case(
     repositorio_usuarios: RepositorioUsuarios = Depends(obtener_repositorio_usuarios),
     hasher: HasherContrasenas = Depends(obtener_hasher_contrasenas),
     emitir_confirmacion: EmitirConfirmacionUseCase = Depends(crear_emitir_confirmacion_use_case),
+    repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
 ) -> RegistrarUsuarioUseCase:
-    return RegistrarUsuarioUseCase(repositorio_usuarios, hasher, emitir_confirmacion)
+    return RegistrarUsuarioUseCase(repositorio_usuarios, hasher, emitir_confirmacion, repositorio_matriculas)
 
 
 def crear_confirmar_cuenta_use_case(
@@ -68,6 +71,7 @@ def crear_iniciar_sesion_google_use_case(
     hasher: HasherContrasenas = Depends(obtener_hasher_contrasenas),
     configuracion: Configuracion = Depends(obtener_configuracion),
     repositorio_confirmaciones: RepositorioConfirmaciones = Depends(obtener_repositorio_confirmaciones),
+    repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
 ) -> IniciarSesionGoogleUseCase:
     return IniciarSesionGoogleUseCase(
         repositorio_usuarios,
@@ -75,6 +79,7 @@ def crear_iniciar_sesion_google_use_case(
         hasher,
         configuracion.duracion_sesion,
         repositorio_confirmaciones,
+        repositorio_matriculas,
     )
 
 
@@ -90,9 +95,14 @@ def crear_iniciar_sesion_use_case(
     repositorio_sesiones: RepositorioSesiones = Depends(obtener_repositorio_sesiones),
     hasher: HasherContrasenas = Depends(obtener_hasher_contrasenas),
     configuracion: Configuracion = Depends(obtener_configuracion),
+    repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
 ) -> IniciarSesionUseCase:
     return IniciarSesionUseCase(
-        repositorio_usuarios, repositorio_sesiones, hasher, configuracion.duracion_sesion
+        repositorio_usuarios,
+        repositorio_sesiones,
+        hasher,
+        configuracion.duracion_sesion,
+        repositorio_matriculas,
     )
 
 
