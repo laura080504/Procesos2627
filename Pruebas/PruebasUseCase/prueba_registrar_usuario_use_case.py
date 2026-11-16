@@ -40,10 +40,14 @@ def prueba_no_permite_email_duplicado(use_case, repositorio_usuarios, hasher):
     assert hasher.verificar("contrasena-segura", guardado.contrasena_hash)
 
 
-def prueba_no_permite_registrar_si_el_email_esta_eliminado(use_case, repositorio_usuarios):
+def prueba_permite_registrar_de_nuevo_si_el_email_esta_eliminado(use_case, repositorio_usuarios, hasher):
     usuario = use_case.ejecutar(RegistrarUsuarioCommand("laura@ejemplo.com", "laura", "contrasena-segura"))
     usuario.estado = EstadoUsuario.ELIMINADO
+    usuario.rol = Rol.PROFESOR
     repositorio_usuarios.actualizar(usuario)
-    with pytest.raises(UsuarioYaExiste):
-        use_case.ejecutar(RegistrarUsuarioCommand("laura@ejemplo.com", "nueva", "nueva-segura"))
-    assert repositorio_usuarios.obtener_por_email("laura@ejemplo.com").nick == "laura"
+    reactivado = use_case.ejecutar(RegistrarUsuarioCommand("laura@ejemplo.com", "nueva", "nueva-segura"))
+    assert reactivado.nick == "nueva"
+    assert reactivado.estado == EstadoUsuario.PENDIENTE
+    assert reactivado.rol == Rol.USUARIO
+    assert hasher.verificar("nueva-segura", reactivado.contrasena_hash)
+    assert repositorio_usuarios.obtener_por_email("laura@ejemplo.com") == reactivado
