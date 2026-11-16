@@ -95,7 +95,10 @@ _configuracion = obtener_configuracion()
     _repositorio_matriculas,
 ) = crear_repositorios(_configuracion)
 _enviador_correo = EnviadorCorreoBrevo(
-    _configuracion.brevo_api_clave,
+    _configuracion.brevo_smtp_servidor,
+    _configuracion.brevo_smtp_puerto,
+    _configuracion.brevo_smtp_usuario,
+    _configuracion.brevo_smtp_clave,
     _configuracion.brevo_remitente,
     _configuracion.brevo_remitente_nombre,
 )
