@@ -101,6 +101,7 @@ _enviador_correo = EnviadorCorreoBrevo(
     _configuracion.brevo_smtp_clave,
     _configuracion.brevo_remitente,
     _configuracion.brevo_remitente_nombre,
+    _configuracion.brevo_api_clave,
 )
 if _configuracion.admin_email and _configuracion.admin_contrasena:
     AsegurarAdministradorUseCase(_repositorio_usuarios, obtener_hasher_contrasenas()).ejecutar(
