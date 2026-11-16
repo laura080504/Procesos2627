@@ -1,6 +1,9 @@
+import random
 from dataclasses import dataclass
 
 from Servidor.Dominio.DominioEnums.curso_asignatura import CursoAsignatura
+from Servidor.Dominio.DominioServices.catalogo_informatica_albacete import CATALOGO_INFORMATICA_ALBACETE
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 
 EMAIL_LAURA = "lgonzarico@gmail.com"
 CONTRASENA_PRUEBA = "prueba1234"
@@ -35,6 +38,9 @@ ALUMNOS_PRUEBA = (
     },
 )
 
+_CANTIDAD_MUESTRA = 6
+_PRINCIPALES_MUESTRA = 4
+
 
 @dataclass(frozen=True)
 class TramoCurso:
@@ -47,6 +53,36 @@ def notas_de_muestra(email: str, codigos: tuple[str, ...] | list[str]) -> dict[s
     if email == EMAIL_LAURA:
         return {codigo: NOTAS_LAURA[codigo] for codigo in codigos if codigo in NOTAS_LAURA}
     return {codigo: float(4 + int(codigo) % 6) for codigo in codigos}
+
+
+def codigos_aleatorios_para(email: str) -> tuple[str, ...]:
+    if email == EMAIL_LAURA:
+        return CODIGOS_LAURA
+    por_curso: dict[CursoAsignatura, list[str]] = {}
+    for asignatura in CATALOGO_INFORMATICA_ALBACETE:
+        por_curso.setdefault(asignatura.curso, []).append(asignatura.codigo)
+    aleatorio = random.Random(email.strip().lower())
+    curso_principal = aleatorio.choice(list(por_curso.keys()))
+    principales = por_curso[curso_principal]
+    n_principal = min(_PRINCIPALES_MUESTRA, len(principales))
+    elegidos = aleatorio.sample(principales, n_principal)
+    resto = [codigo for codigo in (a.codigo for a in CATALOGO_INFORMATICA_ALBACETE) if codigo not in elegidos]
+    n_extra = min(_CANTIDAD_MUESTRA - n_principal, len(resto))
+    if n_extra:
+        elegidos.extend(aleatorio.sample(resto, n_extra))
+    return tuple(sorted(elegidos))
+
+
+def asegurar_matricula_de(repositorio_matriculas: RepositorioMatriculas, email: str, codigos: tuple[str, ...] | None = None) -> list[str]:
+    email = email.strip().lower()
+    actuales = repositorio_matriculas.obtener_codigos(email)
+    if actuales:
+        repositorio_matriculas.rellenar_notas(email, notas_de_muestra(email, actuales))
+        return actuales
+    elegidos = list(codigos if codigos is not None else codigos_aleatorios_para(email))
+    repositorio_matriculas.reemplazar_alumno(email, elegidos)
+    repositorio_matriculas.rellenar_notas(email, notas_de_muestra(email, elegidos))
+    return elegidos
 
 
 def tramos_de(asignaturas: list) -> list[TramoCurso]:

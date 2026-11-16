@@ -25,3 +25,12 @@ def prueba_las_marcas_llegan_con_estrellas_delante(cliente_autenticado):
     assert simbolo["codigo"]
     assert simbolo["hora"]
     assert "lugar" in simbolo
+
+
+def prueba_un_usuario_sin_matricula_recibe_asignaturas_de_muestra(cliente_autenticado):
+    respuesta = cliente_autenticado.get("/api/matricula")
+    assert respuesta.status_code == 200
+    cuerpo = respuesta.json()
+    assert len(cuerpo["asignaturas"]) == 6
+    assert len(cuerpo["horario"]) >= 1
+    assert cuerpo["creditos_aprobados"] >= 0
