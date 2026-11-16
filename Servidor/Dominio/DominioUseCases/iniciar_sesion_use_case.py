@@ -1,6 +1,7 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones import RepositorioSesiones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Dominio.DominioCommands.iniciar_sesion_command import IniciarSesionCommand
@@ -11,6 +12,7 @@ from Servidor.Dominio.DominioExceptions.cuenta_eliminada import CuentaEliminada
 from Servidor.Dominio.DominioExceptions.cuenta_pendiente import CuentaPendiente
 from Servidor.Dominio.DominioResults.inicio_sesion_resultado import InicioSesionResultado
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
+from Servidor.Dominio.DominioServices.matriculas_muestra import asegurar_matricula_de
 
 
 class IniciarSesionUseCase:
@@ -20,11 +22,13 @@ class IniciarSesionUseCase:
         repositorio_sesiones: RepositorioSesiones,
         hasher: HasherContrasenas,
         duracion_sesion: timedelta,
+        repositorio_matriculas: RepositorioMatriculas | None = None,
     ):
         self.repositorio_usuarios = repositorio_usuarios
         self.repositorio_sesiones = repositorio_sesiones
         self.hasher = hasher
         self.duracion_sesion = duracion_sesion
+        self.repositorio_matriculas = repositorio_matriculas
 
     def ejecutar(self, command: IniciarSesionCommand) -> InicioSesionResultado:
         email = command.email.strip().lower()
@@ -38,6 +42,8 @@ class IniciarSesionUseCase:
         if usuario.estado == EstadoUsuario.PENDIENTE:
             raise CuentaPendiente(email)
 
+        if self.repositorio_matriculas is not None:
+            asegurar_matricula_de(self.repositorio_matriculas, email)
         sesion = Sesion(
             token=secrets.token_urlsafe(32),
             email=email,

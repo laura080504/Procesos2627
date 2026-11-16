@@ -8,7 +8,9 @@ from Servidor.Dominio.DominioExceptions.cuenta_eliminada import CuentaEliminada
 from Servidor.Dominio.DominioExceptions.oauth_no_valido import OauthNoValido
 from Servidor.Dominio.DominioResults.inicio_sesion_resultado import InicioSesionResultado
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
+from Servidor.Dominio.DominioServices.matriculas_muestra import asegurar_matricula_de
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_confirmaciones import RepositorioConfirmaciones
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones import RepositorioSesiones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 
@@ -21,12 +23,14 @@ class IniciarSesionGoogleUseCase:
         hasher: HasherContrasenas,
         duracion_sesion: timedelta,
         repositorio_confirmaciones: RepositorioConfirmaciones | None = None,
+        repositorio_matriculas: RepositorioMatriculas | None = None,
     ):
         self.repositorio_usuarios = repositorio_usuarios
         self.repositorio_sesiones = repositorio_sesiones
         self.hasher = hasher
         self.duracion_sesion = duracion_sesion
         self.repositorio_confirmaciones = repositorio_confirmaciones
+        self.repositorio_matriculas = repositorio_matriculas
 
     def ejecutar(self, email: str, nombre: str) -> InicioSesionResultado:
         email = email.strip().lower()
@@ -54,6 +58,8 @@ class IniciarSesionGoogleUseCase:
             raise RuntimeError(f"No se ha podido guardar la sesión de {email}")
         if self.repositorio_confirmaciones is not None:
             self.repositorio_confirmaciones.eliminar_por_email(email)
+        if self.repositorio_matriculas is not None:
+            asegurar_matricula_de(self.repositorio_matriculas, email)
         sesion = Sesion(
             token=secrets.token_urlsafe(32),
             email=email,

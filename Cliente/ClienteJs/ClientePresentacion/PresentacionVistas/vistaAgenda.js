@@ -483,11 +483,11 @@ class VistaAgenda {
         titulo.textContent = nombre;
         cabecera.append(insignia, titulo);
         const teoria = bloqueGrupo(this.textos.teoria, `${aula} ${grupo.aulaTeoria}`, [
-            { nombre: this.textos.nombreProfesor, lado: `${despacho} ${grupo.despachoTeoria}` },
+            { nombre: grupo.profesorTeoria, lado: `${despacho} ${grupo.despachoTeoria}` },
         ]);
-        const practicas = bloqueGrupo(this.textos.practicas, `${aula} ${grupo.aulaPracticas}`, grupo.despachos.map((numero) => ({
-            nombre: this.textos.nombreProfesor,
-            lado: `${despacho} ${numero}`,
+        const practicas = bloqueGrupo(this.textos.practicas, `${aula} ${grupo.aulaPracticas}`, grupo.profesoresPracticas.map((nombre, indice) => ({
+            nombre,
+            lado: `${despacho} ${grupo.despachos[indice]}`,
         })));
         const enlaces = document.createElement("div");
         enlaces.className = "ficha-enlaces";
@@ -634,13 +634,33 @@ function iconoPunto() {
     return punto;
 }
 
+const PROFESORES_MUESTRA = [
+    "Ana Ruiz",
+    "Carlos Vega",
+    "Elena Mora",
+    "Hugo Santos",
+    "Irene Díaz",
+    "Javier Peña",
+    "Lucía Ortega",
+    "Miguel Torres",
+    "Nora Gil",
+    "Pablo Ramos",
+    "Raquel Soto",
+    "Sergio Núñez",
+];
+
 function grupoDe(codigo) {
     const base = Number(String(codigo).slice(-2)) || 1;
+    const semilla = Number(String(codigo).replace(/\D/g, "")) || base;
+    const teoria = PROFESORES_MUESTRA[semilla % PROFESORES_MUESTRA.length];
+    const practicas = [0, 1, 2].map((indice) => PROFESORES_MUESTRA[(semilla + indice + 1) % PROFESORES_MUESTRA.length]);
     return {
         aulaTeoria: `${(base % 3) + 1}.${(base % 4) + 1}`,
         aulaPracticas: `${(base % 3) + 1}.${(base % 2) + 1}`,
         despachoTeoria: String((base % 5) + 1),
         despachos: [0, 1, 2].map((indice) => String((base + indice) % 6 + 1)),
+        profesorTeoria: teoria,
+        profesoresPracticas: practicas,
     };
 }
 

@@ -5,7 +5,7 @@ from Servidor.Dominio.DominioServices.matriculas_muestra import (
     CODIGOS_LAURA,
     CONTRASENA_PRUEBA,
     EMAIL_LAURA,
-    notas_de_muestra,
+    asegurar_matricula_de,
 )
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
@@ -32,6 +32,4 @@ class AsegurarMatriculasMuestraUseCase:
             self.repositorio_usuarios.insertar(
                 Usuario(email=email, nick=nick, contrasena_hash=self.hasher.hashear(CONTRASENA_PRUEBA))
             )
-        if not self.repositorio_matriculas.obtener_codigos(email):
-            self.repositorio_matriculas.reemplazar_alumno(email, list(codigos))
-        self.repositorio_matriculas.rellenar_notas(email, notas_de_muestra(email, codigos))
+        asegurar_matricula_de(self.repositorio_matriculas, email, codigos)
