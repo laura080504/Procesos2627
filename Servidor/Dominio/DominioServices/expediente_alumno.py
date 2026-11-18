@@ -12,16 +12,22 @@ class ExpedienteAlumno:
 
 
 def expediente_de(asignaturas: list[Asignatura], notas: dict[str, float | None]) -> ExpedienteAlumno:
+    """Créditos solo de aprobadas; media ponderada de todas las calificadas (también suspensos)."""
     creditos_aprobados = 0
-    suma = 0.0
-    pesos = 0
+    suma_ponderada = 0.0
+    creditos_calificados = 0
+
     for asignatura in asignaturas:
         nota = notas.get(asignatura.codigo)
         if nota is None:
             continue
-        suma += nota * asignatura.creditos
-        pesos += asignatura.creditos
+
+        suma_ponderada += nota * asignatura.creditos
+        creditos_calificados += asignatura.creditos
         if nota >= NOTA_APROBADO:
             creditos_aprobados += asignatura.creditos
-    media = round(suma / pesos, 2) if pesos else None
+
+    media = None
+    if creditos_calificados:
+        media = round(suma_ponderada / creditos_calificados, 2)
     return ExpedienteAlumno(creditos_aprobados, media)

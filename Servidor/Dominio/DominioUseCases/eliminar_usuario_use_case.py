@@ -34,10 +34,16 @@ class EliminarUsuarioUseCase:
 
 
 def _puede_eliminar(rol_solicitante: Rol, email_solicitante: str, objetivo) -> bool:
+    # Superadministrador: nunca se elimina.
     if objetivo.rol == Rol.SUPERADMINISTRADOR:
         return False
+    # Uno mismo: solo si es usuario normal.
     if email_solicitante == objetivo.email:
         return objetivo.rol == Rol.USUARIO
+    # Sobre otra cuenta:
+    # - superadministrador → usuario o profesor
+    # - profesor → solo usuario
+    # - usuario → nadie
     if rol_solicitante == Rol.SUPERADMINISTRADOR:
         return objetivo.rol in (Rol.USUARIO, Rol.PROFESOR)
     if rol_solicitante == Rol.PROFESOR:
