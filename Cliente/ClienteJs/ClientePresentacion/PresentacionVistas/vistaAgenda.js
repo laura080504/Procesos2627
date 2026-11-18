@@ -34,11 +34,23 @@ const VistaAgenda = (() => {
             this.tituloDialogo = document.getElementById("tituloDialogoDia");
             this.fechaDialogo = document.getElementById("fechaDialogoDia");
             this.listaDialogo = document.getElementById("listaDialogoDia");
+            this.dialogoAvisos = document.getElementById("dialogoAvisos");
+            this.listaAvisos = document.getElementById("listaAvisos");
+            this.sinAvisos = document.getElementById("sinAvisos");
+            this.botonMarcarAvisosLeidos = document.getElementById("botonMarcarAvisosLeidos");
+            this.botonEliminarAvisos = document.getElementById("botonEliminarAvisos");
+            this.botonAvisos = document.getElementById("botonAvisosAgenda");
+            this.iconoAvisos = document.getElementById("iconoAvisosAgenda");
+            this.contadorAvisos = document.getElementById("contadorAvisos");
+            this.avisosActivos = [];
             this.textos = TEXTOS.es;
             this.usuario = null;
             this.asignaturas = [];
             this.marcas = [];
+            this.marcasAntelacion = [];
             this.horario = [];
+            this.avisos = [];
+            this.preferenciasAvisos = PreferenciasNotificaciones.leer();
             this.abierta = null;
             this.hoy = new Date();
             this.lunes = lunesDe(this.hoy);
@@ -51,6 +63,9 @@ const VistaAgenda = (() => {
             document.getElementById("botonTemaAgenda").addEventListener("click", alCambiarTema);
             document.getElementById("botonIdiomaAgenda").addEventListener("click", alCambiarIdioma);
             document.getElementById("botonVozAgenda").addEventListener("click", () => alLeer(this.textoEnPantalla()));
+            this.botonAvisos.addEventListener("click", () => this.abrirDialogoAvisos());
+            this.botonMarcarAvisosLeidos.addEventListener("click", () => this.marcarTodosAvisosLeidos());
+            this.botonEliminarAvisos.addEventListener("click", () => this.eliminarTodosAvisos());
             document.getElementById("mesAnterior").addEventListener("click", () => this.cambiarMes(-1));
             document.getElementById("mesSiguiente").addEventListener("click", () => this.cambiarMes(1));
             this.mes.addEventListener("change", () => {
@@ -75,7 +90,13 @@ const VistaAgenda = (() => {
                     this.dialogo.close();
                 }
             });
+            this.dialogoAvisos.addEventListener("click", (evento) => {
+                if (evento.target === this.dialogoAvisos) {
+                    this.dialogoAvisos.close();
+                }
+            });
             this.prepararLeyenda();
+            this.aplicarPreferenciasAvisos(this.preferenciasAvisos);
             window.addEventListener("resize", () => {
                 if (this.seccion.hidden) {
                     return;
@@ -107,9 +128,12 @@ const VistaAgenda = (() => {
             this.ficha.hidden = true;
             this.buscador.closest(".buscador").hidden = false;
             this.lista.hidden = false;
+            this.preferenciasAvisos = PreferenciasNotificaciones.leer();
+            this.aplicarPreferenciasAvisos(this.preferenciasAvisos);
             this.rellenarSelectores();
             this.pintarCalendario();
             this.pintarHorario();
+            this.actualizarAvisos();
             this.iniciarReloj();
         }
 
@@ -150,6 +174,7 @@ const VistaAgenda = (() => {
             this.textos = textos;
             aplicarTextos(this.seccion, textos);
             this.buscador.placeholder = textos.buscarAsignatura;
+            this.botonAvisos.setAttribute("aria-label", textos.abrirAvisos);
             if (this.usuario) {
                 this.nick.textContent = this.usuario.nick;
             }
@@ -161,6 +186,7 @@ const VistaAgenda = (() => {
                 }
                 this.pintarCalendario();
                 this.pintarHorario();
+                this.actualizarAvisos();
             }
         }
 
@@ -172,9 +198,12 @@ const VistaAgenda = (() => {
             return { anio: this.vista.getFullYear(), mes: this.vista.getMonth() + 1 };
         }
 
-        pintar(asignaturas, marcas, horario) {
+        pintar(asignaturas, marcas, horario, marcasAntelacion) {
             this.asignaturas = asignaturas;
             this.marcas = marcas;
+            if (marcasAntelacion !== undefined) {
+                this.marcasAntelacion = marcasAntelacion;
+            }
             if (horario) {
                 this.horario = horario;
             }
@@ -188,11 +217,105 @@ const VistaAgenda = (() => {
                 this.pintarFicha();
                 this.pintarCalendario();
                 this.pintarHorario();
+                this.actualizarAvisos();
                 return;
             }
             this.pintarLista();
             this.pintarCalendario();
             this.pintarHorario();
+            this.actualizarAvisos();
+        }
+
+        aplicarPreferenciasAvisos(preferencias) {
+            this.preferenciasAvisos = preferencias;
+            this.iconoAvisos.replaceChildren(
+                this.preferenciasAvisos.icono === "mascota" ? iconoMascota() : iconoCampana(),
+            );
+            this.botonAvisos.setAttribute("aria-label", this.textos.abrirAvisos || "Abrir avisos");
+            this.actualizarAvisos();
+        }
+
+        actualizarAvisos() {
+            const codigos = this.asignaturas.map((asignatura) => asignatura.codigo);
+            const marcasAvisos = this.marcasAntelacion.length
+                ? this.filtrarMarcas(this.marcasAntelacion)
+                : this.marcasVisibles();
+            this.avisos = PreferenciasNotificaciones.construirAvisos({
+                marcas: marcasAvisos,
+                horario: this.franjasVisibles(),
+                textos: this.textos,
+                preferencias: this.preferenciasAvisos,
+                ahora: this.hoy,
+                mesVista: this.vista,
+                codigosMatricula: codigos,
+            });
+            this.avisosActivos = PreferenciasNotificaciones.filtrarAvisosActivos(this.avisos);
+            const noLeidos = this.avisosActivos.filter((aviso) => !PreferenciasNotificaciones.estaLeido(aviso.id));
+            const total = noLeidos.length;
+            this.contadorAvisos.textContent = String(total);
+            this.contadorAvisos.hidden = total === 0;
+            this.botonMarcarAvisosLeidos.disabled = total === 0;
+            this.botonEliminarAvisos.disabled = this.avisosActivos.length === 0;
+        }
+
+        pintarListaAvisos() {
+            document.getElementById("tituloDialogoAvisos").textContent = this.textos.tituloAvisos;
+            this.botonMarcarAvisosLeidos.textContent = this.textos.marcarAvisosLeidos;
+            this.botonEliminarAvisos.textContent = this.textos.eliminarAvisos;
+            this.listaAvisos.replaceChildren();
+            this.sinAvisos.hidden = this.avisosActivos.length > 0;
+            this.avisosActivos.forEach((aviso) => {
+                const leido = PreferenciasNotificaciones.estaLeido(aviso.id);
+                const item = document.createElement("li");
+                item.className = `aviso-item aviso-${aviso.tipo} ${leido ? "aviso-leido" : "aviso-no-leido"}`;
+                item.dataset.id = aviso.id;
+                item.tabIndex = 0;
+                item.setAttribute("role", "button");
+                item.setAttribute("aria-pressed", leido ? "true" : "false");
+                const punto = document.createElement("span");
+                punto.className = "aviso-punto";
+                punto.setAttribute("aria-hidden", "true");
+                const cuerpo = document.createElement("span");
+                cuerpo.className = "aviso-cuerpo";
+                const titulo = document.createElement("strong");
+                titulo.textContent = aviso.titulo;
+                const detalle = document.createElement("span");
+                detalle.textContent = aviso.detalle;
+                cuerpo.append(titulo, detalle);
+                item.append(punto, cuerpo);
+                item.addEventListener("click", () => this.marcarAvisoLeido(aviso.id));
+                item.addEventListener("keydown", (evento) => {
+                    if (evento.key === "Enter" || evento.key === " ") {
+                        evento.preventDefault();
+                        this.marcarAvisoLeido(aviso.id);
+                    }
+                });
+                this.listaAvisos.append(item);
+            });
+        }
+
+        abrirDialogoAvisos() {
+            this.actualizarAvisos();
+            this.pintarListaAvisos();
+            this.dialogoAvisos.showModal();
+        }
+
+        marcarAvisoLeido(id) {
+            PreferenciasNotificaciones.marcarLeido(id);
+            this.actualizarAvisos();
+            this.pintarListaAvisos();
+        }
+
+        marcarTodosAvisosLeidos() {
+            PreferenciasNotificaciones.marcarTodosLeidos(this.avisosActivos.map((aviso) => aviso.id));
+            this.actualizarAvisos();
+            this.pintarListaAvisos();
+        }
+
+        eliminarTodosAvisos() {
+            PreferenciasNotificaciones.eliminarTodos(this.avisosActivos.map((aviso) => aviso.id));
+            this.actualizarAvisos();
+            this.pintarListaAvisos();
         }
 
         pintarLista() {
@@ -400,13 +523,20 @@ const VistaAgenda = (() => {
         }
 
         marcasVisibles() {
-            if (!this.abierta) {
-                return this.marcas;
-            }
-            return this.marcas
+            return this.filtrarMarcas(this.marcas);
+        }
+
+        filtrarMarcas(marcas) {
+            const codigos = new Set(this.asignaturas.map((asignatura) => asignatura.codigo));
+            return (marcas || [])
                 .map((marca) => ({
                     dia: marca.dia,
-                    simbolos: marca.simbolos.filter((simbolo) => simbolo.codigo === this.abierta.codigo),
+                    simbolos: (marca.simbolos || []).filter((simbolo) => {
+                        if (this.abierta) {
+                            return simbolo.codigo === this.abierta.codigo;
+                        }
+                        return codigos.has(simbolo.codigo);
+                    }),
                 }))
                 .filter((marca) => marca.simbolos.length);
         }
@@ -712,6 +842,71 @@ const VistaAgenda = (() => {
             const columnasVisibles = Math.max(...grupo.map((otra) => otra.columna)) + 1;
             return { ...franja, columnasVisibles };
         });
+    }
+
+    function iconoCampana() {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("aria-hidden", "true");
+        const cuerpo = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        cuerpo.setAttribute("d", "M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9");
+        cuerpo.setAttribute("fill", "none");
+        cuerpo.setAttribute("stroke", "currentColor");
+        cuerpo.setAttribute("stroke-width", "1.6");
+        cuerpo.setAttribute("stroke-linecap", "round");
+        cuerpo.setAttribute("stroke-linejoin", "round");
+        const badajo = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        badajo.setAttribute("d", "M10.3 21a1.94 1.94 0 0 0 3.4 0");
+        badajo.setAttribute("fill", "none");
+        badajo.setAttribute("stroke", "currentColor");
+        badajo.setAttribute("stroke-width", "1.6");
+        badajo.setAttribute("stroke-linecap", "round");
+        badajo.setAttribute("stroke-linejoin", "round");
+        svg.append(cuerpo, badajo);
+        return svg;
+    }
+
+    function iconoMascota() {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("aria-hidden", "true");
+        const cara = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        cara.setAttribute("cx", "12");
+        cara.setAttribute("cy", "13");
+        cara.setAttribute("r", "6.2");
+        cara.setAttribute("fill", "none");
+        cara.setAttribute("stroke", "currentColor");
+        cara.setAttribute("stroke-width", "1.6");
+        const orejaIzq = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        orejaIzq.setAttribute("d", "M7.2 8.2 5.4 4.8 9.2 6.6");
+        orejaIzq.setAttribute("fill", "none");
+        orejaIzq.setAttribute("stroke", "currentColor");
+        orejaIzq.setAttribute("stroke-width", "1.6");
+        orejaIzq.setAttribute("stroke-linejoin", "round");
+        const orejaDer = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        orejaDer.setAttribute("d", "M16.8 8.2 18.6 4.8 14.8 6.6");
+        orejaDer.setAttribute("fill", "none");
+        orejaDer.setAttribute("stroke", "currentColor");
+        orejaDer.setAttribute("stroke-width", "1.6");
+        orejaDer.setAttribute("stroke-linejoin", "round");
+        const ojoIzq = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        ojoIzq.setAttribute("cx", "9.8");
+        ojoIzq.setAttribute("cy", "12.4");
+        ojoIzq.setAttribute("r", "0.9");
+        ojoIzq.setAttribute("fill", "currentColor");
+        const ojoDer = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        ojoDer.setAttribute("cx", "14.2");
+        ojoDer.setAttribute("cy", "12.4");
+        ojoDer.setAttribute("r", "0.9");
+        ojoDer.setAttribute("fill", "currentColor");
+        const boca = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        boca.setAttribute("d", "M10.2 15.2c.7.7 2.9.7 3.6 0");
+        boca.setAttribute("fill", "none");
+        boca.setAttribute("stroke", "currentColor");
+        boca.setAttribute("stroke-width", "1.4");
+        boca.setAttribute("stroke-linecap", "round");
+        svg.append(cara, orejaIzq, orejaDer, ojoIzq, ojoDer, boca);
+        return svg;
     }
 
     function iconoEstrella() {

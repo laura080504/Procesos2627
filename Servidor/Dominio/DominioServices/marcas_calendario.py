@@ -17,6 +17,7 @@ class SimboloCalendario:
     nombre: str
     nombre_ingles: str
     hora: str
+    fecha: str
     lugar: str | None = None
 
 
@@ -60,5 +61,6 @@ def _simbolo_de(evento: Evento, asignatura: Asignatura | None) -> SimboloCalenda
         nombre=asignatura.nombre if asignatura else evento.codigo,
         nombre_ingles=asignatura.nombre_ingles if asignatura else evento.codigo,
         hora=evento.hora,
+        fecha=evento.fecha.isoformat(),
         lugar=evento.lugar,
     )
