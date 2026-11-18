@@ -13,3 +13,6 @@ class RepositorioEventos(ABC):
 
     @abstractmethod
     def reemplazar(self, eventos: list[Evento]) -> None: ...
+
+    @abstractmethod
+    def guardar(self, evento: Evento) -> None: ...

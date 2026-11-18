@@ -40,3 +40,20 @@ def prueba_otro_mes_no_repite_las_marcas_de_octubre():
     noviembre = ObtenerMarcasCalendarioUseCase(eventos, asignaturas).ejecutar(ObtenerMarcasCalendarioQuery(2026, 11))
     assert noviembre
     assert {marca.dia for marca in noviembre} != {4, 7, 11, 16, 21, 27}
+
+
+def prueba_noviembre_incluye_avisos_de_la_matricula_demo():
+    cursos = RepositorioCursosMemoria()
+    asignaturas = RepositorioAsignaturasMemoria()
+    eventos = RepositorioEventosMemoria()
+    AsegurarCatalogoAsignaturasUseCase(cursos, asignaturas).ejecutar()
+    AsegurarEventosMuestraUseCase(eventos, asignaturas).ejecutar()
+    noviembre = ObtenerMarcasCalendarioUseCase(eventos, asignaturas).ejecutar(ObtenerMarcasCalendarioQuery(2026, 11))
+    por_codigo = {
+        simbolo.codigo
+        for marca in noviembre
+        for simbolo in marca.simbolos
+    }
+    assert {"42300", "42302", "42304", "42305", "42314", "42322"} <= por_codigo
+    dias = {marca.dia for marca in noviembre}
+    assert {19, 20, 21, 25, 26} <= dias

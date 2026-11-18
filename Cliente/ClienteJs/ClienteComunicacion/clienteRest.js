@@ -76,4 +76,12 @@ class ClienteRest {
     obtenerMarcas(anio, mes) {
         return this.clienteHttp.peticion("GET", `/agenda/marcas?anio=${anio}&mes=${mes}`);
     }
+
+    crearEvento({ codigo, tipo, fecha, hora, lugar }) {
+        const cuerpo = { codigo, tipo, fecha, hora };
+        if (lugar) {
+            cuerpo.lugar = lugar;
+        }
+        return this.clienteHttp.peticion("POST", "/eventos", cuerpo);
+    }
 }

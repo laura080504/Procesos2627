@@ -14,6 +14,9 @@ class RepositorioEventosMemoria(RepositorioEventos):
     def reemplazar(self, eventos: list[Evento]) -> None:
         self._eventos = {_clave(evento): evento for evento in eventos}
 
+    def guardar(self, evento: Evento) -> None:
+        self._eventos[_clave(evento)] = evento
+
 
 def _clave(evento: Evento) -> str:
-    return f"{evento.fecha.isoformat()}|{evento.codigo}|{evento.tipo.value}"
+    return f"{evento.fecha.isoformat()}|{evento.codigo}|{evento.tipo.value}|{evento.hora}"
