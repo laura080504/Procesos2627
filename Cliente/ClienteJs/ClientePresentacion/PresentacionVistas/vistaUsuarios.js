@@ -118,6 +118,10 @@ class VistaUsuarios {
             : this.textos.sinCurso;
         document.getElementById("creditosAprobados").textContent =
             `${this.textos.creditosAprobados}: ${matricula.creditos_aprobados}`;
+        const convalidados = document.getElementById("creditosConvalidados");
+        const cuantosConvalidados = matricula.creditos_convalidados || 0;
+        convalidados.textContent = `${this.textos.creditosConvalidados}: ${cuantosConvalidados}`;
+        convalidados.hidden = cuantosConvalidados === 0;
         const media = document.getElementById("mediaCarrera");
         media.textContent = matricula.media === null || matricula.media === undefined
             ? `${this.textos.mediaCarrera}: ${this.textos.sinMedia}`

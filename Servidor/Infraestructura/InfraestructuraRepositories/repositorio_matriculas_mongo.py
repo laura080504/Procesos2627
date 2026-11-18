@@ -15,13 +15,26 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
         documentos = self.base_datos.coleccion("matricula").find({"email": email}).sort("codigo", 1)
         return {documento["codigo"]: documento.get("nota") for documento in documentos}
 
+    def obtener_convalidadas(self, email: str) -> set[str]:
+        documentos = self.base_datos.coleccion("matricula").find(
+            {"email": email, "convalidada": True},
+            {"codigo": 1},
+        )
+        return {documento["codigo"] for documento in documentos}
+
     def reemplazar_alumno(self, email: str, codigos: list[str]) -> None:
         coleccion = self.base_datos.coleccion("matricula")
         coleccion.delete_many({"email": email})
         if codigos:
             coleccion.insert_many(
                 [
-                    {"_id": f"{email}|{codigo}", "email": email, "codigo": codigo, "nota": None}
+                    {
+                        "_id": f"{email}|{codigo}",
+                        "email": email,
+                        "codigo": codigo,
+                        "nota": None,
+                        "convalidada": False,
+                    }
                     for codigo in dict.fromkeys(codigos)
                 ]
             )
@@ -32,7 +45,24 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
             coleccion.update_one(
                 {
                     "_id": f"{email}|{codigo}",
+                    "convalidada": {"$ne": True},
                     "$or": [{"nota": None}, {"nota": {"$exists": False}}],
                 },
                 {"$set": {"nota": nota}},
+            )
+
+    def marcar_convalidadas(self, email: str, codigos: list[str]) -> None:
+        coleccion = self.base_datos.coleccion("matricula")
+        for codigo in codigos:
+            coleccion.update_one(
+                {"_id": f"{email}|{codigo}"},
+                {
+                    "$set": {
+                        "email": email,
+                        "codigo": codigo,
+                        "nota": None,
+                        "convalidada": True,
+                    }
+                },
+                upsert=True,
             )
