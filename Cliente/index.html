@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=14">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=14">
-    <link rel="stylesheet" href="ClienteShared/agenda.css?v=17">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=22">
+    <link rel="stylesheet" href="ClienteShared/agenda.css?v=24">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -289,6 +289,35 @@
                             <button id="botonEliminarSesion" type="button" data-texto="eliminarCuenta">Eliminar cuenta</button>
                         </span>
                     </p>
+                    <section id="formularioEventoProfesor" class="formulario-evento">
+                        <h2 data-texto="nuevoAvisoProfesor">Nuevo aviso para alumnos</h2>
+                        <form id="formCrearEvento" class="fila-evento">
+                            <label class="campo-evento">
+                                <span data-texto="asignaturaEvento">Asignatura</span>
+                                <select id="codigoEvento" name="codigo" required></select>
+                            </label>
+                            <label class="campo-evento">
+                                <span data-texto="tipoEvento">Tipo</span>
+                                <select id="tipoEvento" name="tipo" required>
+                                    <option value="examen" data-texto="examen">Examen</option>
+                                    <option value="entrega" data-texto="entrega">Entrega</option>
+                                </select>
+                            </label>
+                            <label class="campo-evento">
+                                <span data-texto="fechaFinEvento">Fecha de finalización</span>
+                                <input id="fechaEvento" name="fecha" type="date" required>
+                            </label>
+                            <label class="campo-evento">
+                                <span data-texto="horaEvento">Hora</span>
+                                <input id="horaEvento" name="hora" type="time" required value="23:59">
+                            </label>
+                            <label class="campo-evento">
+                                <span data-texto="lugarEvento">Lugar</span>
+                                <input id="lugarEvento" name="lugar" type="text" maxlength="80" placeholder="Aula / opcional">
+                            </label>
+                            <button class="boton-entrar" type="submit" data-texto="publicarAviso">Publicar aviso</button>
+                        </form>
+                    </section>
                     <button id="botonRefrescar" type="button" data-texto="refrescar">Refrescar</button>
                     <ul id="listaUsuarios"></ul>
                 </div>
@@ -296,15 +325,67 @@
                     <button id="botonVolverAgenda" type="button" data-texto="volverAgenda">Volver a la agenda</button>
                     <span id="cuentaActual"></span>
                     <div id="resumenCurso" class="resumen-curso" hidden>
-                        <p id="cursoAlumno"></p>
-                        <p id="creditosAprobados"></p>
-                        <p id="creditosConvalidados"></p>
-                        <p id="mediaCarrera"></p>
+                        <div class="resumen-datos">
+                            <p id="cursoAlumno"></p>
+                            <p id="creditosAprobados"></p>
+                            <p id="creditosConvalidados"></p>
+                            <p id="mediaCarrera"></p>
+                        </div>
                         <div class="tarta-fila">
                             <svg id="graficoCurso" viewBox="0 0 42 42" aria-hidden="true"></svg>
                             <ul id="leyendaCurso"></ul>
                         </div>
                     </div>
+                    <section id="preferenciasAvisos" class="preferencias-avisos">
+                        <header class="preferencias-cabecera">
+                            <h2 data-texto="preferenciasAvisos">Notificaciones</h2>
+                            <p class="preferencias-ayuda" data-texto="preferenciasAvisosAyuda">Elige cómo quieres ver los avisos y qué te interesa.</p>
+                        </header>
+                        <div class="preferencias-fila">
+                            <fieldset class="preferencias-grupo">
+                                <legend data-texto="iconoAvisos">Aspecto de los avisos</legend>
+                                <div class="preferencias-opciones">
+                                    <label class="preferencia-opcion">
+                                        <input type="radio" name="iconoAvisos" value="campana" checked>
+                                        <span data-texto="iconoCampana">Campanita</span>
+                                    </label>
+                                    <label class="preferencia-opcion">
+                                        <input type="radio" name="iconoAvisos" value="mascota">
+                                        <span data-texto="iconoMascota">Mascota</span>
+                                    </label>
+                                </div>
+                            </fieldset>
+                            <fieldset class="preferencias-grupo">
+                                <legend data-texto="tiposAvisos">Qué avisos quiero</legend>
+                                <div class="preferencias-opciones">
+                                    <label class="preferencia-opcion">
+                                        <input id="avisoExamenes" type="checkbox" checked>
+                                        <span data-texto="avisoExamenes">Exámenes próximos</span>
+                                    </label>
+                                    <label class="preferencia-opcion">
+                                        <input id="avisoEntregas" type="checkbox" checked>
+                                        <span data-texto="avisoEntregas">Entregas próximas</span>
+                                    </label>
+                                    <label class="preferencia-opcion">
+                                        <input id="avisoHorarioHoy" type="checkbox" checked>
+                                        <span data-texto="avisoHorarioHoy">Clases de hoy</span>
+                                    </label>
+                                </div>
+                            </fieldset>
+                            <fieldset class="preferencias-grupo">
+                                <legend data-texto="antelacionAvisos">Avisarme con</legend>
+                                <div class="preferencias-antelacion">
+                                    <input id="antelacionValor" type="number" min="1" max="365" value="2" inputmode="numeric" aria-label="Cantidad de antelación">
+                                    <select id="antelacionUnidad" aria-label="Unidad de antelación">
+                                        <option value="dias" data-texto="antelacionUnidadDias">días</option>
+                                        <option value="semanas" data-texto="antelacionUnidadSemanas" selected>semanas</option>
+                                        <option value="mes" data-texto="antelacionUnidadMes">meses</option>
+                                        <option value="curso" data-texto="antelacionUnidadCurso">todo el curso</option>
+                                    </select>
+                                </div>
+                            </fieldset>
+                        </div>
+                    </section>
                     <span class="botones-linea">
                         <button id="botonEditarCuenta" type="button" data-texto="editarDatos">Editar datos</button>
                         <button id="botonCerrarSesionCuenta" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
@@ -319,6 +400,10 @@
             <header class="agenda-barra">
                 <h1 data-texto="tituloAgenda">Tu Agenda UCLM</h1>
                 <div class="agenda-herramientas">
+                    <button id="botonAvisosAgenda" class="boton-avisos" type="button" data-etiqueta="abrirAvisos" aria-label="Abrir avisos">
+                        <span id="iconoAvisosAgenda" class="icono-avisos" aria-hidden="true"></span>
+                        <span id="contadorAvisos" class="contador-avisos" hidden>0</span>
+                    </button>
                     <button id="botonVozAgenda" type="button" data-etiqueta="leerPantalla" aria-label="Leer lo que hay en pantalla">
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"></rect>
@@ -411,23 +496,38 @@
                     <ul id="listaDialogoDia"></ul>
                 </form>
             </dialog>
+            <dialog id="dialogoAvisos" class="dialogo-avisos">
+                <form method="dialog">
+                    <header>
+                        <h2 id="tituloDialogoAvisos" data-texto="tituloAvisos">Tus avisos</h2>
+                        <button type="submit" class="cerrar-dialogo" data-etiqueta="cerrarDialogo" aria-label="Cerrar">&times;</button>
+                    </header>
+                    <div class="avisos-acciones">
+                        <button id="botonMarcarAvisosLeidos" type="button" data-texto="marcarAvisosLeidos">Marcar todas como leídas</button>
+                        <button id="botonEliminarAvisos" type="button" data-texto="eliminarAvisos">Eliminar todas</button>
+                    </div>
+                    <ul id="listaAvisos"></ul>
+                    <p id="sinAvisos" class="sin-avisos" data-texto="sinAvisos" hidden>No tienes avisos con tus preferencias actuales</p>
+                </form>
+            </dialog>
         </section>
     </div>
 
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=17"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=22"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=18"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=28"></script>
+    <script src="ClienteJs/ClientePresentacion/preferenciasNotificaciones.js?v=6"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=13"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=16"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=14"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=20"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=21"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=11"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=19"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=23"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>

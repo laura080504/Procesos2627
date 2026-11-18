@@ -24,6 +24,7 @@ def prueba_las_marcas_llegan_con_estrellas_delante(cliente_autenticado):
     simbolo = respuesta.json()[0]["simbolos"][0]
     assert simbolo["codigo"]
     assert simbolo["hora"]
+    assert simbolo["fecha"]
     assert "lugar" in simbolo
 
 
@@ -35,3 +36,50 @@ def prueba_un_usuario_sin_matricula_recibe_asignaturas_de_muestra(cliente_autent
     assert len(cuerpo["horario"]) >= 1
     assert cuerpo["creditos_aprobados"] >= 0
     assert cuerpo["creditos_convalidados"] >= 0
+
+
+def prueba_profesor_publica_evento_y_aparece_en_marcas(cliente, administrador, usuario_registrado):
+    from Pruebas.conftest import CONTRASENA
+
+    assert cliente.post(
+        "/api/auth/inicio-sesion",
+        json={"email": administrador.email, "contrasena": CONTRASENA},
+    ).status_code == 200
+    creado = cliente.post(
+        "/api/eventos",
+        json={
+            "codigo": "42302",
+            "tipo": "entrega",
+            "fecha": "2026-12-15",
+            "hora": "23:59",
+            "lugar": None,
+        },
+    )
+    assert creado.status_code == 201
+    assert creado.json()["fecha"] == "2026-12-15"
+    assert creado.json()["hora"] == "23:59"
+
+    assert cliente.post(
+        "/api/auth/inicio-sesion",
+        json={"email": usuario_registrado.email, "contrasena": CONTRASENA},
+    ).status_code == 200
+    marcas = cliente.get("/api/agenda/marcas", params={"anio": 2026, "mes": 12})
+    assert marcas.status_code == 200
+    del_15 = next(marca for marca in marcas.json() if marca["dia"] == 15)
+    simbolo = next(item for item in del_15["simbolos"] if item["codigo"] == "42302" and item["hora"] == "23:59")
+    assert simbolo["tipo"] == "punto"
+    assert simbolo["fecha"] == "2026-12-15"
+
+
+def prueba_alumno_no_puede_publicar_evento(cliente_autenticado):
+    respuesta = cliente_autenticado.post(
+        "/api/eventos",
+        json={
+            "codigo": "42302",
+            "tipo": "examen",
+            "fecha": "2026-12-16",
+            "hora": "09:00",
+            "lugar": "Aula 1",
+        },
+    )
+    assert respuesta.status_code == 403

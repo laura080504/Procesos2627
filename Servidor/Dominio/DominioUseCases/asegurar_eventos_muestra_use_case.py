@@ -30,4 +30,15 @@ class AsegurarEventosMuestraUseCase:
             ),
             None,
         )
-        return calculo is not None and calculo.hora == "09:00" and calculo.lugar == "Aula Multiusos"
+        if calculo is None or calculo.hora != "09:00" or calculo.lugar != "Aula Multiusos":
+            return False
+        # Fuerza regenerar cuando faltan los avisos de noviembre de la matrícula demo.
+        gestion = next(
+            (
+                evento
+                for evento in eventos
+                if evento.fecha == date(2026, 11, 19) and evento.codigo == "42304"
+            ),
+            None,
+        )
+        return gestion is not None and gestion.hora == "23:59"

@@ -36,12 +36,15 @@ class ControlWeb {
             alVolver: () => this.mostrarInicioSesion(),
             alNoCoinciden: () => this.mostrarMensaje(this.textos.contrasenasNoCoinciden, true),
         });
+        this.socketAvisos = null;
         this.vistaUsuarios = new VistaUsuarios({
             alEliminar: (email) => this.eliminarUsuario(email),
             alRefrescar: () => this.refrescarUsuarios(),
             alEditar: () => this.mostrarEditarDatos(this.usuarioActual),
             alEditarUsuario: (usuario) => this.mostrarEditarDatos(usuario),
             alVolverAgenda: () => this.mostrarAgenda(),
+            alCambiarPreferenciasAvisos: (preferencias) => this.cambiarPreferenciasAvisos(preferencias),
+            alCrearEvento: (datos) => this.crearEventoProfesor(datos),
         });
         this.vistaAgenda = new VistaAgenda({
             alBuscar: (nombre) => this.buscarAsignaturas(nombre),
@@ -200,11 +203,68 @@ class ControlWeb {
     }
 
     async abrirTrasSesion() {
+        this.conectarAvisos();
         if (this.esGestion(this.usuarioActual.rol)) {
             await this.mostrarPanel();
             return;
         }
         await this.mostrarAgenda();
+    }
+
+    conectarAvisos() {
+        this.desconectarAvisos();
+        const protocolo = location.protocol === "https:" ? "wss" : "ws";
+        this.socketAvisos = new WebSocket(`${protocolo}://${location.host}/ws`);
+        this.socketAvisos.addEventListener("message", (evento) => this.recibirAvisoProfesor(evento));
+    }
+
+    desconectarAvisos() {
+        if (this.socketAvisos) {
+            this.socketAvisos.close();
+            this.socketAvisos = null;
+        }
+    }
+
+    async recibirAvisoProfesor(evento) {
+        let mensaje;
+        try {
+            mensaje = JSON.parse(evento.data);
+        } catch {
+            return;
+        }
+        if (!mensaje || mensaje.tipo !== "evento_nuevo") {
+            return;
+        }
+        const codigos = (this.matricula && this.matricula.asignaturas)
+            ? this.matricula.asignaturas.map((asignatura) => asignatura.codigo)
+            : (this.vistaAgenda.asignaturas || []).map((asignatura) => asignatura.codigo);
+        if (codigos.length && !codigos.includes(mensaje.codigo)) {
+            return;
+        }
+        if (this.esGestion(this.usuarioActual?.rol)) {
+            return;
+        }
+        const ingles = this.textos.codigo === "EN";
+        const nombre = ingles ? mensaje.nombre_ingles : mensaje.nombre;
+        const tipo = mensaje.tipo_evento === "examen" ? this.textos.examen : this.textos.entrega;
+        const fecha = mensaje.fecha || "";
+        this.mostrarMensaje(
+            `${this.textos.avisoNuevoRecibido}: ${tipo} · ${nombre} · ${this.textos.fechaFinalizacion}: ${fecha}`,
+        );
+        if (!this.vistaAgenda.seccion.hidden) {
+            await this.cargarMarcas();
+            this.vistaAgenda.actualizarAvisos();
+        }
+    }
+
+    async crearEventoProfesor(datos) {
+        try {
+            await this.rest.crearEvento(datos);
+            this.vistaUsuarios.limpiarFormularioEvento();
+            this.mostrarMensaje(this.textos.avisoPublicado);
+        } catch (error) {
+            this.gestionarError(error);
+        }
     }
 
     async mostrarAgenda() {
@@ -214,25 +274,70 @@ class ControlWeb {
         await this.cargarAgenda();
     }
 
+    periodosAntelacion() {
+        const prefs = PreferenciasNotificaciones.leer();
+        const ahora = new Date();
+        const limite = PreferenciasNotificaciones.limiteAntelacion(prefs, ahora);
+        const periodos = PreferenciasNotificaciones.periodosHasta(limite, ahora);
+        const visto = this.vistaAgenda.periodo();
+        if (!periodos.some((periodo) => periodo.anio === visto.anio && periodo.mes === visto.mes)) {
+            periodos.unshift(visto);
+        }
+        return periodos;
+    }
+
+    async obtenerMarcasAntelacion() {
+        const periodoVista = this.vistaAgenda.periodo();
+        const periodos = this.periodosAntelacion();
+        const respuestas = await Promise.all(
+            periodos.map((periodo) => this.rest.obtenerMarcas(periodo.anio, periodo.mes)),
+        );
+        let marcasVista = [];
+        const marcasAntelacion = [];
+        respuestas.forEach((marcas, indice) => {
+            const periodo = periodos[indice];
+            if (periodo.anio === periodoVista.anio && periodo.mes === periodoVista.mes) {
+                marcasVista = marcas;
+            }
+            marcasAntelacion.push(...marcas);
+        });
+        return { marcasVista, marcasAntelacion };
+    }
+
+    async cambiarPreferenciasAvisos(preferencias) {
+        this.vistaAgenda.aplicarPreferenciasAvisos(preferencias);
+        if (!this.vistaAgenda.seccion.hidden) {
+            await this.cargarMarcas();
+        }
+    }
+
     async cargarAgenda() {
-        const periodo = this.vistaAgenda.periodo();
         try {
             const [matricula, marcas] = await Promise.all([
                 this.rest.obtenerMatricula(this.vistaAgenda.textoBusqueda()),
-                this.rest.obtenerMarcas(periodo.anio, periodo.mes),
+                this.obtenerMarcasAntelacion(),
             ]);
             this.matricula = matricula;
-            this.vistaAgenda.pintar(matricula.asignaturas, marcas, matricula.horario);
+            this.vistaAgenda.pintar(
+                matricula.asignaturas,
+                marcas.marcasVista,
+                matricula.horario,
+                marcas.marcasAntelacion,
+            );
         } catch (error) {
             this.gestionarError(error);
         }
     }
 
     async cargarMarcas() {
-        const periodo = this.vistaAgenda.periodo();
         try {
-            const marcas = await this.rest.obtenerMarcas(periodo.anio, periodo.mes);
-            this.vistaAgenda.pintar(this.vistaAgenda.asignaturas, marcas);
+            const marcas = await this.obtenerMarcasAntelacion();
+            this.vistaAgenda.pintar(
+                this.vistaAgenda.asignaturas,
+                marcas.marcasVista,
+                undefined,
+                marcas.marcasAntelacion,
+            );
         } catch (error) {
             this.gestionarError(error);
         }
@@ -241,7 +346,12 @@ class ControlWeb {
     async buscarAsignaturas(nombre) {
         try {
             const matricula = await this.rest.obtenerMatricula(nombre);
-            this.vistaAgenda.pintar(matricula.asignaturas, this.vistaAgenda.marcas, matricula.horario);
+            this.vistaAgenda.pintar(
+                matricula.asignaturas,
+                this.vistaAgenda.marcas,
+                matricula.horario,
+                this.vistaAgenda.marcasAntelacion,
+            );
         } catch (error) {
             this.gestionarError(error);
         }
@@ -252,6 +362,14 @@ class ControlWeb {
         document.body.classList.add("en-perfil");
         this.cabecera.mostrar(this.usuarioActual, this.textos);
         this.vistaUsuarios.mostrar();
+        if (this.esGestion(this.usuarioActual.rol)) {
+            try {
+                const asignaturas = await this.rest.listarAsignaturas("");
+                this.vistaUsuarios.cargarCatalogoAsignaturas(asignaturas);
+            } catch (error) {
+                this.gestionarError(error);
+            }
+        }
         await this.refrescarUsuarios();
     }
 
@@ -362,6 +480,7 @@ class ControlWeb {
         try {
             await this.rest.cerrarSesion();
         } finally {
+            this.desconectarAvisos();
             this.usuarioActual = null;
             this.mostrarInicioSesion();
             this.mostrarMensaje(this.textos.sesionCerrada);

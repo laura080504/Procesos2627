@@ -22,6 +22,14 @@ class RepositorioEventosMongo(RepositorioEventos):
         if eventos:
             coleccion.insert_many([{"_id": _clave(evento), **self._a_documento(evento)} for evento in eventos])
 
+    def guardar(self, evento: Evento) -> None:
+        coleccion = self.base_datos.coleccion("evento")
+        coleccion.replace_one(
+            {"_id": _clave(evento)},
+            {"_id": _clave(evento), **self._a_documento(evento)},
+            upsert=True,
+        )
+
     def _a_documento(self, evento: Evento) -> dict:
         return {
             "fecha": evento.fecha.isoformat(),
@@ -59,4 +67,4 @@ def _aula_por_defecto(codigo: str) -> str:
 
 
 def _clave(evento: Evento) -> str:
-    return f"{evento.fecha.isoformat()}|{evento.codigo}|{evento.tipo.value}"
+    return f"{evento.fecha.isoformat()}|{evento.codigo}|{evento.tipo.value}|{evento.hora}"

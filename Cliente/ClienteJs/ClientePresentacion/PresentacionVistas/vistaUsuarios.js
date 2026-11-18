@@ -1,5 +1,13 @@
 class VistaUsuarios {
-    constructor({ alEliminar, alRefrescar, alEditar, alEditarUsuario, alVolverAgenda }) {
+    constructor({
+        alEliminar,
+        alRefrescar,
+        alEditar,
+        alEditarUsuario,
+        alVolverAgenda,
+        alCambiarPreferenciasAvisos,
+        alCrearEvento,
+    }) {
         this.seccion = document.getElementById("vistaUsuarios");
         this.vistaAdministrador = document.getElementById("vistaAdministrador");
         this.vistaCuenta = document.getElementById("vistaCuenta");
@@ -8,13 +16,20 @@ class VistaUsuarios {
         this.lista = document.getElementById("listaUsuarios");
         this.numeroUsuarios = document.getElementById("numeroUsuarios");
         this.botonRefrescar = document.getElementById("botonRefrescar");
+        this.preferenciasAvisos = document.getElementById("preferenciasAvisos");
+        this.formularioEvento = document.getElementById("formularioEventoProfesor");
+        this.formCrearEvento = document.getElementById("formCrearEvento");
+        this.selectCodigoEvento = document.getElementById("codigoEvento");
         this.rolVisor = "usuario";
         this.alEliminar = alEliminar;
         this.alEditarUsuario = alEditarUsuario;
+        this.alCambiarPreferenciasAvisos = alCambiarPreferenciasAvisos;
+        this.alCrearEvento = alCrearEvento;
         this.textos = TEXTOS.es;
         this.ultimos = [];
         this.emailActual = "";
         this.matricula = null;
+        this.catalogoAsignaturas = [];
         document.getElementById("botonRefrescar").addEventListener("click", alRefrescar);
         const eliminarCuenta = () => this.alEliminar(this.emailActual);
         document.getElementById("botonEliminarCuenta").addEventListener("click", eliminarCuenta);
@@ -22,6 +37,11 @@ class VistaUsuarios {
         document.getElementById("botonEditarDatos").addEventListener("click", alEditar);
         document.getElementById("botonEditarCuenta").addEventListener("click", alEditar);
         document.getElementById("botonVolverAgenda").addEventListener("click", alVolverAgenda);
+        this.preferenciasAvisos.addEventListener("change", () => this.guardarPreferenciasAvisos());
+        this.formCrearEvento.addEventListener("submit", (evento) => {
+            evento.preventDefault();
+            this.enviarEventoProfesor();
+        });
     }
 
     aplicarTextos(textos) {
@@ -63,7 +83,13 @@ class VistaUsuarios {
                 this.cuentaActual.replaceChildren();
             }
             this.pintarCurso(matricula);
+            this.pintarPreferenciasAvisos();
             return;
+        }
+        this.preferenciasAvisos.hidden = true;
+        this.formularioEvento.hidden = !(rolVisor === "profesor" || rolVisor === "superadministrador");
+        if (!this.formularioEvento.hidden) {
+            this.pintarSelectAsignaturas();
         }
         usuarios.forEach((usuario) => {
             const elemento = document.createElement("li");
@@ -157,6 +183,86 @@ class VistaUsuarios {
             fila.append(muestra, document.createTextNode(`${nombres[tramo.curso]} ${tramo.porcentaje}%`));
             leyenda.append(fila);
         });
+    }
+
+    pintarPreferenciasAvisos() {
+        this.preferenciasAvisos.hidden = false;
+        this.formularioEvento.hidden = true;
+        const prefs = PreferenciasNotificaciones.leer();
+        this.preferenciasAvisos.querySelectorAll('input[name="iconoAvisos"]').forEach((input) => {
+            input.checked = input.value === prefs.icono;
+        });
+        document.getElementById("avisoExamenes").checked = prefs.avisos.examenes;
+        document.getElementById("avisoEntregas").checked = prefs.avisos.entregas;
+        document.getElementById("avisoHorarioHoy").checked = prefs.avisos.horarioHoy;
+        const valor = document.getElementById("antelacionValor");
+        const unidad = document.getElementById("antelacionUnidad");
+        unidad.value = prefs.antelacion.unidad;
+        valor.value = String(prefs.antelacion.valor);
+        valor.disabled = prefs.antelacion.unidad === "curso";
+    }
+
+    guardarPreferenciasAvisos() {
+        const iconoElegido = this.preferenciasAvisos.querySelector('input[name="iconoAvisos"]:checked');
+        const unidad = document.getElementById("antelacionUnidad").value;
+        const valorInput = document.getElementById("antelacionValor");
+        valorInput.disabled = unidad === "curso";
+        const preferencias = PreferenciasNotificaciones.guardar({
+            icono: iconoElegido ? iconoElegido.value : "campana",
+            antelacion: {
+                valor: Number(valorInput.value),
+                unidad,
+            },
+            avisos: {
+                examenes: document.getElementById("avisoExamenes").checked,
+                entregas: document.getElementById("avisoEntregas").checked,
+                horarioHoy: document.getElementById("avisoHorarioHoy").checked,
+            },
+        });
+        if (this.alCambiarPreferenciasAvisos) {
+            this.alCambiarPreferenciasAvisos(preferencias);
+        }
+    }
+
+    cargarCatalogoAsignaturas(asignaturas) {
+        this.catalogoAsignaturas = asignaturas || [];
+        if (!this.formularioEvento.hidden) {
+            this.pintarSelectAsignaturas();
+        }
+    }
+
+    pintarSelectAsignaturas() {
+        const ingles = this.textos.codigo === "EN";
+        const valor = this.selectCodigoEvento.value;
+        this.selectCodigoEvento.replaceChildren();
+        this.catalogoAsignaturas.forEach((asignatura) => {
+            const opcion = document.createElement("option");
+            opcion.value = asignatura.codigo;
+            opcion.textContent = `${asignatura.codigo} · ${ingles ? asignatura.nombre_ingles : asignatura.nombre}`;
+            this.selectCodigoEvento.append(opcion);
+        });
+        if (valor && [...this.selectCodigoEvento.options].some((opcion) => opcion.value === valor)) {
+            this.selectCodigoEvento.value = valor;
+        }
+    }
+
+    enviarEventoProfesor() {
+        const datos = new FormData(this.formCrearEvento);
+        const hora = String(datos.get("hora") || "").slice(0, 5);
+        if (this.alCrearEvento) {
+            this.alCrearEvento({
+                codigo: String(datos.get("codigo") || ""),
+                tipo: String(datos.get("tipo") || "entrega"),
+                fecha: String(datos.get("fecha") || ""),
+                hora,
+                lugar: String(datos.get("lugar") || "").trim(),
+            });
+        }
+    }
+
+    limpiarFormularioEvento() {
+        this.formCrearEvento.reset();
+        document.getElementById("horaEvento").value = "23:59";
     }
 }
 
