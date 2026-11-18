@@ -360,15 +360,18 @@ class ControlWeb {
     async mostrarPanel() {
         this.ocultarVistas();
         document.body.classList.add("en-perfil");
-        this.cabecera.mostrar(this.usuarioActual, this.textos);
-        this.vistaUsuarios.mostrar();
+        // Primero se fija la vista según el rol para no enseñar gestión al alumno ni un instante.
+        this.vistaUsuarios.mostrar(this.usuarioActual.rol);
         if (this.esGestion(this.usuarioActual.rol)) {
+            this.cabecera.mostrar(this.usuarioActual, this.textos);
             try {
                 const asignaturas = await this.rest.listarAsignaturas("");
                 this.vistaUsuarios.cargarCatalogoAsignaturas(asignaturas);
             } catch (error) {
                 this.gestionarError(error);
             }
+        } else {
+            pintarDatosUsuario(this.vistaUsuarios.cuentaActual, this.usuarioActual, this.textos);
         }
         await this.refrescarUsuarios();
     }
