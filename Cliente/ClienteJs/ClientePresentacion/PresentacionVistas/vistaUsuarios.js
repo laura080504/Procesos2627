@@ -52,30 +52,49 @@ class VistaUsuarios {
         }
     }
 
-    mostrar() {
+    esGestion(rol) {
+        return rol === "profesor" || rol === "superadministrador";
+    }
+
+    preparar(rolVisor = "usuario") {
+        this.rolVisor = rolVisor;
+        const gestion = this.esGestion(rolVisor);
+        this.vistaAdministrador.hidden = !gestion;
+        this.vistaCuenta.hidden = gestion;
+        this.formularioEvento.hidden = !gestion;
+        this.botonRefrescar.hidden = !gestion;
+        this.preferenciasAvisos.hidden = gestion;
+        this.contadorUsuarios.hidden = !gestion;
+        document.getElementById("botonEliminarSesion").hidden = gestion;
+        document.getElementById("tituloVistaUsuarios").textContent = gestion
+            ? this.textos.gestionUsuarios
+            : this.textos.perfilEstudiante;
+        if (!gestion) {
+            this.lista.innerHTML = "";
+        }
+    }
+
+    mostrar(rolVisor = this.rolVisor) {
+        this.preparar(rolVisor);
         this.seccion.hidden = false;
     }
 
     ocultar() {
         this.seccion.hidden = true;
+        this.vistaAdministrador.hidden = true;
+        this.vistaCuenta.hidden = true;
+        this.formularioEvento.hidden = true;
+        this.botonRefrescar.hidden = true;
         this.lista.innerHTML = "";
     }
 
     pintar(usuarios, emailActual, rolVisor = "usuario", matricula = null) {
         this.ultimos = usuarios;
         this.emailActual = emailActual;
-        this.rolVisor = rolVisor;
         this.matricula = matricula;
-        const esGestion = rolVisor === "profesor" || rolVisor === "superadministrador";
-        this.vistaAdministrador.hidden = !esGestion;
-        this.vistaCuenta.hidden = esGestion;
-        document.getElementById("tituloVistaUsuarios").textContent = esGestion
-            ? this.textos.gestionUsuarios
-            : this.textos.perfilEstudiante;
-        this.contadorUsuarios.hidden = !esGestion;
-        document.getElementById("botonEliminarSesion").hidden = esGestion;
+        this.preparar(rolVisor);
         this.lista.innerHTML = "";
-        if (!esGestion) {
+        if (!this.esGestion(rolVisor)) {
             const usuario = usuarios[0];
             if (usuario) {
                 pintarDatosUsuario(this.cuentaActual, usuario, this.textos);
@@ -86,8 +105,6 @@ class VistaUsuarios {
             this.pintarPreferenciasAvisos();
             return;
         }
-        this.preferenciasAvisos.hidden = true;
-        this.formularioEvento.hidden = !(rolVisor === "profesor" || rolVisor === "superadministrador");
         if (!this.formularioEvento.hidden) {
             this.pintarSelectAsignaturas();
         }

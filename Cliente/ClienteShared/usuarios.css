@@ -25,6 +25,10 @@
     margin: 0.9rem auto 0;
 }
 
+#botonRefrescar[hidden] {
+    display: none;
+}
+
 #botonRefrescar:focus-visible,
 #listaUsuarios button:focus-visible {
     outline: 2px solid var(--rojo-logo);
@@ -109,6 +113,7 @@ body.oscuro #listaUsuarios li {
 
 #vistaCuenta .botones-linea {
     justify-content: center;
+    margin-top: 0.75rem;
 }
 
 .resumen-curso {
@@ -293,8 +298,8 @@ body.oscuro .campo-evento select {
 }
 
 .preferencias-avisos {
-    margin: 0.9rem 0 1rem;
-    padding: 0.85rem 0;
+    margin: 0.9rem 0 2.4rem;
+    padding: 0.85rem 0 1rem;
     border: none;
     border-radius: 0;
     text-align: left;
@@ -391,9 +396,9 @@ body.oscuro .campo-evento select {
 
 body.oscuro .preferencias-antelacion input[type="number"],
 body.oscuro .preferencias-antelacion select {
-    background: #2b2b30;
-    border-color: rgba(255, 255, 255, 0.22);
-    color: #f3f3f3;
+    background: #fff;
+    border-color: rgba(255, 255, 255, 0.55);
+    color: #1a1a1a;
 }
 
 .preferencia-opcion {
