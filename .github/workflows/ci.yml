@@ -9,6 +9,9 @@ on:
 jobs:
   pruebas:
     runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTEST_ADDOPTS: "-p no:cacheprovider"
     steps:
       - uses: actions/checkout@v4
 

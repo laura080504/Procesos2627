@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from Servidor.Dominio.DominioEnums.curso_asignatura import CursoAsignatura
 from Servidor.Dominio.DominioServices.catalogo_informatica_albacete import CATALOGO_INFORMATICA_ALBACETE
+from Servidor.Dominio.DominioServices.conteo_cursos import contar_por_curso
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 
 EMAIL_LAURA = "lgonzarico@gmail.com"
@@ -86,19 +87,22 @@ def asegurar_matricula_de(repositorio_matriculas: RepositorioMatriculas, email: 
 
 
 def tramos_de(asignaturas: list) -> list[TramoCurso]:
+    """Porcentaje de asignaturas por curso; el último tramo absorbe el redondeo para sumar 100."""
     if not asignaturas:
         return []
-    cantidades: dict[CursoAsignatura, int] = {}
-    for asignatura in asignaturas:
-        cantidades[asignatura.curso] = cantidades.get(asignatura.curso, 0) + 1
-    tramos = []
-    acumulado = 0
+
+    cantidades = contar_por_curso(asignaturas)
     cursos = [curso for curso in CursoAsignatura if cantidades.get(curso)]
+    total = len(asignaturas)
+    tramos = []
+    porcentaje_acumulado = 0
+
     for indice, curso in enumerate(cursos):
-        if indice == len(cursos) - 1:
-            porcentaje = 100 - acumulado
+        es_ultimo = indice == len(cursos) - 1
+        if es_ultimo:
+            porcentaje = 100 - porcentaje_acumulado
         else:
-            porcentaje = round(100 * cantidades[curso] / len(asignaturas))
-            acumulado += porcentaje
+            porcentaje = round(100 * cantidades[curso] / total)
+            porcentaje_acumulado += porcentaje
         tramos.append(TramoCurso(curso, cantidades[curso], porcentaje))
     return tramos
