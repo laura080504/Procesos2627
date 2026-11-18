@@ -17,6 +17,7 @@ class MatriculaAlumno:
     tramos: list[TramoCurso]
     asignaturas: list[Asignatura]
     creditos_aprobados: int
+    creditos_convalidados: int
     media: float | None
     horario: list[FranjaHorario]
 
@@ -29,9 +30,10 @@ class ObtenerMatriculaUseCase:
     def ejecutar(self, email: str, nombre: str = "") -> MatriculaAlumno:
         asegurar_matricula_de(self.repositorio_matriculas, email)
         notas = self.repositorio_matriculas.obtener_notas(email)
+        convalidadas = self.repositorio_matriculas.obtener_convalidadas(email)
         catalogo = self.repositorio_asignaturas.obtener_todas()
         propias = [asignatura for asignatura in catalogo if asignatura.codigo in notas]
-        expediente = expediente_de(propias, notas)
+        expediente = expediente_de(propias, notas, convalidadas)
         visibles = _filtrar_por_nombre(propias, nombre)
         visibles.sort(key=lambda asignatura: asignatura.codigo)
         return MatriculaAlumno(
@@ -39,6 +41,7 @@ class ObtenerMatriculaUseCase:
             tramos_de(propias),
             visibles,
             expediente.creditos_aprobados,
+            expediente.creditos_convalidados,
             expediente.media,
             franjas_de(propias),
         )
