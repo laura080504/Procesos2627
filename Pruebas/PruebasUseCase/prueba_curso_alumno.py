@@ -46,6 +46,7 @@ def prueba_laura_es_de_primero_porque_es_la_mayoria_de_sus_asignaturas():
     assert sum(tramo.porcentaje for tramo in resultado.tramos) == 100
     assert any(tramo.curso == CursoAsignatura.PRIMERO and tramo.cantidad == 4 for tramo in resultado.tramos)
     assert resultado.creditos_aprobados == 30
+    assert resultado.creditos_convalidados == 0
     assert resultado.media == 7.0
 
 
@@ -59,6 +60,7 @@ def prueba_laura_ve_los_creditos_aprobados_y_la_media():
     resultado = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar(EMAIL_LAURA)
     assert matriculas.obtener_notas(EMAIL_LAURA)["42305"] == NOTAS_LAURA["42305"]
     assert resultado.creditos_aprobados == 30
+    assert resultado.creditos_convalidados == 0
     assert resultado.media == 7.0
 
 

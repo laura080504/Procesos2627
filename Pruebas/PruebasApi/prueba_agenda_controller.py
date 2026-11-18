@@ -34,3 +34,4 @@ def prueba_un_usuario_sin_matricula_recibe_asignaturas_de_muestra(cliente_autent
     assert len(cuerpo["asignaturas"]) == 6
     assert len(cuerpo["horario"]) >= 1
     assert cuerpo["creditos_aprobados"] >= 0
+    assert cuerpo["creditos_convalidados"] >= 0

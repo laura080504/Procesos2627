@@ -31,5 +31,6 @@ class MatriculaSalida(BaseModel):
     tramos: list[TramoCursoSalida]
     asignaturas: list[AsignaturaSalida]
     creditos_aprobados: int
+    creditos_convalidados: int
     media: float | None
     horario: list[FranjaHorarioSalida]
