@@ -5,6 +5,8 @@ teoría y el laboratorio (SOFTW, HW, Elect o Lab) como prácticas. En los
 cursos con varios grupos se usa el grupo A, el de referencia de la escuela.
 """
 
+from Servidor.Dominio.DominioServices.normalizar_texto import normalizar_texto
+
 L = 0
 M = 1
 X = 2
@@ -353,13 +355,10 @@ SESIONES_ESIIAB: dict[str, tuple[tuple[int, str, str, str], ...]] = {
 }
 
 
-def _clave(nombre: str) -> str:
-    traduccion = str.maketrans("áéíóúü", "aeiouu")
-    return " ".join(nombre.lower().translate(traduccion).split())
-
-
-_POR_CLAVE = {_clave(nombre): sesiones for nombre, sesiones in SESIONES_ESIIAB.items()}
+_SESIONES_POR_NOMBRE = {
+    normalizar_texto(nombre): sesiones for nombre, sesiones in SESIONES_ESIIAB.items()
+}
 
 
 def sesiones_de(nombre: str) -> tuple[tuple[int, str, str, str], ...]:
-    return _POR_CLAVE.get(_clave(nombre), ())
+    return _SESIONES_POR_NOMBRE.get(normalizar_texto(nombre), ())
