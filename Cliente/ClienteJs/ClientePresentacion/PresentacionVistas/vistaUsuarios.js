@@ -7,6 +7,7 @@ class VistaUsuarios {
         alVolverAgenda,
         alCambiarPreferenciasAvisos,
         alCrearEvento,
+        alGuardarMatricula,
     }) {
         this.seccion = document.getElementById("vistaUsuarios");
         this.vistaAdministrador = document.getElementById("vistaAdministrador");
@@ -20,16 +21,22 @@ class VistaUsuarios {
         this.formularioEvento = document.getElementById("formularioEventoProfesor");
         this.formCrearEvento = document.getElementById("formCrearEvento");
         this.selectCodigoEvento = document.getElementById("codigoEvento");
+        this.dialogoMatricula = document.getElementById("dialogoMatricula");
+        this.listaMatriculaEditable = document.getElementById("listaMatriculaEditable");
+        this.formMatricula = document.getElementById("formMatricula");
+        this.botonEditarMatricula = document.getElementById("botonEditarMatricula");
         this.rolVisor = "usuario";
         this.alEliminar = alEliminar;
         this.alEditarUsuario = alEditarUsuario;
         this.alCambiarPreferenciasAvisos = alCambiarPreferenciasAvisos;
         this.alCrearEvento = alCrearEvento;
+        this.alGuardarMatricula = alGuardarMatricula;
         this.textos = TEXTOS.es;
         this.ultimos = [];
         this.emailActual = "";
         this.matricula = null;
         this.catalogoAsignaturas = [];
+        this.gruposMatricula = ["A", "B", "C", "I"];
         document.getElementById("botonRefrescar").addEventListener("click", alRefrescar);
         const eliminarCuenta = () => this.alEliminar(this.emailActual);
         document.getElementById("botonEliminarCuenta").addEventListener("click", eliminarCuenta);
@@ -37,6 +44,16 @@ class VistaUsuarios {
         document.getElementById("botonEditarDatos").addEventListener("click", alEditar);
         document.getElementById("botonEditarCuenta").addEventListener("click", alEditar);
         document.getElementById("botonVolverAgenda").addEventListener("click", alVolverAgenda);
+        this.botonEditarMatricula.addEventListener("click", () => this.abrirEditorMatricula());
+        document.getElementById("botonAnadirAsignaturaMatricula").addEventListener("click", () => {
+            this.anadirFilaMatricula();
+        });
+        this.formMatricula.addEventListener("submit", (evento) => {
+            if (evento.submitter && evento.submitter.value === "guardar") {
+                evento.preventDefault();
+                this.enviarMatricula();
+            }
+        });
         this.preferenciasAvisos.addEventListener("change", () => this.guardarPreferenciasAvisos());
         this.formCrearEvento.addEventListener("submit", (evento) => {
             evento.preventDefault();
@@ -47,6 +64,9 @@ class VistaUsuarios {
     aplicarTextos(textos) {
         this.textos = textos;
         aplicarTextos(this.seccion, textos);
+        if (this.dialogoMatricula) {
+            aplicarTextos(this.dialogoMatricula, textos);
+        }
         if (!this.seccion.hidden) {
             this.pintar(this.ultimos, this.emailActual, this.rolVisor, this.matricula);
         }
@@ -65,6 +85,7 @@ class VistaUsuarios {
         this.botonRefrescar.hidden = !gestion;
         this.preferenciasAvisos.hidden = gestion;
         this.contadorUsuarios.hidden = !gestion;
+        this.botonEditarMatricula.hidden = gestion;
         document.getElementById("botonEliminarSesion").hidden = gestion;
         document.getElementById("tituloVistaUsuarios").textContent = gestion
             ? this.textos.gestionUsuarios
@@ -276,6 +297,108 @@ class VistaUsuarios {
     limpiarFormularioEvento() {
         this.formCrearEvento.reset();
         document.getElementById("horaEvento").value = "23:59";
+    }
+
+    abrirEditorMatricula() {
+        if (!this.dialogoMatricula) {
+            return;
+        }
+        const filas = (this.matricula?.asignaturas || []).map((asignatura) => ({
+            codigo: asignatura.codigo,
+            grupo: asignatura.grupo || "A",
+        }));
+        this.pintarEditorMatricula(filas.length ? filas : [{ codigo: "", grupo: "A" }]);
+        if (this.dialogoMatricula.open) {
+            return;
+        }
+        try {
+            this.dialogoMatricula.showModal();
+        } catch {
+            this.dialogoMatricula.setAttribute("open", "");
+        }
+    }
+
+    pintarEditorMatricula(filas) {
+        this.listaMatriculaEditable.replaceChildren();
+        filas.forEach((fila) => this.anadirFilaMatricula(fila.codigo, fila.grupo));
+    }
+
+    anadirFilaMatricula(codigo = "", grupo = "A") {
+        const fila = document.createElement("div");
+        fila.className = "fila-matricula";
+
+        const select = document.createElement("select");
+        select.className = "codigo-matricula";
+        const vacia = document.createElement("option");
+        vacia.value = "";
+        vacia.textContent = this.textos.elegirAsignatura;
+        select.append(vacia);
+        const ingles = this.textos.codigo === "EN";
+        this.catalogoAsignaturas.forEach((asignatura) => {
+            const opcion = document.createElement("option");
+            opcion.value = asignatura.codigo;
+            opcion.textContent = `${asignatura.codigo} · ${ingles ? asignatura.nombre_ingles : asignatura.nombre}`;
+            select.append(opcion);
+        });
+        if (codigo) {
+            select.value = codigo;
+        }
+
+        const grupoInput = document.createElement("input");
+        grupoInput.className = "grupo-matricula";
+        grupoInput.type = "text";
+        grupoInput.maxLength = 24;
+        grupoInput.placeholder = this.textos.grupoMatricula;
+        grupoInput.setAttribute("list", "gruposMatriculaSugeridos");
+        grupoInput.value = grupo || "A";
+        grupoInput.setAttribute("aria-label", this.textos.grupoMatricula);
+
+        if (!document.getElementById("gruposMatriculaSugeridos")) {
+            const lista = document.createElement("datalist");
+            lista.id = "gruposMatriculaSugeridos";
+            this.gruposMatricula.forEach((valor) => {
+                const opcion = document.createElement("option");
+                opcion.value = valor;
+                lista.append(opcion);
+            });
+            document.body.append(lista);
+        }
+
+        const quitar = document.createElement("button");
+        quitar.type = "button";
+        quitar.className = "quitar-matricula";
+        quitar.textContent = this.textos.quitarAsignaturaMatricula;
+        quitar.addEventListener("click", () => {
+            fila.remove();
+            if (!this.listaMatriculaEditable.children.length) {
+                this.anadirFilaMatricula();
+            }
+        });
+
+        fila.append(select, grupoInput, quitar);
+        this.listaMatriculaEditable.append(fila);
+    }
+
+    leerMatriculaEditor() {
+        return [...this.listaMatriculaEditable.querySelectorAll(".fila-matricula")]
+            .map((fila) => ({
+                codigo: fila.querySelector(".codigo-matricula")?.value || "",
+                grupo: (fila.querySelector(".grupo-matricula")?.value || "A").trim().toUpperCase() || "A",
+            }))
+            .filter((item) => item.codigo);
+    }
+
+    enviarMatricula() {
+        const asignaturas = this.leerMatriculaEditor();
+        if (this.alGuardarMatricula) {
+            this.alGuardarMatricula(asignaturas);
+        }
+    }
+
+    cerrarEditorMatricula() {
+        if (this.dialogoMatricula.open) {
+            this.dialogoMatricula.close();
+        }
     }
 }
 

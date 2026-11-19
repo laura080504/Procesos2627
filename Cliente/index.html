@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=14">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=30">
-    <link rel="stylesheet" href="ClienteShared/agenda.css?v=31">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=32">
+    <link rel="stylesheet" href="ClienteShared/agenda.css?v=35">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -373,11 +373,14 @@
                             </fieldset>
                         </div>
                     </section>
-                    <span class="botones-linea">
-                        <button id="botonEditarCuenta" type="button" data-texto="editarDatos">Editar datos</button>
-                        <button id="botonCerrarSesionCuenta" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
-                        <button id="botonEliminarCuenta" type="button" data-texto="eliminarCuenta">Eliminar cuenta</button>
-                    </span>
+                    <div class="perfil-pie">
+                        <button id="botonEditarMatricula" type="button" data-texto="editarMatricula">Mi matrícula</button>
+                        <span class="botones-linea">
+                            <button id="botonEditarCuenta" type="button" data-texto="editarDatos">Editar datos</button>
+                            <button id="botonCerrarSesionCuenta" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
+                            <button id="botonEliminarCuenta" type="button" data-texto="eliminarCuenta">Eliminar cuenta</button>
+                        </span>
+                    </div>
                 </div>
             </section>
 
@@ -510,12 +513,27 @@
                 </form>
             </dialog>
         </section>
+
+        <dialog id="dialogoMatricula" class="dialogo-matricula">
+            <form id="formMatricula" method="dialog">
+                <header>
+                    <h2 data-texto="tituloMatricula">Tu matrícula real</h2>
+                    <button type="submit" class="cerrar-dialogo" data-etiqueta="cerrarDialogo" value="cancelar" aria-label="Cerrar">&times;</button>
+                </header>
+                <p class="ayuda-matricula" data-texto="ayudaMatricula">Elige las asignaturas que cursas y el grupo exacto de cada una.</p>
+                <div id="listaMatriculaEditable" class="lista-matricula-editable"></div>
+                <div class="matricula-acciones">
+                    <button id="botonAnadirAsignaturaMatricula" type="button" data-texto="anadirAsignaturaMatricula">Añadir asignatura</button>
+                    <button id="botonGuardarMatricula" type="submit" value="guardar" data-texto="guardarMatricula">Guardar matrícula</button>
+                </div>
+            </form>
+        </dialog>
     </div>
 
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=19"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=33"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=20"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=35"></script>
     <script src="ClienteJs/ClientePresentacion/preferenciasNotificaciones.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
@@ -523,10 +541,10 @@
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=13"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=24"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=33"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=26"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=37"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=11"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=29"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=30"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>

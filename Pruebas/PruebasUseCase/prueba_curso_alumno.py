@@ -1,6 +1,6 @@
 from Servidor.Dominio.DominioEnums.curso_asignatura import CursoAsignatura
 from Servidor.Dominio.DominioServices.curso_alumno import curso_del_alumno
-from Servidor.Dominio.DominioServices.matriculas_muestra import CODIGOS_LAURA, EMAIL_LAURA, NOTAS_LAURA, notas_de_muestra
+from Servidor.Dominio.DominioServices.matriculas_muestra import CODIGOS_LAURA, EMAIL_LAURA, GRUPOS_LAURA
 from Servidor.Dominio.DominioUseCases.asegurar_catalogo_asignaturas_use_case import AsegurarCatalogoAsignaturasUseCase
 from Servidor.Dominio.DominioUseCases.obtener_matricula_use_case import ObtenerMatriculaUseCase
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas_memoria import RepositorioAsignaturasMemoria
@@ -34,58 +34,40 @@ def prueba_la_mitad_exacta_no_asigna_curso():
     assert curso_del_alumno(propias) is None
 
 
-def prueba_laura_es_de_primero_porque_es_la_mayoria_de_sus_asignaturas():
+def prueba_laura_tiene_su_matricula_real_y_curso_tercero():
     catalogo = _catalogo()
     matriculas = RepositorioMatriculasMemoria()
     asignaturas = RepositorioAsignaturasMemoria()
     asignaturas.reemplazar(catalogo)
-    matriculas.reemplazar_alumno("lgonzarico@gmail.com", list(CODIGOS_LAURA))
-    resultado = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar("lgonzarico@gmail.com")
-    assert {asignatura.codigo for asignatura in resultado.asignaturas} == set(CODIGOS_LAURA)
-    assert resultado.curso == CursoAsignatura.PRIMERO
-    assert sum(tramo.porcentaje for tramo in resultado.tramos) == 100
-    assert any(tramo.curso == CursoAsignatura.PRIMERO and tramo.cantidad == 4 for tramo in resultado.tramos)
-    assert resultado.creditos_aprobados == 30
-    assert resultado.creditos_convalidados == 0
-    assert resultado.media == 7.0
-
-
-def prueba_laura_ve_los_creditos_aprobados_y_la_media():
-    catalogo = _catalogo()
-    matriculas = RepositorioMatriculasMemoria()
-    asignaturas = RepositorioAsignaturasMemoria()
-    asignaturas.reemplazar(catalogo)
-    matriculas.reemplazar_alumno(EMAIL_LAURA, list(CODIGOS_LAURA))
-    matriculas.rellenar_notas(EMAIL_LAURA, notas_de_muestra(EMAIL_LAURA, CODIGOS_LAURA))
+    matriculas.reemplazar_alumno(EMAIL_LAURA, list(CODIGOS_LAURA), dict(GRUPOS_LAURA))
     resultado = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar(EMAIL_LAURA)
-    assert matriculas.obtener_notas(EMAIL_LAURA)["42305"] == NOTAS_LAURA["42305"]
-    assert resultado.creditos_aprobados == 30
-    assert resultado.creditos_convalidados == 0
-    assert resultado.media == 7.0
+    assert {asignatura.codigo for asignatura in resultado.asignaturas} == set(CODIGOS_LAURA)
+    assert resultado.curso == CursoAsignatura.TERCERO
+    assert sum(tramo.porcentaje for tramo in resultado.tramos) == 100
+    assert any(tramo.curso == CursoAsignatura.TERCERO and tramo.cantidad == 6 for tramo in resultado.tramos)
+    assert matriculas.obtener_grupos(EMAIL_LAURA) == dict(GRUPOS_LAURA)
+    assert resultado.creditos_aprobados == 0
+    assert resultado.media is None
 
 
-def prueba_una_cuenta_nueva_recibe_matricula_aleatoria_al_acceder():
+def prueba_una_cuenta_nueva_empieza_sin_matricula():
     catalogo = _catalogo()
     matriculas = RepositorioMatriculasMemoria()
     asignaturas = RepositorioAsignaturasMemoria()
     asignaturas.reemplazar(catalogo)
     email = "nueva@ejemplo.com"
     resultado = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar(email)
-    codigos = {asignatura.codigo for asignatura in resultado.asignaturas}
-    assert len(codigos) == 6
-    assert all(codigo in {asignatura.codigo for asignatura in catalogo} for codigo in codigos)
-    assert all(nota is not None for nota in matriculas.obtener_notas(email).values())
-    repetido = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar(email)
-    assert {asignatura.codigo for asignatura in repetido.asignaturas} == codigos
+    assert resultado.asignaturas == []
+    assert resultado.horario == []
+    assert matriculas.obtener_codigos(email) == []
 
 
-def prueba_dos_cuentas_nuevas_no_comparten_la_misma_matricula():
+def prueba_dos_cuentas_nuevas_quedan_vacias_hasta_que_editen():
     catalogo = _catalogo()
     matriculas = RepositorioMatriculasMemoria()
     asignaturas = RepositorioAsignaturasMemoria()
     asignaturas.reemplazar(catalogo)
     una = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar("una@ejemplo.com")
     otra = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar("otra@ejemplo.com")
-    assert {asignatura.codigo for asignatura in una.asignaturas} != {
-        asignatura.codigo for asignatura in otra.asignaturas
-    }
+    assert una.asignaturas == []
+    assert otra.asignaturas == []

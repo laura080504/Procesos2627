@@ -53,3 +53,11 @@ class RepositorioMatriculasMemoria(RepositorioMatriculas):
             grupos.setdefault(codigo, "A")
             guardadas[codigo] = None
             convalidadas.add(codigo)
+
+    def vaciar_todos_excepto(self, email: str) -> None:
+        conservar = email.strip().lower()
+        for alumno in list(self._notas):
+            if alumno != conservar:
+                self._notas[alumno] = {}
+                self._grupos[alumno] = {}
+                self._convalidadas[alumno] = set()

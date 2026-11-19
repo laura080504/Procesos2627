@@ -111,9 +111,48 @@ body.oscuro #listaUsuarios li {
     cursor: pointer;
 }
 
-#vistaCuenta .botones-linea {
-    justify-content: center;
+.perfil-pie {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
     margin-top: 0.75rem;
+    width: 100%;
+}
+
+#botonEditarMatricula {
+    position: relative;
+    z-index: 3;
+    border: 1px solid var(--rojo-logo);
+    background: var(--rojo-logo);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.4rem 0.95rem;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 650;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+#botonEditarMatricula:focus-visible {
+    outline: 2px solid var(--rojo-logo);
+    outline-offset: 2px;
+}
+
+#vistaCuenta .botones-linea {
+    justify-content: flex-end;
+    margin-top: 0;
+    margin-left: auto;
+}
+
+body.oscuro #botonEditarMatricula {
+    background: #c45c6c;
+    border-color: #c45c6c;
+    color: #1a1a1a;
 }
 
 .resumen-curso {

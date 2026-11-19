@@ -22,6 +22,11 @@ _RE_GRUPO = re.compile(
     r"(?P<curso>\d)º\s+GRUPO\s+(?P<grupo>[^-\n<]+?)\s*-\s*(?P<semestre>\d)\s+Semestre",
     re.IGNORECASE,
 )
+# Tablas únicas sin desdoble A/B, p.ej. "3º Aspectos Prof. Inf. - 2 Semestre".
+_RE_ESPECIAL = re.compile(
+    r"(?P<curso>\d)º\s+(?P<grupo>(?!GRUPO\b)[^-\n<]+?)\s*-\s*(?P<semestre>\d)\s+Semestre",
+    re.IGNORECASE,
+)
 _RE_HORA = re.compile(r"(\d{1,2}):(\d{2})")
 _RE_ENLACE = re.compile(
     r'href="(/asignatura/[^"]+)"[^>]*>\s*([^<]+?)\s*</a>',
@@ -45,9 +50,9 @@ def parsear_horarios_html(html: str, base: str = BASE_ESIIAB) -> HorarioPublicoE
     grupos_vistos: list[str] = []
     for cabecera, tabla in bloques:
         grupo = _etiqueta_grupo(cabecera)
-        if not grupo:
+        if grupo is None:
             continue
-        if grupo not in grupos_vistos:
+        if grupo and grupo not in grupos_vistos:
             grupos_vistos.append(grupo)
         for nombre, sesion, enlace in _sesiones_de_tabla(tabla, grupo):
             clave = normalizar_texto(nombre)
@@ -75,9 +80,17 @@ def parsear_horarios_html(html: str, base: str = BASE_ESIIAB) -> HorarioPublicoE
 def _etiqueta_grupo(cabecera: str) -> str | None:
     texto = re.sub(r"\s+", " ", cabecera).strip()
     match = _RE_GRUPO.search(texto)
+    especial = False
+    if not match:
+        match = _RE_ESPECIAL.search(texto)
+        especial = True
     if not match:
         return None
+    # Horario único (Aspectos Prof. Inf., etc.): sin etiqueta A/B para no filtrarlo.
+    if especial:
+        return ""
     crudo = re.sub(r"\(BILING[ÜU]E\)", "", match.group("grupo"), flags=re.IGNORECASE).strip()
+    crudo = re.sub(r"\(\d{1,3}\)", "", crudo).strip()
     letra = re.match(r"^([A-Za-z])\b", crudo)
     if letra and letra.group(1).upper() in {"A", "B", "C", "I"}:
         return letra.group(1).upper()
@@ -89,7 +102,7 @@ def _bloques_horario(html: str) -> list[tuple[str, str]]:
     for match in re.finditer(r"<table[^>]*tableHorario[^>]*>[\s\S]*?</table>", html, re.IGNORECASE):
         previa = html[max(0, match.start() - 800) : match.start()]
         cabeceras = re.findall(
-            r"\dº\s+GRUPO[\s\S]{0,120}?Semestre[\s\S]{0,80}?20\d{2}\s*-\s*20\d{2}",
+            r"\dº\s+(?:GRUPO\s+)?[\s\S]{0,140}?Semestre[\s\S]{0,80}?20\d{2}\s*-\s*20\d{2}",
             previa,
             re.IGNORECASE,
         )

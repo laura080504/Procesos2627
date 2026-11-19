@@ -64,6 +64,15 @@ class ObtenerMatriculaUseCase:
         self._catalogo_cache: tuple[float, list[Asignatura]] | None = None
         self._periodo_cache: tuple[date, int] | None = None
 
+    def invalidar_cache(self, email: str | None = None) -> None:
+        if email is None:
+            self._cache.clear()
+            return
+        clave = email.strip().lower()
+        for guardada in list(self._cache):
+            if guardada[0] == clave:
+                self._cache.pop(guardada, None)
+
     def ejecutar(self, email: str, nombre: str = "") -> MatriculaAlumno:
         clave = (email.strip().lower(), normalizar_texto(nombre))
         ahora = monotonic()
@@ -80,9 +89,11 @@ class ObtenerMatriculaUseCase:
         expediente = expediente_de(propias, notas, convalidadas)
         visibles = _filtrar_por_nombre(propias, nombre)
         visibles.sort(key=lambda asignatura: asignatura.codigo)
-        horario = franjas_de(propias, grupos)
-        fichas, urls = self._datos_esiiab(visibles)
         periodo = self._cuatrimestre_hoy()
+        # La lista muestra toda la matrícula; el horario solo el cuatrimestre vigente.
+        del_periodo = [asignatura for asignatura in propias if asignatura.cuatrimestre == periodo]
+        horario = franjas_de(del_periodo, grupos)
+        fichas, urls = self._datos_esiiab(visibles)
         enriquecidas = [
             _enriquecer(
                 asignatura,

@@ -30,3 +30,6 @@ class RepositorioMatriculas(ABC):
 
     @abstractmethod
     def marcar_convalidadas(self, email: str, codigos: list[str]) -> None: ...
+
+    @abstractmethod
+    def vaciar_todos_excepto(self, email: str) -> None: ...
