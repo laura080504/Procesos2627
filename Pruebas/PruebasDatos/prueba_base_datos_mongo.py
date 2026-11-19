@@ -160,9 +160,18 @@ def prueba_cargar_configuracion_mongo_sin_uri_falla(monkeypatch):
 
 
 def prueba_el_motor_memoria_no_pide_mongo():
-    usuarios, sesiones, recuperaciones, confirmaciones, cursos, asignaturas, eventos, matriculas, esiiab = crear_repositorios(
-        _configuracion("memoria")
-    )
+    (
+        usuarios,
+        sesiones,
+        recuperaciones,
+        confirmaciones,
+        cursos,
+        asignaturas,
+        eventos,
+        matriculas,
+        esiiab,
+        docencia,
+    ) = crear_repositorios(_configuracion("memoria"))
     assert isinstance(usuarios, RepositorioUsuariosMemoria)
     assert isinstance(sesiones, RepositorioSesionesMemoria)
     assert isinstance(recuperaciones, RepositorioRecuperacionesMemoria)
@@ -172,8 +181,10 @@ def prueba_el_motor_memoria_no_pide_mongo():
     assert isinstance(eventos, RepositorioEventosMemoria)
     assert isinstance(matriculas, RepositorioMatriculasMemoria)
     from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_esiiab_memoria import RepositorioEsiiabMemoria
+    from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia_memoria import RepositorioDocenciaMemoria
 
     assert isinstance(esiiab, RepositorioEsiiabMemoria)
+    assert isinstance(docencia, RepositorioDocenciaMemoria)
 
 
 def prueba_un_motor_desconocido_falla():

@@ -23,7 +23,8 @@ CODIGOS_LAURA = (
     "42366",
 )
 GRUPOS_LAURA = {
-    "42305": "13",
+    # Álgebra: campus 13 = I (inglés) solapa mucho; A/10 es el de menos choques con IS.
+    "42305": "10",
     "42322": "11",
     "42324": "11",
     "42325": "11",
