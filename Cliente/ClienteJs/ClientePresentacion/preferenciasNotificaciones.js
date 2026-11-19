@@ -72,7 +72,7 @@ const PreferenciasNotificaciones = (() => {
     function estructurar(entrada) {
         const avisos = entrada && entrada.avisos ? entrada.avisos : {};
         return {
-            icono: entrada && entrada.icono === "mascota" ? "mascota" : "campana",
+            icono: "campana",
             antelacion: antelacionDe(entrada),
             avisos: {
                 examenes: avisos.examenes !== false,

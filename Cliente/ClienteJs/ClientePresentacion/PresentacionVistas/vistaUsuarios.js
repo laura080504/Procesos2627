@@ -206,9 +206,6 @@ class VistaUsuarios {
         this.preferenciasAvisos.hidden = false;
         this.formularioEvento.hidden = true;
         const prefs = PreferenciasNotificaciones.leer();
-        this.preferenciasAvisos.querySelectorAll('input[name="iconoAvisos"]').forEach((input) => {
-            input.checked = input.value === prefs.icono;
-        });
         document.getElementById("avisoExamenes").checked = prefs.avisos.examenes;
         document.getElementById("avisoEntregas").checked = prefs.avisos.entregas;
         document.getElementById("avisoHorarioHoy").checked = prefs.avisos.horarioHoy;
@@ -220,12 +217,11 @@ class VistaUsuarios {
     }
 
     guardarPreferenciasAvisos() {
-        const iconoElegido = this.preferenciasAvisos.querySelector('input[name="iconoAvisos"]:checked');
         const unidad = document.getElementById("antelacionUnidad").value;
         const valorInput = document.getElementById("antelacionValor");
         valorInput.disabled = unidad === "curso";
         const preferencias = PreferenciasNotificaciones.guardar({
-            icono: iconoElegido ? iconoElegido.value : "campana",
+            icono: "campana",
             antelacion: {
                 valor: Number(valorInput.value),
                 unidad,

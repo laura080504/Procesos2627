@@ -228,9 +228,7 @@ const VistaAgenda = (() => {
 
         aplicarPreferenciasAvisos(preferencias) {
             this.preferenciasAvisos = preferencias;
-            this.iconoAvisos.replaceChildren(
-                this.preferenciasAvisos.icono === "mascota" ? iconoMascota() : iconoCampana(),
-            );
+            this.iconoAvisos.replaceChildren(iconoCampana());
             this.botonAvisos.setAttribute("aria-label", this.textos.abrirAvisos || "Abrir avisos");
             this.actualizarAvisos();
         }
@@ -863,49 +861,6 @@ const VistaAgenda = (() => {
         badajo.setAttribute("stroke-linecap", "round");
         badajo.setAttribute("stroke-linejoin", "round");
         svg.append(cuerpo, badajo);
-        return svg;
-    }
-
-    function iconoMascota() {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("viewBox", "0 0 24 24");
-        svg.setAttribute("aria-hidden", "true");
-        const cara = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        cara.setAttribute("cx", "12");
-        cara.setAttribute("cy", "13");
-        cara.setAttribute("r", "6.2");
-        cara.setAttribute("fill", "none");
-        cara.setAttribute("stroke", "currentColor");
-        cara.setAttribute("stroke-width", "1.6");
-        const orejaIzq = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        orejaIzq.setAttribute("d", "M7.2 8.2 5.4 4.8 9.2 6.6");
-        orejaIzq.setAttribute("fill", "none");
-        orejaIzq.setAttribute("stroke", "currentColor");
-        orejaIzq.setAttribute("stroke-width", "1.6");
-        orejaIzq.setAttribute("stroke-linejoin", "round");
-        const orejaDer = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        orejaDer.setAttribute("d", "M16.8 8.2 18.6 4.8 14.8 6.6");
-        orejaDer.setAttribute("fill", "none");
-        orejaDer.setAttribute("stroke", "currentColor");
-        orejaDer.setAttribute("stroke-width", "1.6");
-        orejaDer.setAttribute("stroke-linejoin", "round");
-        const ojoIzq = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        ojoIzq.setAttribute("cx", "9.8");
-        ojoIzq.setAttribute("cy", "12.4");
-        ojoIzq.setAttribute("r", "0.9");
-        ojoIzq.setAttribute("fill", "currentColor");
-        const ojoDer = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        ojoDer.setAttribute("cx", "14.2");
-        ojoDer.setAttribute("cy", "12.4");
-        ojoDer.setAttribute("r", "0.9");
-        ojoDer.setAttribute("fill", "currentColor");
-        const boca = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        boca.setAttribute("d", "M10.2 15.2c.7.7 2.9.7 3.6 0");
-        boca.setAttribute("fill", "none");
-        boca.setAttribute("stroke", "currentColor");
-        boca.setAttribute("stroke-width", "1.4");
-        boca.setAttribute("stroke-linecap", "round");
-        svg.append(cara, orejaIzq, orejaDer, ojoIzq, ojoDer, boca);
         return svg;
     }
 
