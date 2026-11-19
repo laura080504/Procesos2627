@@ -15,6 +15,14 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
         documentos = self.base_datos.coleccion("matricula").find({"email": email}).sort("codigo", 1)
         return {documento["codigo"]: documento.get("nota") for documento in documentos}
 
+    def obtener_grupos(self, email: str) -> dict[str, str]:
+        documentos = self.base_datos.coleccion("matricula").find({"email": email}, {"codigo": 1, "grupo": 1})
+        return {
+            documento["codigo"]: (documento.get("grupo") or "A")
+            for documento in documentos
+            if documento.get("codigo")
+        }
+
     def obtener_convalidadas(self, email: str) -> set[str]:
         documentos = self.base_datos.coleccion("matricula").find(
             {"email": email, "convalidada": True},
@@ -22,20 +30,28 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
         )
         return {documento["codigo"] for documento in documentos}
 
-    def reemplazar_alumno(self, email: str, codigos: list[str]) -> None:
+    def reemplazar_alumno(
+        self,
+        email: str,
+        codigos: list[str],
+        grupos: dict[str, str] | None = None,
+    ) -> None:
         coleccion = self.base_datos.coleccion("matricula")
         coleccion.delete_many({"email": email})
-        if codigos:
+        asignados = grupos or {}
+        unicos = list(dict.fromkeys(codigos))
+        if unicos:
             coleccion.insert_many(
                 [
                     {
                         "_id": f"{email}|{codigo}",
                         "email": email,
                         "codigo": codigo,
+                        "grupo": (asignados.get(codigo) or "A").strip() or "A",
                         "nota": None,
                         "convalidada": False,
                     }
-                    for codigo in dict.fromkeys(codigos)
+                    for codigo in unicos
                 ]
             )
 
@@ -62,7 +78,8 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
                         "codigo": codigo,
                         "nota": None,
                         "convalidada": True,
-                    }
+                    },
+                    "$setOnInsert": {"grupo": "A"},
                 },
                 upsert=True,
             )

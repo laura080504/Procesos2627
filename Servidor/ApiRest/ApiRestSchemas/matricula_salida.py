@@ -14,6 +14,8 @@ class FranjaHorarioSalida(BaseModel):
     inicio: str
     fin: str
     tipo: str
+    aula: str = ""
+    grupo: str = ""
 
 
 class TramoCursoSalida(BaseModel):

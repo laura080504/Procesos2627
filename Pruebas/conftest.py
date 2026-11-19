@@ -1,6 +1,8 @@
 import os
 
 os.environ["DATOS_MOTOR"] = "memoria"
+# Las pruebas usan el diccionario estático; el cliente vivo se cubre con fixtures HTML.
+os.environ["HORARIOS_ESIIAB_VIVO"] = "false"
 
 import pytest
 from fastapi.testclient import TestClient

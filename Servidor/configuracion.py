@@ -31,6 +31,9 @@ class Configuracion:
     google_client_id: str | None = None
     google_client_secret: str | None = field(default=None, repr=False)
     url_publica: str | None = None
+    horarios_esiiab_vivo: bool = True
+    horarios_esiiab_url: str = "https://esiiab.uclm.es/horarios/"
+    horarios_esiiab_ttl_segundos: int = 5 * 60
 
 
 def cargar_configuracion() -> Configuracion:
@@ -63,6 +66,9 @@ def cargar_configuracion() -> Configuracion:
     if bool(google_client_id) != bool(google_client_secret):
         raise ValueError("GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET deben indicarse juntos.")
     url_publica = os.getenv("URL_PUBLICA", "").strip().rstrip("/") or None
+    horarios_vivo = os.getenv("HORARIOS_ESIIAB_VIVO", "true").lower() != "false"
+    horarios_url = os.getenv("HORARIOS_ESIIAB_URL", "https://esiiab.uclm.es/horarios/").strip()
+    horarios_ttl = int(os.getenv("HORARIOS_ESIIAB_TTL_SEGUNDOS", str(5 * 60)))
     return Configuracion(
         duracion_sesion=timedelta(hours=float(os.getenv("SESION_DURACION_HORAS", "8"))),
         cookie_segura=os.getenv("COOKIE_SEGURA", "false").lower() == "true",
@@ -84,6 +90,9 @@ def cargar_configuracion() -> Configuracion:
         google_client_id=google_client_id,
         google_client_secret=google_client_secret or None,
         url_publica=url_publica,
+        horarios_esiiab_vivo=horarios_vivo,
+        horarios_esiiab_url=horarios_url or "https://esiiab.uclm.es/horarios/",
+        horarios_esiiab_ttl_segundos=max(30, horarios_ttl),
     )
 
 

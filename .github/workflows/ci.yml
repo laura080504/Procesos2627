@@ -12,6 +12,7 @@ jobs:
     env:
       PYTHONDONTWRITEBYTECODE: "1"
       PYTEST_ADDOPTS: "-p no:cacheprovider"
+      HORARIOS_ESIIAB_VIVO: "false"
     steps:
       - uses: actions/checkout@v4
 

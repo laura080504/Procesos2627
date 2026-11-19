@@ -2,20 +2,6 @@ const VistaAgenda = (() => {
     const HORA_INICIO = 8;
     const HORA_FIN = 20;
     const TONOS_FRANJA = ["#9d1830", "#7a1528", "#c45c6c", "#5c101c", "#a33d4e", "#8e3044"];
-    const PROFESORES_MUESTRA = [
-        "Ana Ruiz",
-        "Carlos Vega",
-        "Elena Mora",
-        "Hugo Santos",
-        "Irene Díaz",
-        "Javier Peña",
-        "Lucía Ortega",
-        "Miguel Torres",
-        "Nora Gil",
-        "Pablo Ramos",
-        "Raquel Soto",
-        "Sergio Núñez",
-    ];
 
     class VistaAgenda {
         constructor({ alBuscar, alAbrirPerfil, alCambiarTema, alCambiarIdioma, alLeer, alCambiarMes }) {
@@ -660,11 +646,13 @@ const VistaAgenda = (() => {
             bloque.style.background = tonoFranja(franja.codigo);
             const nombre = ingles ? franja.nombre_ingles : franja.nombre;
             const tipo = franja.tipo === "teoria" ? this.textos.teoria : this.textos.practicas;
-            bloque.title = `${nombre} · ${tipo} · ${franja.inicio}–${franja.fin}`;
+            const grupo = franja.grupo ? ` · ${franja.grupo}` : "";
+            const aula = franja.aula ? ` · ${franja.aula}` : "";
+            bloque.title = `${nombre} · ${tipo}${grupo}${aula} · ${franja.inicio}–${franja.fin}`;
             const fuerte = document.createElement("strong");
             fuerte.textContent = nombre;
             const detalle = document.createElement("span");
-            detalle.textContent = tipo;
+            detalle.textContent = franja.grupo ? `${tipo} · ${franja.grupo}` : tipo;
             bloque.append(fuerte, detalle);
             return bloque;
         }
@@ -686,9 +674,9 @@ const VistaAgenda = (() => {
         pintarFicha() {
             const ingles = this.textos.codigo === "EN";
             const nombre = ingles ? this.abierta.nombre_ingles : this.abierta.nombre;
-            const grupo = datosGrupoMuestra(this.abierta.codigo);
-            const aula = ingles ? "Room" : "Aula";
-            const despacho = ingles ? "Office" : "Despacho";
+            const aulasTeoria = (this.abierta.aulas_teoria || []).join(", ") || this.textos.sinAula;
+            const aulasPracticas = (this.abierta.aulas_practicas || []).join(", ") || this.textos.sinAula;
+            const profesores = this.abierta.profesores || [];
             this.fichaContenido.replaceChildren();
             const cabecera = document.createElement("div");
             cabecera.className = "ficha-cabecera";
@@ -697,26 +685,33 @@ const VistaAgenda = (() => {
             insignia.textContent = nombre.slice(0, 1).toLocaleUpperCase(ingles ? "en" : "es");
             const titulo = document.createElement("span");
             titulo.className = "asignatura-nombre";
-            titulo.textContent = nombre;
+            titulo.textContent = this.abierta.grupo
+                ? `${nombre} · ${this.textos.filtroGrupo} ${this.abierta.grupo}`
+                : nombre;
             cabecera.append(insignia, titulo);
-            const teoria = bloqueGrupo(this.textos.teoria, `${aula} ${grupo.aulaTeoria}`, [
-                { nombre: grupo.profesorTeoria, lado: `${despacho} ${grupo.despachoTeoria}` },
-            ]);
-            const practicas = bloqueGrupo(
-                this.textos.practicas,
-                `${aula} ${grupo.aulaPracticas}`,
-                grupo.profesoresPracticas.map((nombreProfesor, indice) => ({
-                    nombre: nombreProfesor,
-                    lado: `${despacho} ${grupo.despachos[indice]}`,
-                })),
+            const teoria = bloqueGrupo(this.textos.teoria, aulasTeoria, []);
+            const practicas = bloqueGrupo(this.textos.practicas, aulasPracticas, []);
+            const bloqueProfesores = bloqueGrupo(
+                this.textos.profesores,
+                "",
+                profesores.length
+                    ? profesores.map((profesor) => ({
+                        nombre: profesor.nombre,
+                        lineas: profesor.tutorias || [],
+                        url: profesor.url,
+                    }))
+                    : [{ nombre: this.textos.sinProfesores, lineas: [] }],
             );
             const enlaces = document.createElement("div");
             enlaces.className = "ficha-enlaces";
+            if (this.abierta.url_esiiab) {
+                enlaces.append(enlaceFicha(this.textos.enlaceEsiiab, this.abierta.url_esiiab));
+            }
             enlaces.append(
                 enlaceFicha(this.textos.enlaceCampus, "https://campusvirtual.uclm.es/"),
                 enlaceFicha(this.textos.enlaceSecretaria, "https://secretaria.uclm.es/"),
             );
-            this.fichaContenido.append(cabecera, teoria, practicas, enlaces);
+            this.fichaContenido.append(cabecera, teoria, practicas, bloqueProfesores, enlaces);
         }
 
         textoEnPantalla() {
@@ -882,22 +877,6 @@ const VistaAgenda = (() => {
         return punto;
     }
 
-    function datosGrupoMuestra(codigo) {
-        // Datos inventados a partir del código: solo para rellenar la ficha de muestra.
-        const base = Number(String(codigo).slice(-2)) || 1;
-        const semilla = Number(String(codigo).replace(/\D/g, "")) || base;
-        return {
-            aulaTeoria: `${(base % 3) + 1}.${(base % 4) + 1}`,
-            aulaPracticas: `${(base % 3) + 1}.${(base % 2) + 1}`,
-            despachoTeoria: String((base % 5) + 1),
-            despachos: [0, 1, 2].map((indice) => String((base + indice) % 6 + 1)),
-            profesorTeoria: PROFESORES_MUESTRA[semilla % PROFESORES_MUESTRA.length],
-            profesoresPracticas: [0, 1, 2].map(
-                (indice) => PROFESORES_MUESTRA[(semilla + indice + 1) % PROFESORES_MUESTRA.length],
-            ),
-        };
-    }
-
     function bloqueGrupo(titulo, aula, personas) {
         const bloque = document.createElement("section");
         bloque.className = "ficha-bloque";
@@ -905,9 +884,12 @@ const VistaAgenda = (() => {
         cabecera.className = "ficha-titulo";
         const nombre = document.createElement("span");
         nombre.textContent = titulo;
-        const lugar = document.createElement("span");
-        lugar.textContent = aula;
-        cabecera.append(nombre, lugar);
+        cabecera.append(nombre);
+        if (aula) {
+            const lugar = document.createElement("span");
+            lugar.textContent = aula;
+            cabecera.append(lugar);
+        }
         bloque.append(cabecera);
         personas.forEach((persona) => {
             const fila = document.createElement("div");
@@ -915,12 +897,32 @@ const VistaAgenda = (() => {
             const insignia = document.createElement("span");
             insignia.className = "insignia";
             insignia.append(iconoPersona());
-            const texto = document.createElement("span");
-            texto.textContent = persona.nombre;
-            const lado = document.createElement("span");
-            lado.className = "ficha-lado";
-            lado.textContent = persona.lado;
-            fila.append(insignia, texto, lado);
+            const cuerpo = document.createElement("div");
+            cuerpo.className = "ficha-persona-cuerpo";
+            const texto = persona.url ? enlaceFicha(persona.nombre, persona.url) : document.createElement("span");
+            if (!persona.url) {
+                texto.textContent = persona.nombre;
+            }
+            texto.classList.add("ficha-persona-nombre");
+            cuerpo.append(texto);
+            const lineas = persona.lineas || [];
+            if (lineas.length) {
+                const tutorias = document.createElement("div");
+                tutorias.className = "ficha-tutorias";
+                lineas.forEach((linea) => {
+                    const franja = document.createElement("div");
+                    franja.className = "ficha-tutoria";
+                    franja.textContent = linea;
+                    tutorias.append(franja);
+                });
+                cuerpo.append(tutorias);
+            } else if (persona.lado) {
+                const lado = document.createElement("span");
+                lado.className = "ficha-lado";
+                lado.textContent = persona.lado;
+                cuerpo.append(lado);
+            }
+            fila.append(insignia, cuerpo);
             bloque.append(fila);
         });
         return bloque;
