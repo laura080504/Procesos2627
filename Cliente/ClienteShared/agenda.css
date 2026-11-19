@@ -331,9 +331,44 @@ body.con-agenda .herramientas {
     color: #8a6a70;
 }
 
-#sinAsignaturas {
-    margin: 0.4rem 0.8rem;
+.sin-asignaturas {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin: 0.6rem 0.8rem 0.9rem;
+}
+
+.sin-asignaturas[hidden] {
+    display: none;
+}
+
+#textoSinAsignaturas {
+    margin: 0;
     color: var(--rojo-logo);
+    font-size: 0.92rem;
+    line-height: 1.4;
+}
+
+#botonMatriculaVacia {
+    border: 0;
+    background: var(--rojo-logo);
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+#botonMatriculaVacia[hidden] {
+    display: none;
+}
+
+#botonMatriculaVacia:focus-visible {
+    outline: 2px solid var(--rojo-logo);
+    outline-offset: 2px;
 }
 
 #listaAsignaturas {
@@ -703,50 +738,59 @@ body.con-agenda .herramientas {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 1.1rem;
+    gap: 0.85rem 1.2rem;
     list-style: none;
     margin: 0.85rem 0 0;
     padding: 0;
     color: #6d5a5e;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
 }
 
 .leyenda-calendario li {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.45rem;
 }
 
 .leyenda-icono {
     display: inline-grid;
     place-items: center;
-    width: 0.9rem;
-    height: 0.9rem;
+    width: 1.15rem;
+    height: 1.15rem;
     color: var(--rojo-logo);
+    flex: 0 0 auto;
 }
 
-.leyenda-icono .estrella {
-    width: 10px;
-    height: 10px;
+.leyenda-estrella .estrella {
+    width: 14px;
+    height: 14px;
 }
 
-.leyenda-icono.punto {
-    width: 7px;
-    height: 7px;
+.leyenda-punto .punto {
+    width: 11px;
+    height: 11px;
+}
+
+.leyenda-letra {
+    min-width: 1.15rem;
+    height: 1.15rem;
+    padding: 0 0.2rem;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
 }
 
 .leyenda-icono.cambio-cuatri {
-    border-radius: 3px;
     background: #0c7a70;
 }
 
 .leyenda-icono.festivo {
-    border-radius: 3px;
     background: #6c3483;
 }
 
 .leyenda-icono.semana-examenes {
-    border-radius: 3px;
     background: var(--rojo-logo);
 }
 
@@ -819,9 +863,14 @@ body.con-agenda .herramientas {
 
 .fila-matricula {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 5.5rem auto;
+    grid-template-columns: minmax(0, 1fr) 9.5rem auto;
     gap: 0.45rem;
-    align-items: center;
+    align-items: start;
+}
+
+.combo-asignatura {
+    position: relative;
+    min-width: 0;
 }
 
 .fila-matricula select,
@@ -837,16 +886,95 @@ body.con-agenda .herramientas {
     color: inherit;
 }
 
+.sugerencias-asignatura {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 2px);
+    z-index: 5;
+    margin: 0;
+    padding: 0.25rem 0;
+    list-style: none;
+    max-height: 12rem;
+    overflow: auto;
+    border: 1px solid rgba(157, 24, 48, 0.28);
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(60, 8, 16, 0.16);
+}
+
+.sugerencias-asignatura[hidden] {
+    display: none;
+}
+
+.sugerencias-asignatura button {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    padding: 0.45rem 0.65rem;
+    font: inherit;
+    font-size: 0.84rem;
+    cursor: pointer;
+}
+
+.sugerencias-asignatura button:hover,
+.sugerencias-asignatura button:focus-visible {
+    background: rgba(157, 24, 48, 0.1);
+}
+
+.lista-resumen-matricula {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    max-height: min(50vh, 22rem);
+    overflow: auto;
+}
+
+.lista-resumen-matricula li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: 10px;
+    background: rgba(157, 24, 48, 0.06);
+    font-size: 0.88rem;
+}
+
+.lista-resumen-matricula .resumen-nombre {
+    min-width: 0;
+    font-weight: 600;
+}
+
+.lista-resumen-matricula .resumen-grupo {
+    flex: 0 0 auto;
+    font-weight: 650;
+    color: var(--rojo-logo);
+}
+
+.lista-resumen-matricula .resumen-vacio {
+    justify-content: center;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
 .fila-matricula .quitar-matricula {
     border: 1px solid rgba(157, 24, 48, 0.28);
     border-radius: 999px;
     background: #fff;
     color: var(--rojo-logo);
-    padding: 0.35rem 0.7rem;
+    padding: 0.45rem 0.7rem;
     font: inherit;
     font-size: 0.78rem;
     cursor: pointer;
     white-space: nowrap;
+    margin-top: 0.05rem;
 }
 
 .matricula-acciones {
@@ -1130,10 +1258,24 @@ body.oscuro .dialogo-matricula {
 body.oscuro .fila-matricula select,
 body.oscuro .fila-matricula input,
 body.oscuro .fila-matricula .quitar-matricula,
-body.oscuro .matricula-acciones button {
+body.oscuro .matricula-acciones button,
+body.oscuro .sugerencias-asignatura {
     background: #3a3a40;
     border-color: rgba(255, 255, 255, 0.22);
     color: #f3f3f3;
+}
+
+body.oscuro .sugerencias-asignatura button:hover,
+body.oscuro .sugerencias-asignatura button:focus-visible {
+    background: rgba(196, 92, 108, 0.25);
+}
+
+body.oscuro .lista-resumen-matricula li {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+body.oscuro .lista-resumen-matricula .resumen-grupo {
+    color: #f3c3cb;
 }
 
 body.oscuro #botonGuardarMatricula {

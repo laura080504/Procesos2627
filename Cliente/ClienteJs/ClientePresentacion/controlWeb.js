@@ -61,6 +61,7 @@ class ControlWeb {
             alLeer: (texto) => this.leerPantalla(texto),
             alCambiarMes: () => this.programarCargaMarcas(),
             alAbrirAsignatura: (asignatura) => this.asegurarFichaAsignatura(asignatura),
+            alEditarMatricula: () => this.abrirEdicionMatriculaDesdeAgenda(),
         });
         this.vistaEditarDatos = new VistaEditarDatos({
             alGuardar: (datos) => this.guardarEdicion(datos),
@@ -552,9 +553,16 @@ class ControlWeb {
                 this.gestionarError(error);
             }
         } else {
-            pintarDatosUsuario(this.vistaUsuarios.cuentaActual, this.usuarioActual, this.textos);
+            this.vistaUsuarios.pintarIdentidadEstudiante(this.usuarioActual);
         }
         await this.refrescarUsuarios();
+    }
+
+    async abrirEdicionMatriculaDesdeAgenda() {
+        await this.mostrarPanel();
+        if (!this.esGestion(this.usuarioActual.rol)) {
+            this.vistaUsuarios.abrirEditorMatricula();
+        }
     }
 
     esGestion(rol) {
