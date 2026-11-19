@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=14">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=32">
-    <link rel="stylesheet" href="ClienteShared/agenda.css?v=35">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=36">
+    <link rel="stylesheet" href="ClienteShared/agenda.css?v=38">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -323,7 +323,7 @@
                 </div>
                 <div id="vistaCuenta" class="perfil-estudiante" hidden>
                     <button id="botonVolverAgenda" type="button" data-texto="volverAgenda">Volver a la agenda</button>
-                    <span id="cuentaActual"></span>
+                    <div id="cuentaActual" class="perfil-identidad"></div>
                     <div id="resumenCurso" class="resumen-curso" hidden>
                         <div class="resumen-datos">
                             <p id="cursoAlumno"></p>
@@ -331,9 +331,11 @@
                             <p id="creditosConvalidados"></p>
                             <p id="mediaCarrera"></p>
                         </div>
-                        <div class="tarta-fila">
-                            <svg id="graficoCurso" viewBox="0 0 42 42" aria-hidden="true"></svg>
-                            <ul id="leyendaCurso"></ul>
+                        <div class="tarta-tarjeta">
+                            <div class="tarta-fila">
+                                <svg id="graficoCurso" viewBox="0 0 42 42" aria-hidden="true"></svg>
+                                <ul id="leyendaCurso"></ul>
+                            </div>
                         </div>
                     </div>
                     <section id="preferenciasAvisos" class="preferencias-avisos">
@@ -342,7 +344,7 @@
                             <p class="preferencias-ayuda" data-texto="preferenciasAvisosAyuda">Elige qué avisos quieres y con cuánta antelación.</p>
                         </header>
                         <div class="preferencias-fila">
-                            <fieldset class="preferencias-grupo">
+                            <fieldset class="preferencias-grupo preferencias-cristal">
                                 <legend data-texto="tiposAvisos">Qué avisos quiero</legend>
                                 <div class="preferencias-opciones">
                                     <label class="preferencia-opcion">
@@ -354,19 +356,19 @@
                                         <span data-texto="avisoEntregas">Entregas próximas</span>
                                     </label>
                                     <label class="preferencia-opcion">
-                                        <input id="avisoHorarioHoy" type="checkbox" checked>
+                                        <input id="avisoHorarioHoy" type="checkbox">
                                         <span data-texto="avisoHorarioHoy">Clases de hoy</span>
                                     </label>
                                 </div>
                             </fieldset>
-                            <fieldset class="preferencias-grupo">
+                            <fieldset class="preferencias-grupo preferencias-cristal">
                                 <legend data-texto="antelacionAvisos">Avisarme con</legend>
                                 <div class="preferencias-antelacion">
                                     <input id="antelacionValor" type="number" min="1" max="365" value="2" inputmode="numeric" aria-label="Cantidad de antelación">
                                     <select id="antelacionUnidad" aria-label="Unidad de antelación">
                                         <option value="dias" data-texto="antelacionUnidadDias">días</option>
-                                        <option value="semanas" data-texto="antelacionUnidadSemanas" selected>semanas</option>
-                                        <option value="mes" data-texto="antelacionUnidadMes">meses</option>
+                                        <option value="semanas" data-texto="antelacionUnidadSemanas">semanas</option>
+                                        <option value="mes" data-texto="antelacionUnidadMes" selected>meses</option>
                                         <option value="curso" data-texto="antelacionUnidadCurso">todo el curso</option>
                                     </select>
                                 </div>
@@ -374,7 +376,10 @@
                         </div>
                     </section>
                     <div class="perfil-pie">
-                        <button id="botonEditarMatricula" type="button" data-texto="editarMatricula">Mi matrícula</button>
+                        <span class="perfil-acciones-matricula">
+                            <button id="botonVerMatricula" type="button" data-texto="verMatricula">Ver matrícula</button>
+                            <button id="botonEditarMatricula" type="button" data-texto="editarMatricula">Editar matrícula</button>
+                        </span>
                         <span class="botones-linea">
                             <button id="botonEditarCuenta" type="button" data-texto="editarDatos">Editar datos</button>
                             <button id="botonCerrarSesionCuenta" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
@@ -445,7 +450,10 @@
                         </svg>
                         <input id="buscadorAsignatura" type="search" placeholder="Buscar asignatura" autocomplete="off">
                     </label>
-                    <p id="sinAsignaturas" data-texto="sinAsignaturas" hidden>Ninguna asignatura coincide con la búsqueda</p>
+                    <div id="sinAsignaturas" class="sin-asignaturas" hidden>
+                        <p id="textoSinAsignaturas" data-texto="sinAsignaturas">Ninguna asignatura coincide con la búsqueda</p>
+                        <button id="botonMatriculaVacia" type="button" data-texto="editarMatricula" hidden>Editar matrícula</button>
+                    </div>
                     <ul id="listaAsignaturas"></ul>
                     <div id="fichaAsignatura" class="ficha-asignatura" hidden>
                         <button id="volverAsignaturas" type="button">
@@ -466,23 +474,23 @@
                     <div id="rejillaAgenda" class="rejilla"></div>
                     <ul id="leyendaCalendario" class="leyenda-calendario" aria-label="Leyenda">
                         <li>
-                            <span class="leyenda-icono" aria-hidden="true"></span>
+                            <span class="leyenda-icono leyenda-estrella" aria-hidden="true"></span>
                             <span data-texto="leyendaExamen">Examen</span>
                         </li>
                         <li>
-                            <span class="leyenda-icono punto" aria-hidden="true"></span>
+                            <span class="leyenda-icono leyenda-punto" aria-hidden="true"></span>
                             <span data-texto="leyendaEntrega">Entrega</span>
                         </li>
                         <li>
-                            <span class="leyenda-icono cambio-cuatri" aria-hidden="true"></span>
+                            <span class="leyenda-icono leyenda-letra cambio-cuatri" aria-hidden="true" data-texto="abrevCambioCuatri">C</span>
                             <span data-texto="leyendaCambioCuatri">Cambio de cuatrimestre</span>
                         </li>
                         <li>
-                            <span class="leyenda-icono festivo" aria-hidden="true"></span>
-                            <span data-texto="leyendaFestivo">Festivo</span>
+                            <span class="leyenda-icono leyenda-letra festivo" aria-hidden="true" data-texto="abrevFestivo">F</span>
+                            <span data-texto="leyendaFestivo">Festivo / vacaciones</span>
                         </li>
                         <li>
-                            <span class="leyenda-icono semana-examenes" aria-hidden="true"></span>
+                            <span class="leyenda-icono leyenda-letra semana-examenes" aria-hidden="true" data-texto="abrevPeriodo">P</span>
                             <span data-texto="leyendaSemanaExamenes">Semana de exámenes</span>
                         </li>
                     </ul>
@@ -520,11 +528,26 @@
                     <h2 data-texto="tituloMatricula">Tu matrícula real</h2>
                     <button type="submit" class="cerrar-dialogo" data-etiqueta="cerrarDialogo" value="cancelar" aria-label="Cerrar">&times;</button>
                 </header>
-                <p class="ayuda-matricula" data-texto="ayudaMatricula">Elige las asignaturas que cursas y el grupo exacto de cada una.</p>
+                <p class="ayuda-matricula" data-texto="ayudaMatricula">Escribe el nombre o la letra inicial para buscar la asignatura y elige el grupo.</p>
                 <div id="listaMatriculaEditable" class="lista-matricula-editable"></div>
                 <div class="matricula-acciones">
                     <button id="botonAnadirAsignaturaMatricula" type="button" data-texto="anadirAsignaturaMatricula">Añadir asignatura</button>
                     <button id="botonGuardarMatricula" type="submit" value="guardar" data-texto="guardarMatricula">Guardar matrícula</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="dialogoResumenMatricula" class="dialogo-matricula dialogo-resumen-matricula">
+            <form method="dialog">
+                <header>
+                    <h2 data-texto="tituloResumenMatricula">Tu matrícula</h2>
+                    <button type="submit" class="cerrar-dialogo" data-etiqueta="cerrarDialogo" value="cancelar" aria-label="Cerrar">&times;</button>
+                </header>
+                <p class="ayuda-matricula" data-texto="ayudaResumenMatricula">Resumen de las asignaturas y grupos en los que estás.</p>
+                <ul id="listaResumenMatricula" class="lista-resumen-matricula"></ul>
+                <div class="matricula-acciones">
+                    <button type="submit" value="cancelar" data-texto="cerrarDialogo">Cerrar</button>
+                    <button id="botonEditarDesdeResumen" type="button" data-texto="editarMatricula">Editar matrícula</button>
                 </div>
             </form>
         </dialog>
@@ -533,7 +556,7 @@
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=20"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=35"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=40"></script>
     <script src="ClienteJs/ClientePresentacion/preferenciasNotificaciones.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
@@ -541,10 +564,10 @@
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=13"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=26"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=37"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=28"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=39"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=11"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=30"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=32"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>
