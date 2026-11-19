@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=14">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=36">
-    <link rel="stylesheet" href="ClienteShared/agenda.css?v=38">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=37">
+    <link rel="stylesheet" href="ClienteShared/agenda.css?v=39">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -380,6 +380,7 @@
                             <button id="botonVerMatricula" type="button" data-texto="verMatricula">Ver matrícula</button>
                             <button id="botonEditarMatricula" type="button" data-texto="editarMatricula">Editar matrícula</button>
                         </span>
+                        <button id="botonHistorial" type="button" data-texto="historial">★ Historial</button>
                         <span class="botones-linea">
                             <button id="botonEditarCuenta" type="button" data-texto="editarDatos">Editar datos</button>
                             <button id="botonCerrarSesionCuenta" type="button" data-texto="cerrarSesion">Cerrar sesión</button>
@@ -551,12 +552,35 @@
                 </div>
             </form>
         </dialog>
+
+        <dialog id="dialogoHistorial" class="dialogo-matricula dialogo-historial">
+            <form id="formHistorial" method="dialog">
+                <header>
+                    <h2 data-texto="tituloHistorial">Tu historial académico</h2>
+                    <button type="submit" class="cerrar-dialogo" data-etiqueta="cerrarDialogo" value="cancelar" aria-label="Cerrar">&times;</button>
+                </header>
+                <p class="ayuda-matricula" data-texto="ayudaHistorial">Introduce a mano tus notas y medias. Cuando haya acceso a secretaría se importarán solas.</p>
+                <div id="resumenHistorial" class="resumen-historial"></div>
+                <section class="bloque-historial">
+                    <h3 data-texto="historialCalificadas">Asignaturas con nota</h3>
+                    <div id="listaHistorialCalificadas" class="lista-historial"></div>
+                </section>
+                <section class="bloque-historial">
+                    <h3 data-texto="historialPendientes">Te quedan por cursar</h3>
+                    <div id="listaHistorialPendientes" class="lista-historial lista-historial-pendientes"></div>
+                </section>
+                <div class="matricula-acciones">
+                    <button type="submit" value="cancelar" data-texto="cerrarDialogo">Cerrar</button>
+                    <button id="botonGuardarHistorial" type="submit" value="guardar" data-texto="guardarHistorial">Guardar historial</button>
+                </div>
+            </form>
+        </dialog>
     </div>
 
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=20"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=40"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=21"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=41"></script>
     <script src="ClienteJs/ClientePresentacion/preferenciasNotificaciones.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
@@ -564,10 +588,10 @@
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=13"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=28"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=29"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=39"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=11"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=32"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=33"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>

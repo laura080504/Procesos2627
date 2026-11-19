@@ -85,12 +85,29 @@ class ObtenerMatriculaUseCase:
         grupos = self.repositorio_matriculas.obtener_grupos(email)
         convalidadas = self.repositorio_matriculas.obtener_convalidadas(email)
         catalogo = self._catalogo(ahora)
-        propias = [asignatura for asignatura in catalogo if asignatura.codigo in notas]
-        expediente = expediente_de(propias, notas, convalidadas)
+        activas = set(self.repositorio_matriculas.obtener_codigos(email))
+        propias = [asignatura for asignatura in catalogo if asignatura.codigo in activas]
+        # Expediente / media: matrícula activa + historial calificado.
+        del_expediente = [
+            asignatura
+            for asignatura in catalogo
+            if asignatura.codigo in notas
+            and (
+                asignatura.codigo in activas
+                or notas.get(asignatura.codigo) is not None
+                or asignatura.codigo in convalidadas
+            )
+        ]
+        expediente = expediente_de(del_expediente, notas, convalidadas)
+        resumen = [
+            asignatura
+            for asignatura in del_expediente
+            if notas.get(asignatura.codigo) is not None or asignatura.codigo in convalidadas
+        ] or propias
         visibles = _filtrar_por_nombre(propias, nombre)
         visibles.sort(key=lambda asignatura: asignatura.codigo)
         periodo = self._cuatrimestre_hoy()
-        # La lista muestra toda la matrícula; el horario solo el cuatrimestre vigente.
+        # La lista muestra la matrícula activa; el horario solo el cuatrimestre vigente.
         del_periodo = [asignatura for asignatura in propias if asignatura.cuatrimestre == periodo]
         horario = franjas_de(del_periodo, grupos)
         fichas, urls = self._datos_esiiab(visibles)
@@ -106,8 +123,8 @@ class ObtenerMatriculaUseCase:
             for asignatura in visibles
         ]
         resultado = MatriculaAlumno(
-            curso_del_alumno(propias),
-            tramos_de(propias),
+            curso_del_alumno(resumen),
+            tramos_de(resumen),
             enriquecidas,
             expediente.creditos_aprobados,
             expediente.creditos_convalidados,

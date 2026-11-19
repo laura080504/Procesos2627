@@ -861,6 +861,98 @@ body.con-agenda .herramientas {
     padding-right: 0.15rem;
 }
 
+.dialogo-historial {
+    width: min(42rem, calc(100vw - 1.5rem));
+}
+
+.dialogo-historial .bloque-historial {
+    margin-top: 0.85rem;
+}
+
+.dialogo-historial .bloque-historial h3 {
+    margin: 0 0 0.45rem;
+    font-size: 0.92rem;
+    color: var(--rojo-logo);
+}
+
+.resumen-historial {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin: 0.35rem 0 0.15rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.lista-historial {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    max-height: min(28vh, 14rem);
+    overflow: auto;
+}
+
+.fila-historial {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 5rem auto auto;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.fila-historial .nota-historial {
+    width: 100%;
+    border: 1px solid rgba(157, 24, 48, 0.28);
+    border-radius: 10px;
+    padding: 0.4rem 0.45rem;
+    font: inherit;
+    font-size: 0.84rem;
+}
+
+.historial-convalidada {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+
+.quitar-historial,
+.fila-historial-pendiente button {
+    border: 1px solid rgba(157, 24, 48, 0.28);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--rojo-logo);
+    padding: 0.35rem 0.65rem;
+    font: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.fila-historial-pendiente {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+    font-size: 0.84rem;
+}
+
+.historial-vacio {
+    margin: 0;
+    opacity: 0.75;
+    font-size: 0.84rem;
+}
+
+@media (max-width: 720px) {
+    .fila-historial {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .fila-historial .historial-nombre {
+        grid-column: 1 / -1;
+    }
+}
+
 .fila-matricula {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 9.5rem auto;

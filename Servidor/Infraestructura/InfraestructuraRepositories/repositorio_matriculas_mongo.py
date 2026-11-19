@@ -9,14 +9,22 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
         self.base_datos = base_datos
 
     def obtener_codigos(self, email: str) -> list[str]:
-        return list(self.obtener_notas(email))
+        documentos = (
+            self.base_datos.coleccion("matricula")
+            .find({"email": email, "activa": {"$ne": False}}, {"codigo": 1})
+            .sort("codigo", 1)
+        )
+        return [documento["codigo"] for documento in documentos if documento.get("codigo")]
 
     def obtener_notas(self, email: str) -> dict[str, float | None]:
         documentos = self.base_datos.coleccion("matricula").find({"email": email}).sort("codigo", 1)
         return {documento["codigo"]: documento.get("nota") for documento in documentos}
 
     def obtener_grupos(self, email: str) -> dict[str, str]:
-        documentos = self.base_datos.coleccion("matricula").find({"email": email}, {"codigo": 1, "grupo": 1})
+        documentos = self.base_datos.coleccion("matricula").find(
+            {"email": email, "activa": {"$ne": False}},
+            {"codigo": 1, "grupo": 1},
+        )
         return {
             documento["codigo"]: (documento.get("grupo") or "A")
             for documento in documentos
@@ -37,23 +45,49 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
         grupos: dict[str, str] | None = None,
     ) -> None:
         coleccion = self.base_datos.coleccion("matricula")
-        coleccion.delete_many({"email": email})
+        previas = {
+            documento["codigo"]: documento
+            for documento in coleccion.find({"email": email})
+            if documento.get("codigo")
+        }
         asignados = grupos or {}
         unicos = list(dict.fromkeys(codigos))
-        if unicos:
-            coleccion.insert_many(
-                [
+        activos = set(unicos)
+        coleccion.delete_many({"email": email})
+
+        documentos = []
+        for codigo in unicos:
+            anterior = previas.get(codigo, {})
+            documentos.append(
+                {
+                    "_id": f"{email}|{codigo}",
+                    "email": email,
+                    "codigo": codigo,
+                    "grupo": (asignados.get(codigo) or anterior.get("grupo") or "A").strip() or "A",
+                    "nota": anterior.get("nota"),
+                    "convalidada": bool(anterior.get("convalidada")),
+                    "activa": True,
+                }
+            )
+
+        for codigo, anterior in previas.items():
+            if codigo in activos:
+                continue
+            if anterior.get("nota") is not None or anterior.get("convalidada"):
+                documentos.append(
                     {
                         "_id": f"{email}|{codigo}",
                         "email": email,
                         "codigo": codigo,
-                        "grupo": (asignados.get(codigo) or "A").strip() or "A",
-                        "nota": None,
-                        "convalidada": False,
+                        "grupo": (anterior.get("grupo") or "A"),
+                        "nota": anterior.get("nota"),
+                        "convalidada": bool(anterior.get("convalidada")),
+                        "activa": False,
                     }
-                    for codigo in unicos
-                ]
-            )
+                )
+
+        if documentos:
+            coleccion.insert_many(documentos)
 
     def rellenar_notas(self, email: str, notas: dict[str, float]) -> None:
         coleccion = self.base_datos.coleccion("matricula")
@@ -67,6 +101,70 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
                 {"$set": {"nota": nota}},
             )
 
+    def sincronizar_calificaciones(
+        self,
+        email: str,
+        notas: dict[str, float | None],
+        convalidadas: set[str] | frozenset[str],
+    ) -> None:
+        coleccion = self.base_datos.coleccion("matricula")
+        previas = {
+            documento["codigo"]: documento
+            for documento in coleccion.find({"email": email})
+            if documento.get("codigo")
+        }
+        marcadas = set(convalidadas)
+        calificadas = set(notas) | marcadas
+        documentos = []
+
+        for codigo, anterior in previas.items():
+            activa = anterior.get("activa", True) is not False
+            if codigo in calificadas:
+                convalidada = codigo in marcadas
+                documentos.append(
+                    {
+                        "_id": f"{email}|{codigo}",
+                        "email": email,
+                        "codigo": codigo,
+                        "grupo": anterior.get("grupo") or "A",
+                        "nota": None if convalidada else notas.get(codigo),
+                        "convalidada": convalidada,
+                        "activa": activa,
+                    }
+                )
+            elif activa:
+                documentos.append(
+                    {
+                        "_id": f"{email}|{codigo}",
+                        "email": email,
+                        "codigo": codigo,
+                        "grupo": anterior.get("grupo") or "A",
+                        "nota": None,
+                        "convalidada": False,
+                        "activa": True,
+                    }
+                )
+
+        for codigo in calificadas:
+            if any(documento["codigo"] == codigo for documento in documentos):
+                continue
+            convalidada = codigo in marcadas
+            documentos.append(
+                {
+                    "_id": f"{email}|{codigo}",
+                    "email": email,
+                    "codigo": codigo,
+                    "grupo": "A",
+                    "nota": None if convalidada else notas.get(codigo),
+                    "convalidada": convalidada,
+                    "activa": False,
+                }
+            )
+
+        coleccion.delete_many({"email": email})
+        if documentos:
+            coleccion.insert_many(documentos)
+
     def marcar_convalidadas(self, email: str, codigos: list[str]) -> None:
         coleccion = self.base_datos.coleccion("matricula")
         for codigo in codigos:
@@ -79,7 +177,7 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
                         "nota": None,
                         "convalidada": True,
                     },
-                    "$setOnInsert": {"grupo": "A"},
+                    "$setOnInsert": {"grupo": "A", "activa": True},
                 },
                 upsert=True,
             )

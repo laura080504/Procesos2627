@@ -155,7 +155,8 @@ body.oscuro #listaUsuarios li {
 }
 
 #botonEditarMatricula,
-#botonVerMatricula {
+#botonVerMatricula,
+#botonHistorial {
     position: relative;
     z-index: 3;
     border: 0;
@@ -173,7 +174,8 @@ body.oscuro #listaUsuarios li {
 }
 
 #botonEditarMatricula:focus-visible,
-#botonVerMatricula:focus-visible {
+#botonVerMatricula:focus-visible,
+#botonHistorial:focus-visible {
     outline: 2px solid #fff;
     outline-offset: 2px;
 }
@@ -200,7 +202,8 @@ body.oscuro #listaUsuarios li {
 }
 
 body.oscuro #botonEditarMatricula,
-body.oscuro #botonVerMatricula {
+body.oscuro #botonVerMatricula,
+body.oscuro #botonHistorial {
     background: #fff;
     color: var(--rojo-logo);
 }

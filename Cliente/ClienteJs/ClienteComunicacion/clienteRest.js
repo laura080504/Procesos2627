@@ -77,6 +77,14 @@ class ClienteRest {
         return this.clienteHttp.peticion("PUT", "/matricula", { asignaturas });
     }
 
+    obtenerExpediente() {
+        return this.clienteHttp.peticion("GET", "/expediente");
+    }
+
+    guardarExpediente(calificaciones) {
+        return this.clienteHttp.peticion("PUT", "/expediente", { calificaciones });
+    }
+
     obtenerMarcas(anio, mes) {
         return this.clienteHttp.peticion("GET", `/agenda/marcas?anio=${anio}&mes=${mes}`);
     }

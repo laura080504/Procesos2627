@@ -8,6 +8,8 @@ class VistaUsuarios {
         alCambiarPreferenciasAvisos,
         alCrearEvento,
         alGuardarMatricula,
+        alAbrirHistorial,
+        alGuardarHistorial,
     }) {
         this.seccion = document.getElementById("vistaUsuarios");
         this.vistaAdministrador = document.getElementById("vistaAdministrador");
@@ -23,21 +25,30 @@ class VistaUsuarios {
         this.selectCodigoEvento = document.getElementById("codigoEvento");
         this.dialogoMatricula = document.getElementById("dialogoMatricula");
         this.dialogoResumenMatricula = document.getElementById("dialogoResumenMatricula");
+        this.dialogoHistorial = document.getElementById("dialogoHistorial");
         this.listaMatriculaEditable = document.getElementById("listaMatriculaEditable");
         this.listaResumenMatricula = document.getElementById("listaResumenMatricula");
+        this.listaHistorialCalificadas = document.getElementById("listaHistorialCalificadas");
+        this.listaHistorialPendientes = document.getElementById("listaHistorialPendientes");
+        this.resumenHistorial = document.getElementById("resumenHistorial");
         this.formMatricula = document.getElementById("formMatricula");
+        this.formHistorial = document.getElementById("formHistorial");
         this.botonEditarMatricula = document.getElementById("botonEditarMatricula");
         this.botonVerMatricula = document.getElementById("botonVerMatricula");
+        this.botonHistorial = document.getElementById("botonHistorial");
         this.rolVisor = "usuario";
         this.alEliminar = alEliminar;
         this.alEditarUsuario = alEditarUsuario;
         this.alCambiarPreferenciasAvisos = alCambiarPreferenciasAvisos;
         this.alCrearEvento = alCrearEvento;
         this.alGuardarMatricula = alGuardarMatricula;
+        this.alAbrirHistorial = alAbrirHistorial;
+        this.alGuardarHistorial = alGuardarHistorial;
         this.textos = TEXTOS.es;
         this.ultimos = [];
         this.emailActual = "";
         this.matricula = null;
+        this.expediente = null;
         this.catalogoAsignaturas = [];
         this.gruposMatricula = GRUPOS_MATRICULA;
         document.getElementById("botonRefrescar").addEventListener("click", alRefrescar);
@@ -49,6 +60,11 @@ class VistaUsuarios {
         document.getElementById("botonVolverAgenda").addEventListener("click", alVolverAgenda);
         this.botonEditarMatricula.addEventListener("click", () => this.abrirEditorMatricula());
         this.botonVerMatricula.addEventListener("click", () => this.abrirResumenMatricula());
+        this.botonHistorial.addEventListener("click", () => {
+            if (this.alAbrirHistorial) {
+                this.alAbrirHistorial();
+            }
+        });
         document.getElementById("botonEditarDesdeResumen").addEventListener("click", () => {
             this.cerrarResumenMatricula();
             this.abrirEditorMatricula();
@@ -60,6 +76,12 @@ class VistaUsuarios {
             if (evento.submitter && evento.submitter.value === "guardar") {
                 evento.preventDefault();
                 this.enviarMatricula();
+            }
+        });
+        this.formHistorial.addEventListener("submit", (evento) => {
+            if (evento.submitter && evento.submitter.value === "guardar") {
+                evento.preventDefault();
+                this.enviarHistorial();
             }
         });
         this.preferenciasAvisos.addEventListener("change", () => this.guardarPreferenciasAvisos());
@@ -77,6 +99,9 @@ class VistaUsuarios {
         }
         if (this.dialogoResumenMatricula) {
             aplicarTextos(this.dialogoResumenMatricula, textos);
+        }
+        if (this.dialogoHistorial) {
+            aplicarTextos(this.dialogoHistorial, textos);
         }
         if (!this.seccion.hidden) {
             this.pintar(this.ultimos, this.emailActual, this.rolVisor, this.matricula);
@@ -98,6 +123,7 @@ class VistaUsuarios {
         this.contadorUsuarios.hidden = !gestion;
         this.botonEditarMatricula.hidden = gestion;
         this.botonVerMatricula.hidden = gestion;
+        this.botonHistorial.hidden = gestion;
         document.getElementById("botonEliminarSesion").hidden = gestion;
         document.getElementById("tituloVistaUsuarios").textContent = gestion
             ? this.textos.gestionUsuarios
@@ -525,6 +551,200 @@ class VistaUsuarios {
     cerrarResumenMatricula() {
         if (this.dialogoResumenMatricula?.open) {
             this.dialogoResumenMatricula.close();
+        }
+    }
+
+    abrirHistorial(expediente) {
+        if (!this.dialogoHistorial) {
+            return;
+        }
+        this.expediente = expediente || { calificadas: [], pendientes: [], media: null, creditos_aprobados: 0 };
+        this.pintarHistorial(this.expediente);
+        if (this.dialogoHistorial.open) {
+            return;
+        }
+        try {
+            this.dialogoHistorial.showModal();
+        } catch {
+            this.dialogoHistorial.setAttribute("open", "");
+        }
+    }
+
+    cerrarHistorial() {
+        if (this.dialogoHistorial?.open) {
+            this.dialogoHistorial.close();
+        }
+    }
+
+    pintarHistorial(expediente) {
+        this.pintarResumenHistorial(expediente);
+        this.listaHistorialCalificadas.replaceChildren();
+        const calificadas = expediente?.calificadas || [];
+        if (!calificadas.length) {
+            const vacio = document.createElement("p");
+            vacio.className = "historial-vacio";
+            vacio.textContent = this.textos.historialSinCalificadas;
+            this.listaHistorialCalificadas.append(vacio);
+        } else {
+            calificadas.forEach((asignatura) => this.anadirFilaHistorial(asignatura));
+        }
+
+        this.listaHistorialPendientes.replaceChildren();
+        const pendientes = expediente?.pendientes || [];
+        if (!pendientes.length) {
+            const vacio = document.createElement("p");
+            vacio.className = "historial-vacio";
+            vacio.textContent = this.textos.historialSinPendientes;
+            this.listaHistorialPendientes.append(vacio);
+            return;
+        }
+        const ingles = this.textos.codigo === "EN";
+        pendientes.forEach((asignatura) => {
+            const fila = document.createElement("div");
+            fila.className = "fila-historial-pendiente";
+            const nombre = document.createElement("span");
+            nombre.textContent = `${asignatura.codigo} · ${ingles ? asignatura.nombre_ingles : asignatura.nombre}`;
+            const boton = document.createElement("button");
+            boton.type = "button";
+            boton.textContent = this.textos.anadirNotaPendiente;
+            boton.addEventListener("click", () => {
+                const vacio = this.listaHistorialCalificadas.querySelector(".historial-vacio");
+                if (vacio) {
+                    vacio.remove();
+                }
+                this.anadirFilaHistorial({ ...asignatura, nota: null, convalidada: false });
+                fila.remove();
+                if (!this.listaHistorialPendientes.children.length) {
+                    const mensaje = document.createElement("p");
+                    mensaje.className = "historial-vacio";
+                    mensaje.textContent = this.textos.historialSinPendientes;
+                    this.listaHistorialPendientes.append(mensaje);
+                }
+            });
+            fila.append(nombre, boton);
+            this.listaHistorialPendientes.append(fila);
+        });
+    }
+
+    pintarResumenHistorial(expediente) {
+        this.resumenHistorial.replaceChildren();
+        const media = document.createElement("p");
+        media.textContent = expediente?.media === null || expediente?.media === undefined
+            ? `${this.textos.mediaCarrera}: ${this.textos.sinMedia}`
+            : `${this.textos.mediaCarrera}: ${formatearMedia(expediente.media, this.textos.codigo)}`;
+        const creditos = document.createElement("p");
+        creditos.textContent = `${this.textos.creditosAprobados}: ${expediente?.creditos_aprobados || 0}`;
+        this.resumenHistorial.append(media, creditos);
+        if (expediente?.creditos_convalidados) {
+            const convalidados = document.createElement("p");
+            convalidados.textContent = `${this.textos.creditosConvalidados}: ${expediente.creditos_convalidados}`;
+            this.resumenHistorial.append(convalidados);
+        }
+    }
+
+    anadirFilaHistorial(asignatura) {
+        const ingles = this.textos.codigo === "EN";
+        const fila = document.createElement("div");
+        fila.className = "fila-historial";
+        fila.dataset.codigo = asignatura.codigo;
+
+        const nombre = document.createElement("span");
+        nombre.className = "historial-nombre";
+        nombre.textContent = `${asignatura.codigo} · ${ingles ? asignatura.nombre_ingles : asignatura.nombre}`;
+
+        const nota = document.createElement("input");
+        nota.type = "number";
+        nota.min = "0";
+        nota.max = "10";
+        nota.step = "0.01";
+        nota.className = "nota-historial";
+        nota.setAttribute("aria-label", this.textos.notaAsignatura);
+        if (asignatura.nota !== null && asignatura.nota !== undefined && !asignatura.convalidada) {
+            nota.value = String(asignatura.nota);
+        }
+
+        const label = document.createElement("label");
+        label.className = "historial-convalidada";
+        const check = document.createElement("input");
+        check.type = "checkbox";
+        check.className = "convalidada-historial";
+        check.checked = Boolean(asignatura.convalidada);
+        label.append(check, document.createTextNode(` ${this.textos.convalidada}`));
+        const sincronizar = () => {
+            nota.disabled = check.checked;
+            if (check.checked) {
+                nota.value = "";
+            }
+        };
+        check.addEventListener("change", sincronizar);
+        sincronizar();
+
+        const quitar = document.createElement("button");
+        quitar.type = "button";
+        quitar.className = "quitar-historial";
+        quitar.textContent = this.textos.quitarNotaHistorial;
+        quitar.addEventListener("click", () => {
+            fila.remove();
+            if (!this.listaHistorialCalificadas.querySelector(".fila-historial")) {
+                const vacio = document.createElement("p");
+                vacio.className = "historial-vacio";
+                vacio.textContent = this.textos.historialSinCalificadas;
+                this.listaHistorialCalificadas.append(vacio);
+            }
+            const vacioPendiente = this.listaHistorialPendientes.querySelector(".historial-vacio");
+            if (vacioPendiente) {
+                vacioPendiente.remove();
+            }
+            const pendiente = document.createElement("div");
+            pendiente.className = "fila-historial-pendiente";
+            const texto = document.createElement("span");
+            texto.textContent = nombre.textContent;
+            const boton = document.createElement("button");
+            boton.type = "button";
+            boton.textContent = this.textos.anadirNotaPendiente;
+            boton.addEventListener("click", () => {
+                const vacio = this.listaHistorialCalificadas.querySelector(".historial-vacio");
+                if (vacio) {
+                    vacio.remove();
+                }
+                this.anadirFilaHistorial({
+                    codigo: asignatura.codigo,
+                    nombre: asignatura.nombre,
+                    nombre_ingles: asignatura.nombre_ingles,
+                    nota: null,
+                    convalidada: false,
+                });
+                pendiente.remove();
+                if (!this.listaHistorialPendientes.children.length) {
+                    const mensaje = document.createElement("p");
+                    mensaje.className = "historial-vacio";
+                    mensaje.textContent = this.textos.historialSinPendientes;
+                    this.listaHistorialPendientes.append(mensaje);
+                }
+            });
+            pendiente.append(texto, boton);
+            this.listaHistorialPendientes.prepend(pendiente);
+        });
+
+        fila.append(nombre, nota, label, quitar);
+        this.listaHistorialCalificadas.append(fila);
+    }
+
+    leerHistorialEditor() {
+        return [...this.listaHistorialCalificadas.querySelectorAll(".fila-historial")].map((fila) => {
+            const convalidada = fila.querySelector(".convalidada-historial")?.checked;
+            const crudo = fila.querySelector(".nota-historial")?.value;
+            return {
+                codigo: fila.dataset.codigo,
+                convalidada: Boolean(convalidada),
+                nota: convalidada || crudo === "" || crudo === undefined ? null : Number(crudo),
+            };
+        });
+    }
+
+    enviarHistorial() {
+        if (this.alGuardarHistorial) {
+            this.alGuardarHistorial(this.leerHistorialEditor());
         }
     }
 }

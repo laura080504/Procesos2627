@@ -5,8 +5,10 @@ from fastapi.responses import JSONResponse
 
 from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import (
     crear_crear_evento_use_case,
+    crear_guardar_expediente_use_case,
     crear_guardar_matricula_use_case,
     crear_listar_asignaturas_use_case,
+    crear_obtener_expediente_use_case,
     crear_obtener_marcas_calendario_use_case,
     crear_obtener_matricula_use_case,
     invalidar_cache_marcas,
@@ -16,6 +18,8 @@ from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import obtene
 from Servidor.ApiRest.ApiRestSchemas.asignatura_salida import AsignaturaSalida
 from Servidor.ApiRest.ApiRestSchemas.evento_entrada import EventoEntrada
 from Servidor.ApiRest.ApiRestSchemas.evento_salida import EventoSalida
+from Servidor.ApiRest.ApiRestSchemas.expediente_entrada import ExpedienteEntrada
+from Servidor.ApiRest.ApiRestSchemas.expediente_salida import ExpedienteSalida
 from Servidor.ApiRest.ApiRestSchemas.marca_calendario_salida import MarcaCalendarioSalida, MarcasRangoSalida
 from Servidor.ApiRest.ApiRestSchemas.matricula_entrada import MatriculaEntrada
 from Servidor.ApiRest.ApiRestSchemas.matricula_salida import MatriculaSalida
@@ -26,11 +30,16 @@ from Servidor.Dominio.DominioExceptions.estado_no_valido import EstadoNoValido
 from Servidor.Dominio.DominioQueries.listar_asignaturas_query import ListarAsignaturasQuery
 from Servidor.Dominio.DominioQueries.obtener_marcas_calendario_query import ObtenerMarcasCalendarioQuery
 from Servidor.Dominio.DominioUseCases.crear_evento_use_case import CrearEventoUseCase
+from Servidor.Dominio.DominioUseCases.guardar_expediente_use_case import (
+    CalificacionEntrada,
+    GuardarExpedienteUseCase,
+)
 from Servidor.Dominio.DominioUseCases.guardar_matricula_use_case import (
     AsignaturaMatriculaEntrada,
     GuardarMatriculaUseCase,
 )
 from Servidor.Dominio.DominioUseCases.listar_asignaturas_use_case import ListarAsignaturasUseCase
+from Servidor.Dominio.DominioUseCases.obtener_expediente_use_case import ObtenerExpedienteUseCase
 from Servidor.Dominio.DominioUseCases.obtener_marcas_calendario_use_case import ObtenerMarcasCalendarioUseCase
 from Servidor.Dominio.DominioUseCases.obtener_matricula_use_case import ObtenerMatriculaUseCase
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas import RepositorioAsignaturas
@@ -68,6 +77,33 @@ def guardar_matricula(
             [
                 AsignaturaMatriculaEntrada(asignatura.codigo, asignatura.grupo)
                 for asignatura in cuerpo.asignaturas
+            ],
+        )
+    except EstadoNoValido as error:
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
+
+
+@router.get("/api/expediente", response_model=ExpedienteSalida)
+def obtener_expediente(
+    usuario: Usuario = Depends(obtener_usuario_actual),
+    use_case: ObtenerExpedienteUseCase = Depends(crear_obtener_expediente_use_case),
+):
+    # TODO(secretaría): importar notas oficiales UCLM cuando haya API.
+    return use_case.ejecutar(usuario.email)
+
+
+@router.put("/api/expediente", response_model=ExpedienteSalida)
+def guardar_expediente(
+    cuerpo: ExpedienteEntrada,
+    usuario: Usuario = Depends(obtener_usuario_actual),
+    use_case: GuardarExpedienteUseCase = Depends(crear_guardar_expediente_use_case),
+):
+    try:
+        return use_case.ejecutar(
+            usuario.email,
+            [
+                CalificacionEntrada(item.codigo, item.nota, item.convalidada)
+                for item in cuerpo.calificaciones
             ],
         )
     except EstadoNoValido as error:
