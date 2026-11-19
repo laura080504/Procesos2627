@@ -53,7 +53,8 @@ class ControlWeb {
             alCrearEvento: (datos) => this.crearEventoProfesor(datos),
             alGuardarMatricula: (asignaturas) => this.guardarMatriculaAlumno(asignaturas),
             alAbrirHistorial: () => this.abrirHistorialAlumno(),
-            alGuardarHistorial: (calificaciones) => this.guardarHistorialAlumno(calificaciones),
+            alGuardarHistorial: (calificaciones, intensificacion) =>
+                this.guardarHistorialAlumno(calificaciones, intensificacion),
         });
         this.vistaAgenda = new VistaAgenda({
             alBuscar: (nombre) => this.buscarAsignaturas(nombre),
@@ -722,9 +723,9 @@ class ControlWeb {
         }
     }
 
-    async guardarHistorialAlumno(calificaciones) {
+    async guardarHistorialAlumno(calificaciones, intensificacion) {
         try {
-            await this.rest.guardarExpediente(calificaciones || []);
+            await this.rest.guardarExpediente(calificaciones || [], intensificacion ?? "");
             this.cacheMatricula = { clave: "", datos: null, en: 0 };
             const matricula = await this.obtenerMatriculaCacheada("", { forzar: true });
             this.matricula = matricula;

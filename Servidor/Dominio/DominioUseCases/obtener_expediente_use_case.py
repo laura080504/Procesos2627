@@ -4,8 +4,10 @@ from dataclasses import dataclass
 
 from Servidor.Dominio.DominioEntities.asignatura import Asignatura
 from Servidor.Dominio.DominioEnums.curso_asignatura import CursoAsignatura
+from Servidor.Dominio.DominioEnums.intensificacion import Intensificacion, intensificacion_desde
 from Servidor.Dominio.DominioServices.curso_alumno import curso_del_alumno
 from Servidor.Dominio.DominioServices.expediente_alumno import expediente_de
+from Servidor.Dominio.DominioServices.intensificaciones_plan import es_pendiente_del_plan
 from Servidor.Dominio.DominioServices.matriculas_muestra import TramoCurso, asegurar_matricula_de, tramos_de
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas import RepositorioAsignaturas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
@@ -35,6 +37,7 @@ class ExpedienteVista:
     creditos_aprobados: int
     creditos_convalidados: int
     media: float | None
+    intensificacion: str | None = None
     origen: str = "manual"
 
 
@@ -52,13 +55,17 @@ class ObtenerExpedienteUseCase:
         catalogo = self.repositorio_asignaturas.obtener_todas()
         notas = self.repositorio_matriculas.obtener_notas(email)
         convalidadas = self.repositorio_matriculas.obtener_convalidadas(email)
-        return _vista_de(catalogo, notas, convalidadas)
+        activas = set(self.repositorio_matriculas.obtener_codigos(email))
+        intensificacion = intensificacion_desde(self.repositorio_matriculas.obtener_intensificacion(email))
+        return _vista_de(catalogo, notas, convalidadas, intensificacion, activas)
 
 
 def _vista_de(
     catalogo: list[Asignatura],
     notas: dict[str, float | None],
     convalidadas: set[str] | frozenset[str],
+    intensificacion: Intensificacion | None,
+    activas: set[str],
 ) -> ExpedienteVista:
     calificadas: list[AsignaturaExpediente] = []
     pendientes: list[AsignaturaExpediente] = []
@@ -80,7 +87,8 @@ def _vista_de(
         if convalidada or nota is not None:
             calificadas.append(item)
             con_resultado.append(asignatura)
-        else:
+            continue
+        if es_pendiente_del_plan(asignatura.codigo, intensificacion, activas=activas):
             pendientes.append(item)
 
     calificadas.sort(key=lambda item: (item.curso.value, item.codigo))
@@ -94,5 +102,6 @@ def _vista_de(
         expediente.creditos_aprobados,
         expediente.creditos_convalidados,
         expediente.media,
+        intensificacion.value if intensificacion else None,
         "manual",
     )

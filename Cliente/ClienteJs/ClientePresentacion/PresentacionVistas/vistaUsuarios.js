@@ -230,6 +230,8 @@ class VistaUsuarios {
         curso.textContent = matricula.curso
             ? `${this.textos.cursoAlumno}: ${nombres[matricula.curso]}`
             : this.textos.sinCurso;
+        const intensificacion = document.getElementById("intensificacionAlumno");
+        intensificacion.textContent = `${this.textos.intensificacion}: ${etiquetaIntensificacion(matricula.intensificacion, this.textos)}`;
         document.getElementById("creditosAprobados").textContent =
             `${this.textos.creditosAprobados}: ${matricula.creditos_aprobados}`;
         const convalidados = document.getElementById("creditosConvalidados");
@@ -577,6 +579,10 @@ class VistaUsuarios {
     }
 
     pintarHistorial(expediente) {
+        const select = document.getElementById("selectIntensificacion");
+        if (select) {
+            select.value = expediente?.intensificacion || "";
+        }
         this.pintarResumenHistorial(expediente);
         this.listaHistorialCalificadas.replaceChildren();
         const calificadas = expediente?.calificadas || [];
@@ -742,9 +748,13 @@ class VistaUsuarios {
         });
     }
 
+    leerIntensificacionHistorial() {
+        return document.getElementById("selectIntensificacion")?.value || "";
+    }
+
     enviarHistorial() {
         if (this.alGuardarHistorial) {
-            this.alGuardarHistorial(this.leerHistorialEditor());
+            this.alGuardarHistorial(this.leerHistorialEditor(), this.leerIntensificacionHistorial());
         }
     }
 }
@@ -812,6 +822,16 @@ function formatearMedia(media, codigo) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
+}
+
+function etiquetaIntensificacion(valor, textos) {
+    const claves = {
+        software: textos.intensificacionSoftware,
+        computadores: textos.intensificacionComputadores,
+        computacion: textos.intensificacionComputacion,
+        tecnologias_informacion: textos.intensificacionTI,
+    };
+    return claves[valor] || textos.sinIntensificacion;
 }
 
 function puedeEliminarCuenta(rolVisor, usuario) {

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from Servidor.Dominio.DominioEnums.intensificacion import Intensificacion, intensificacion_desde
 from Servidor.Dominio.DominioExceptions.estado_no_valido import EstadoNoValido
 from Servidor.Dominio.DominioUseCases.obtener_expediente_use_case import ExpedienteVista, ObtenerExpedienteUseCase
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas import RepositorioAsignaturas
@@ -30,11 +31,22 @@ class GuardarExpedienteUseCase:
         self.obtener_expediente = obtener_expediente
         self.invalidar_matricula = invalidar_matricula
 
-    def ejecutar(self, email: str, calificaciones: list[CalificacionEntrada]) -> ExpedienteVista:
+    def ejecutar(
+        self,
+        email: str,
+        calificaciones: list[CalificacionEntrada],
+        intensificacion: str | None = None,
+    ) -> ExpedienteVista:
         catalogo = {asignatura.codigo for asignatura in self.repositorio_asignaturas.obtener_todas()}
         notas: dict[str, float | None] = {}
         convalidadas: set[str] = set()
         vistos: set[str] = set()
+
+        if intensificacion is not None:
+            valor = intensificacion.strip().lower()
+            if valor and intensificacion_desde(valor) is None:
+                raise EstadoNoValido("La intensificación no es válida.")
+            self.repositorio_matriculas.guardar_intensificacion(email, valor or None)
 
         for item in calificaciones:
             codigo = (item.codigo or "").strip()

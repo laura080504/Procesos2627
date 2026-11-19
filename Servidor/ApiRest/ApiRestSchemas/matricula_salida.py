@@ -36,3 +36,4 @@ class MatriculaSalida(BaseModel):
     creditos_convalidados: int
     media: float | None
     horario: list[FranjaHorarioSalida]
+    intensificacion: str | None = None

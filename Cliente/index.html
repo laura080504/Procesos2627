@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=14">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=38">
-    <link rel="stylesheet" href="ClienteShared/agenda.css?v=39">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=39">
+    <link rel="stylesheet" href="ClienteShared/agenda.css?v=40">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -327,6 +327,7 @@
                     <div id="resumenCurso" class="resumen-curso" hidden>
                         <div class="resumen-datos">
                             <p id="cursoAlumno"></p>
+                            <p id="intensificacionAlumno"></p>
                             <p id="creditosAprobados"></p>
                             <p id="creditosConvalidados"></p>
                             <p id="mediaCarrera"></p>
@@ -560,6 +561,16 @@
                     <button type="submit" class="cerrar-dialogo" data-etiqueta="cerrarDialogo" value="cancelar" aria-label="Cerrar">&times;</button>
                 </header>
                 <p class="ayuda-matricula" data-texto="ayudaHistorial">Introduce a mano tus notas y medias. Cuando haya acceso a secretaría se importarán solas.</p>
+                <label class="historial-rama">
+                    <span data-texto="intensificacion">Intensificación</span>
+                    <select id="selectIntensificacion" aria-label="Intensificación">
+                        <option value="" data-texto="sinIntensificacion">Sin intensificación</option>
+                        <option value="software" data-texto="intensificacionSoftware">Ingeniería del Software</option>
+                        <option value="computadores" data-texto="intensificacionComputadores">Ingeniería de Computadores</option>
+                        <option value="computacion" data-texto="intensificacionComputacion">Computación</option>
+                        <option value="tecnologias_informacion" data-texto="intensificacionTI">Tecnologías de la Información</option>
+                    </select>
+                </label>
                 <div id="resumenHistorial" class="resumen-historial"></div>
                 <section class="bloque-historial">
                     <h3 data-texto="historialCalificadas">Asignaturas con nota</h3>
@@ -579,8 +590,8 @@
 
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=21"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=41"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=22"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=42"></script>
     <script src="ClienteJs/ClientePresentacion/preferenciasNotificaciones.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
@@ -588,10 +599,10 @@
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=13"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=29"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=30"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=39"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=11"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=33"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=34"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>

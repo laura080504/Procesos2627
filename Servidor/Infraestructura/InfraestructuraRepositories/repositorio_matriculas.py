@@ -41,6 +41,12 @@ class RepositorioMatriculas(ABC):
         """Sustituye el expediente calificado (manual). Conserva matrícula activa."""
 
     @abstractmethod
+    def obtener_intensificacion(self, email: str) -> str | None: ...
+
+    @abstractmethod
+    def guardar_intensificacion(self, email: str, intensificacion: str | None) -> None: ...
+
+    @abstractmethod
     def marcar_convalidadas(self, email: str, codigos: list[str]) -> None: ...
 
     @abstractmethod

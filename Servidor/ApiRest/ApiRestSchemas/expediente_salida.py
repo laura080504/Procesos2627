@@ -27,4 +27,5 @@ class ExpedienteSalida(BaseModel):
     creditos_aprobados: int
     creditos_convalidados: int
     media: float | None
+    intensificacion: str | None = None
     origen: str = Field(default="manual", description="manual hasta tener API de secretaría")

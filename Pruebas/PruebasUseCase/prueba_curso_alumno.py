@@ -45,9 +45,12 @@ def prueba_laura_tiene_su_matricula_real_y_curso_tercero():
     assert resultado.curso == CursoAsignatura.TERCERO
     assert sum(tramo.porcentaje for tramo in resultado.tramos) == 100
     assert any(tramo.curso == CursoAsignatura.TERCERO and tramo.cantidad == 6 for tramo in resultado.tramos)
+    assert any(tramo.curso == CursoAsignatura.PRIMERO and tramo.cantidad == 1 and tramo.porcentaje == 9 for tramo in resultado.tramos)
     assert matriculas.obtener_grupos(EMAIL_LAURA) == dict(GRUPOS_LAURA)
+    # Sin notas en código: créditos/media vacíos hasta Historial. Tarta = matrícula de este año.
     assert resultado.creditos_aprobados == 0
     assert resultado.media is None
+    assert resultado.intensificacion == "software"
 
 
 def prueba_una_cuenta_nueva_empieza_sin_matricula():

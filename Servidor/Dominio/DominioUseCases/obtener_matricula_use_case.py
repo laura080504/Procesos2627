@@ -48,6 +48,7 @@ class MatriculaAlumno:
     creditos_convalidados: int
     media: float | None
     horario: list[FranjaHorario]
+    intensificacion: str | None = None
 
 
 class ObtenerMatriculaUseCase:
@@ -99,15 +100,10 @@ class ObtenerMatriculaUseCase:
             )
         ]
         expediente = expediente_de(del_expediente, notas, convalidadas)
-        resumen = [
-            asignatura
-            for asignatura in del_expediente
-            if notas.get(asignatura.codigo) is not None or asignatura.codigo in convalidadas
-        ] or propias
         visibles = _filtrar_por_nombre(propias, nombre)
         visibles.sort(key=lambda asignatura: asignatura.codigo)
         periodo = self._cuatrimestre_hoy()
-        # La lista muestra la matrícula activa; el horario solo el cuatrimestre vigente.
+        # Curso/tarta = matrícula de este año. Créditos/media = historial completo.
         del_periodo = [asignatura for asignatura in propias if asignatura.cuatrimestre == periodo]
         horario = franjas_de(del_periodo, grupos)
         fichas, urls = self._datos_esiiab(visibles)
@@ -123,13 +119,14 @@ class ObtenerMatriculaUseCase:
             for asignatura in visibles
         ]
         resultado = MatriculaAlumno(
-            curso_del_alumno(resumen),
-            tramos_de(resumen),
+            curso_del_alumno(propias),
+            tramos_de(propias),
             enriquecidas,
             expediente.creditos_aprobados,
             expediente.creditos_convalidados,
             expediente.media,
             horario,
+            self.repositorio_matriculas.obtener_intensificacion(email),
         )
         self._cache[clave] = (ahora, resultado)
         if len(self._cache) > 64:

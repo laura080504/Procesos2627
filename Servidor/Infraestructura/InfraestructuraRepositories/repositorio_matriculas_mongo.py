@@ -11,18 +11,24 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
     def obtener_codigos(self, email: str) -> list[str]:
         documentos = (
             self.base_datos.coleccion("matricula")
-            .find({"email": email, "activa": {"$ne": False}}, {"codigo": 1})
+            .find({"email": email, "activa": {"$ne": False}, "meta": {"$ne": True}}, {"codigo": 1})
             .sort("codigo", 1)
         )
         return [documento["codigo"] for documento in documentos if documento.get("codigo")]
 
     def obtener_notas(self, email: str) -> dict[str, float | None]:
-        documentos = self.base_datos.coleccion("matricula").find({"email": email}).sort("codigo", 1)
-        return {documento["codigo"]: documento.get("nota") for documento in documentos}
+        documentos = self.base_datos.coleccion("matricula").find(
+            {"email": email, "meta": {"$ne": True}}
+        ).sort("codigo", 1)
+        return {
+            documento["codigo"]: documento.get("nota")
+            for documento in documentos
+            if documento.get("codigo")
+        }
 
     def obtener_grupos(self, email: str) -> dict[str, str]:
         documentos = self.base_datos.coleccion("matricula").find(
-            {"email": email, "activa": {"$ne": False}},
+            {"email": email, "activa": {"$ne": False}, "meta": {"$ne": True}},
             {"codigo": 1, "grupo": 1},
         )
         return {
@@ -33,7 +39,7 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
 
     def obtener_convalidadas(self, email: str) -> set[str]:
         documentos = self.base_datos.coleccion("matricula").find(
-            {"email": email, "convalidada": True},
+            {"email": email, "convalidada": True, "meta": {"$ne": True}},
             {"codigo": 1},
         )
         return {documento["codigo"] for documento in documentos}
@@ -47,13 +53,13 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
         coleccion = self.base_datos.coleccion("matricula")
         previas = {
             documento["codigo"]: documento
-            for documento in coleccion.find({"email": email})
+            for documento in coleccion.find({"email": email, "meta": {"$ne": True}})
             if documento.get("codigo")
         }
         asignados = grupos or {}
         unicos = list(dict.fromkeys(codigos))
         activos = set(unicos)
-        coleccion.delete_many({"email": email})
+        coleccion.delete_many({"email": email, "meta": {"$ne": True}})
 
         documentos = []
         for codigo in unicos:
@@ -110,7 +116,7 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
         coleccion = self.base_datos.coleccion("matricula")
         previas = {
             documento["codigo"]: documento
-            for documento in coleccion.find({"email": email})
+            for documento in coleccion.find({"email": email, "meta": {"$ne": True}})
             if documento.get("codigo")
         }
         marcadas = set(convalidadas)
@@ -161,9 +167,25 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
                 }
             )
 
-        coleccion.delete_many({"email": email})
+        coleccion.delete_many({"email": email, "meta": {"$ne": True}})
         if documentos:
             coleccion.insert_many(documentos)
+
+    def obtener_intensificacion(self, email: str) -> str | None:
+        documento = self.base_datos.coleccion("matricula").find_one(
+            {"_id": f"{email}|_perfil"},
+            {"intensificacion": 1},
+        )
+        valor = (documento or {}).get("intensificacion")
+        return (valor or "").strip().lower() or None
+
+    def guardar_intensificacion(self, email: str, intensificacion: str | None) -> None:
+        valor = (intensificacion or "").strip().lower() or None
+        self.base_datos.coleccion("matricula").update_one(
+            {"_id": f"{email}|_perfil"},
+            {"$set": {"email": email, "intensificacion": valor, "meta": True}},
+            upsert=True,
+        )
 
     def marcar_convalidadas(self, email: str, codigos: list[str]) -> None:
         coleccion = self.base_datos.coleccion("matricula")

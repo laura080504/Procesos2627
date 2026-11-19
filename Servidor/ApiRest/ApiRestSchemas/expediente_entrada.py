@@ -9,3 +9,4 @@ class CalificacionEntradaSchema(BaseModel):
 
 class ExpedienteEntrada(BaseModel):
     calificaciones: list[CalificacionEntradaSchema] = Field(default_factory=list)
+    intensificacion: str | None = None

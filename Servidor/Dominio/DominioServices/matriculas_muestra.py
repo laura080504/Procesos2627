@@ -6,6 +6,7 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas
 
 EMAIL_LAURA = "lgonzarico@gmail.com"
 CONTRASENA_PRUEBA = "prueba1234"
+INTENSIFICACION_LAURA = "software"
 
 # Matrícula real de Laura (campus UCLM).
 CODIGOS_LAURA = (
@@ -57,21 +58,30 @@ def asegurar_matricula_de(
     """Solo siembra la matrícula oficial de Laura. El resto queda vacío hasta que la editen."""
     email = email.strip().lower()
     actuales = repositorio_matriculas.obtener_codigos(email)
-    if actuales:
-        return actuales
+    if not actuales:
+        if email == EMAIL_LAURA:
+            elegidos = list(codigos if codigos is not None else CODIGOS_LAURA)
+            repositorio_matriculas.reemplazar_alumno(email, elegidos, dict(GRUPOS_LAURA))
+            actuales = elegidos
+        elif codigos:
+            elegidos = list(codigos)
+            repositorio_matriculas.reemplazar_alumno(email, elegidos, {codigo: "A" for codigo in elegidos})
+            actuales = elegidos
     if email == EMAIL_LAURA:
-        elegidos = list(codigos if codigos is not None else CODIGOS_LAURA)
-        repositorio_matriculas.reemplazar_alumno(email, elegidos, dict(GRUPOS_LAURA))
-        return elegidos
-    if codigos:
-        elegidos = list(codigos)
-        repositorio_matriculas.reemplazar_alumno(email, elegidos, {codigo: "A" for codigo in elegidos})
-        return elegidos
-    return []
+        asegurar_expediente_laura(repositorio_matriculas)
+    return actuales
+
+
+def asegurar_expediente_laura(repositorio_matriculas: RepositorioMatriculas) -> None:
+    """Solo marca intensificación Software. Las notas NUNCA van en código: solo BBDD vía Historial."""
+    email = EMAIL_LAURA
+    if not repositorio_matriculas.obtener_intensificacion(email):
+        repositorio_matriculas.guardar_intensificacion(email, INTENSIFICACION_LAURA)
 
 
 def forzar_matricula_laura(repositorio_matriculas: RepositorioMatriculas) -> None:
     repositorio_matriculas.reemplazar_alumno(EMAIL_LAURA, list(CODIGOS_LAURA), dict(GRUPOS_LAURA))
+    repositorio_matriculas.guardar_intensificacion(EMAIL_LAURA, INTENSIFICACION_LAURA)
 
 
 def tramos_de(asignaturas: list) -> list[TramoCurso]:

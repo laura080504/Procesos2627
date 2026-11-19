@@ -105,6 +105,7 @@ def guardar_expediente(
                 CalificacionEntrada(item.codigo, item.nota, item.convalidada)
                 for item in cuerpo.calificaciones
             ],
+            cuerpo.intensificacion,
         )
     except EstadoNoValido as error:
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})

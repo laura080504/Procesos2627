@@ -81,8 +81,12 @@ class ClienteRest {
         return this.clienteHttp.peticion("GET", "/expediente");
     }
 
-    guardarExpediente(calificaciones) {
-        return this.clienteHttp.peticion("PUT", "/expediente", { calificaciones });
+    guardarExpediente(calificaciones, intensificacion) {
+        const cuerpo = { calificaciones };
+        if (intensificacion !== undefined) {
+            cuerpo.intensificacion = intensificacion;
+        }
+        return this.clienteHttp.peticion("PUT", "/expediente", cuerpo);
     }
 
     obtenerMarcas(anio, mes) {

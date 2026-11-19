@@ -7,6 +7,7 @@ class RepositorioMatriculasMemoria(RepositorioMatriculas):
     def __init__(self):
         # codigo -> {nota, grupo, convalidada, activa}
         self._filas: dict[str, dict[str, dict]] = {}
+        self._intensificacion: dict[str, str | None] = {}
 
     def _filas_de(self, email: str) -> dict[str, dict]:
         return self._filas.setdefault(email, {})
@@ -116,6 +117,12 @@ class RepositorioMatriculasMemoria(RepositorioMatriculas):
 
         self._filas[email] = nuevas
 
+    def obtener_intensificacion(self, email: str) -> str | None:
+        return self._intensificacion.get(email)
+
+    def guardar_intensificacion(self, email: str, intensificacion: str | None) -> None:
+        self._intensificacion[email] = (intensificacion or "").strip().lower() or None
+
     def marcar_convalidadas(self, email: str, codigos: list[str]) -> None:
         filas = self._filas_de(email)
         for codigo in codigos:
@@ -132,3 +139,4 @@ class RepositorioMatriculasMemoria(RepositorioMatriculas):
         for alumno in list(self._filas):
             if alumno != conservar:
                 self._filas[alumno] = {}
+                self._intensificacion.pop(alumno, None)
