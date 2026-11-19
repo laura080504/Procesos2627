@@ -34,8 +34,10 @@ class GuardarExpedienteUseCase:
     def ejecutar(
         self,
         email: str,
-        calificaciones: list[CalificacionEntrada],
+        calificaciones: list[CalificacionEntrada] | None = None,
         intensificacion: str | None = None,
+        *,
+        actualizar_calificaciones: bool = True,
     ) -> ExpedienteVista:
         catalogo = {asignatura.codigo for asignatura in self.repositorio_asignaturas.obtener_todas()}
         notas: dict[str, float | None] = {}
@@ -48,7 +50,12 @@ class GuardarExpedienteUseCase:
                 raise EstadoNoValido("La intensificación no es válida.")
             self.repositorio_matriculas.guardar_intensificacion(email, valor or None)
 
-        for item in calificaciones:
+        if not actualizar_calificaciones:
+            if self.invalidar_matricula is not None:
+                self.invalidar_matricula(email)
+            return self.obtener_expediente.ejecutar(email)
+
+        for item in calificaciones or []:
             codigo = (item.codigo or "").strip()
             if not codigo:
                 raise EstadoNoValido("Cada calificación necesita un código de asignatura.")

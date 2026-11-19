@@ -1,6 +1,30 @@
 # Proyecto de Procesos de Ingeniería del Software (curso 26-27)
 
-Estructura base de una aplicación SaaS organizada en capas y con gestión de usuarios.
+Agenda académica UCLM (ESIIAB Albacete) con matrícula, horario, avisos y expediente del alumno. SaaS en capas: FastAPI + MongoDB Atlas + cliente HTML/JS.
+
+## Empieza por aquí
+
+| Qué | Dónde |
+|-----|--------|
+| App en producción | https://procesos2627-459073742710.europe-west1.run.app |
+| Documentación API | `/docs` (local o en la URL de arriba) |
+| Arranque local | Sección [Ejecución en local](#ejecución-en-local) |
+| Flujo Git / CI | Sección [Flujo de trabajo](#flujo-de-trabajo-github-flow) |
+
+### Qué puede hacer el alumno
+
+1. **Agenda**: horario del cuatrimestre vigente, fichas ESIIAB (aulas, profesores, tutorías) y calendario de exámenes/entregas.
+2. **Matrícula**: ver y editar asignaturas/grupos reales; la tarta del perfil refleja **solo este curso**.
+3. **Intensificación** (desplegable arriba del perfil): Software, Computadores, Computación o TI. Filtra las asignaturas “que te quedan” para no mezclar menciones.
+4. **Historial**: notas a mano (las oficiales de secretaría van como TODO). Créditos y media del perfil salen de ahí. **Las notas no viven en el código**: solo en la BBDD del usuario autenticado.
+5. **Notificaciones**: preferencias de avisos (exámenes, entregas, clases de hoy) y antelación.
+
+### Roles
+
+| Rol | Alcance |
+|-----|---------|
+| Alumno | Su agenda, matrícula, historial e intensificación |
+| Profesor / admin | Gestión de usuarios y avisos de eventos |
 
 ## Tecnologías
 
@@ -211,4 +235,14 @@ El administrador lista los usuarios, edita los de los demás y puede hacer admin
 | POST | `/api/usuarios/{email}/administrador` | Un administrador convierte esa cuenta en administrador |
 | GET | `/api/usuarios/{email}/activo` | Indica si esa cuenta está activa |
 | DELETE | `/api/usuarios/{email}` | Marca la cuenta como eliminada y cierra sus sesiones |
-| WS | `/ws` | Canal WebSocket |
+| GET | `/api/asignaturas` | Catálogo del grado (plan 406 Albacete) |
+| GET | `/api/matricula` | Matrícula activa, horario, créditos/media e intensificación |
+| PUT | `/api/matricula` | Guarda la matrícula del curso (conserva notas del historial) |
+| GET | `/api/expediente` | Historial: calificadas, pendientes (según mención), media |
+| PUT | `/api/expediente` | Guarda notas y/o intensificación (solo del usuario en sesión) |
+| GET | `/api/agenda/marcas` | Marcas del mes (exámenes, entregas, festivos) |
+| GET | `/api/agenda/marcas-rango` | Marcas de varios meses |
+| POST | `/api/eventos` | Publica un aviso (profesor/admin) |
+| WS | `/ws` | Canal WebSocket (avisos en tiempo real) |
+
+Las rutas de matrícula y expediente exigen cookie de sesión y solo operan sobre `usuario.email`: nadie ve las notas de otro alumno.

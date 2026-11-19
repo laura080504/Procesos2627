@@ -99,6 +99,8 @@ def guardar_expediente(
     use_case: GuardarExpedienteUseCase = Depends(crear_guardar_expediente_use_case),
 ):
     try:
+        # Si solo llega intensificación (sin lista de notas), no se tocan las calificaciones.
+        solo_rama = cuerpo.intensificacion is not None and not cuerpo.calificaciones
         return use_case.ejecutar(
             usuario.email,
             [
@@ -106,6 +108,7 @@ def guardar_expediente(
                 for item in cuerpo.calificaciones
             ],
             cuerpo.intensificacion,
+            actualizar_calificaciones=not solo_rama,
         )
     except EstadoNoValido as error:
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})

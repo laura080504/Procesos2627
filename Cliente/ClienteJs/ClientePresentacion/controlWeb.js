@@ -55,6 +55,7 @@ class ControlWeb {
             alAbrirHistorial: () => this.abrirHistorialAlumno(),
             alGuardarHistorial: (calificaciones, intensificacion) =>
                 this.guardarHistorialAlumno(calificaciones, intensificacion),
+            alGuardarIntensificacion: (intensificacion) => this.guardarIntensificacionAlumno(intensificacion),
         });
         this.vistaAgenda = new VistaAgenda({
             alBuscar: (nombre) => this.buscarAsignaturas(nombre),
@@ -737,6 +738,24 @@ class ControlWeb {
                 matricula,
             );
             this.mostrarMensaje(this.textos.historialGuardado);
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
+    async guardarIntensificacionAlumno(intensificacion) {
+        try {
+            await this.rest.guardarExpediente([], intensificacion ?? "");
+            this.cacheMatricula = { clave: "", datos: null, en: 0 };
+            const matricula = await this.obtenerMatriculaCacheada("", { forzar: true });
+            this.matricula = matricula;
+            this.vistaUsuarios.pintar(
+                [this.usuarioActual],
+                this.usuarioActual.email,
+                this.usuarioActual.rol,
+                matricula,
+            );
+            this.mostrarMensaje(this.textos.intensificacionGuardada);
         } catch (error) {
             this.gestionarError(error);
         }

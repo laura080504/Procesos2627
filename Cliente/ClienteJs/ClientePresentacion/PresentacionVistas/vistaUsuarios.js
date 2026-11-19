@@ -10,6 +10,7 @@ class VistaUsuarios {
         alGuardarMatricula,
         alAbrirHistorial,
         alGuardarHistorial,
+        alGuardarIntensificacion,
     }) {
         this.seccion = document.getElementById("vistaUsuarios");
         this.vistaAdministrador = document.getElementById("vistaAdministrador");
@@ -44,6 +45,7 @@ class VistaUsuarios {
         this.alGuardarMatricula = alGuardarMatricula;
         this.alAbrirHistorial = alAbrirHistorial;
         this.alGuardarHistorial = alGuardarHistorial;
+        this.alGuardarIntensificacion = alGuardarIntensificacion;
         this.textos = TEXTOS.es;
         this.ultimos = [];
         this.emailActual = "";
@@ -65,6 +67,14 @@ class VistaUsuarios {
                 this.alAbrirHistorial();
             }
         });
+        const selectRama = document.getElementById("selectIntensificacion");
+        if (selectRama) {
+            selectRama.addEventListener("change", () => {
+                if (this.alGuardarIntensificacion) {
+                    this.alGuardarIntensificacion(selectRama.value || "");
+                }
+            });
+        }
         document.getElementById("botonEditarDesdeResumen").addEventListener("click", () => {
             this.cerrarResumenMatricula();
             this.abrirEditorMatricula();
@@ -124,6 +134,10 @@ class VistaUsuarios {
         this.botonEditarMatricula.hidden = gestion;
         this.botonVerMatricula.hidden = gestion;
         this.botonHistorial.hidden = gestion;
+        const bloqueRama = document.getElementById("bloqueIntensificacion");
+        if (bloqueRama) {
+            bloqueRama.hidden = gestion;
+        }
         document.getElementById("botonEliminarSesion").hidden = gestion;
         document.getElementById("tituloVistaUsuarios").textContent = gestion
             ? this.textos.gestionUsuarios
@@ -230,8 +244,10 @@ class VistaUsuarios {
         curso.textContent = matricula.curso
             ? `${this.textos.cursoAlumno}: ${nombres[matricula.curso]}`
             : this.textos.sinCurso;
-        const intensificacion = document.getElementById("intensificacionAlumno");
-        intensificacion.textContent = `${this.textos.intensificacion}: ${etiquetaIntensificacion(matricula.intensificacion, this.textos)}`;
+        const selectRama = document.getElementById("selectIntensificacion");
+        if (selectRama) {
+            selectRama.value = matricula.intensificacion || "";
+        }
         document.getElementById("creditosAprobados").textContent =
             `${this.textos.creditosAprobados}: ${matricula.creditos_aprobados}`;
         const convalidados = document.getElementById("creditosConvalidados");
@@ -579,10 +595,6 @@ class VistaUsuarios {
     }
 
     pintarHistorial(expediente) {
-        const select = document.getElementById("selectIntensificacion");
-        if (select) {
-            select.value = expediente?.intensificacion || "";
-        }
         this.pintarResumenHistorial(expediente);
         this.listaHistorialCalificadas.replaceChildren();
         const calificadas = expediente?.calificadas || [];
@@ -748,13 +760,12 @@ class VistaUsuarios {
         });
     }
 
-    leerIntensificacionHistorial() {
-        return document.getElementById("selectIntensificacion")?.value || "";
-    }
-
     enviarHistorial() {
         if (this.alGuardarHistorial) {
-            this.alGuardarHistorial(this.leerHistorialEditor(), this.leerIntensificacionHistorial());
+            this.alGuardarHistorial(
+                this.leerHistorialEditor(),
+                document.getElementById("selectIntensificacion")?.value || "",
+            );
         }
     }
 }
@@ -822,16 +833,6 @@ function formatearMedia(media, codigo) {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
     });
-}
-
-function etiquetaIntensificacion(valor, textos) {
-    const claves = {
-        software: textos.intensificacionSoftware,
-        computadores: textos.intensificacionComputadores,
-        computacion: textos.intensificacionComputacion,
-        tecnologias_informacion: textos.intensificacionTI,
-    };
-    return claves[valor] || textos.sinIntensificacion;
 }
 
 function puedeEliminarCuenta(rolVisor, usuario) {

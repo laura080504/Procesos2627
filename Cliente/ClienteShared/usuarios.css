@@ -135,6 +135,34 @@ body.oscuro #listaUsuarios li {
     font-size: 0.92rem;
 }
 
+.perfil-rama {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    width: min(28rem, 100%);
+    margin: 0.15rem auto 0.55rem;
+    font-size: 0.88rem;
+    font-weight: 650;
+    color: #fff;
+}
+
+.perfil-rama select {
+    min-width: min(18rem, 100%);
+    border: 0;
+    border-radius: 999px;
+    padding: 0.45rem 0.9rem;
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 600;
+    background: #fff;
+    color: var(--rojo-logo);
+    cursor: pointer;
+}
+
 .perfil-pie {
     position: relative;
     z-index: 2;
