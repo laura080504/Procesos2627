@@ -2,10 +2,9 @@ from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
 from Servidor.Dominio.DominioServices.matriculas_muestra import (
     ALUMNOS_PRUEBA,
-    CODIGOS_LAURA,
     CONTRASENA_PRUEBA,
     EMAIL_LAURA,
-    asegurar_matricula_de,
+    forzar_matricula_laura,
 )
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
@@ -23,13 +22,15 @@ class AsegurarMatriculasMuestraUseCase:
         self.hasher = hasher
 
     def ejecutar(self) -> None:
-        self._asegurar_alumno(EMAIL_LAURA, "laura", CODIGOS_LAURA, crear_usuario=False)
+        forzar_matricula_laura(self.repositorio_matriculas)
+        self.repositorio_matriculas.vaciar_todos_excepto(EMAIL_LAURA)
         for alumno in ALUMNOS_PRUEBA:
-            self._asegurar_alumno(alumno["email"], alumno["nick"], alumno["codigos"], crear_usuario=True)
-
-    def _asegurar_alumno(self, email: str, nick: str, codigos: tuple[str, ...], crear_usuario: bool) -> None:
-        if crear_usuario and self.repositorio_usuarios.obtener_por_email(email) is None:
-            self.repositorio_usuarios.insertar(
-                Usuario(email=email, nick=nick, contrasena_hash=self.hasher.hashear(CONTRASENA_PRUEBA))
-            )
-        asegurar_matricula_de(self.repositorio_matriculas, email, codigos)
+            email = alumno["email"]
+            if self.repositorio_usuarios.obtener_por_email(email) is None:
+                self.repositorio_usuarios.insertar(
+                    Usuario(
+                        email=email,
+                        nick=alumno["nick"],
+                        contrasena_hash=self.hasher.hashear(CONTRASENA_PRUEBA),
+                    )
+                )

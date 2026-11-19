@@ -141,7 +141,7 @@ body.con-agenda .herramientas {
 }
 
 .agenda-horario {
-    --alto-hora: 22px;
+    --alto-hora: 28px;
     padding: 0.7rem 0.7rem 0.75rem;
 }
 
@@ -227,6 +227,7 @@ body.con-agenda .herramientas {
 
 .horario-pista {
     position: relative;
+    overflow: hidden;
     background-image: repeating-linear-gradient(
         to bottom,
         transparent 0,
@@ -238,35 +239,39 @@ body.con-agenda .herramientas {
 
 .franja {
     position: absolute;
-    z-index: 1;
+    z-index: 2;
+    box-sizing: border-box;
     overflow: hidden;
-    padding: 0.15rem 0.2rem;
+    margin: 0;
+    border: 0;
+    padding: 0.12rem 0.25rem;
     border-radius: 6px;
     color: #fff;
     font-size: 0.62rem;
     line-height: 1.15;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
 .franja strong,
 .franja span {
-    display: -webkit-box;
+    display: block;
+    max-width: 100%;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-weight: 650;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
 }
 
 .franja span {
     font-weight: 450;
     opacity: 0.92;
-    -webkit-line-clamp: 1;
 }
 
 .linea-ahora {
     position: absolute;
     right: 0;
     left: 0;
-    z-index: 2;
+    z-index: 3;
     height: 2px;
     background: var(--rojo-logo);
     pointer-events: none;
@@ -755,7 +760,8 @@ body.con-agenda .herramientas {
     box-shadow: 0 18px 48px rgba(60, 8, 16, 0.22);
 }
 
-.dialogo-avisos {
+.dialogo-avisos,
+.dialogo-matricula {
     width: min(42rem, calc(100vw - 2rem));
     border: 0;
     border-radius: 16px;
@@ -766,18 +772,21 @@ body.con-agenda .herramientas {
 }
 
 .dialogo-dia::backdrop,
-.dialogo-avisos::backdrop {
+.dialogo-avisos::backdrop,
+.dialogo-matricula::backdrop {
     background: rgba(30, 12, 16, 0.45);
 }
 
 .dialogo-dia form,
-.dialogo-avisos form {
+.dialogo-avisos form,
+.dialogo-matricula form {
     margin: 0;
     padding: 1.1rem 1.2rem 1.2rem;
 }
 
 .dialogo-dia header,
-.dialogo-avisos header {
+.dialogo-avisos header,
+.dialogo-matricula header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -785,10 +794,85 @@ body.con-agenda .herramientas {
 }
 
 .dialogo-dia h2,
-.dialogo-avisos h2 {
+.dialogo-avisos h2,
+.dialogo-matricula h2 {
     margin: 0;
     font-size: 1.05rem;
     font-weight: 650;
+}
+
+.ayuda-matricula {
+    margin: 0.65rem 0 0.85rem;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    opacity: 0.85;
+}
+
+.lista-matricula-editable {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    max-height: min(50vh, 22rem);
+    overflow: auto;
+    padding-right: 0.15rem;
+}
+
+.fila-matricula {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 5.5rem auto;
+    gap: 0.45rem;
+    align-items: center;
+}
+
+.fila-matricula select,
+.fila-matricula input {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid rgba(157, 24, 48, 0.28);
+    border-radius: 10px;
+    padding: 0.45rem 0.55rem;
+    font: inherit;
+    font-size: 0.85rem;
+    background: #fff;
+    color: inherit;
+}
+
+.fila-matricula .quitar-matricula {
+    border: 1px solid rgba(157, 24, 48, 0.28);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--rojo-logo);
+    padding: 0.35rem 0.7rem;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.matricula-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+.matricula-acciones button {
+    border: 1px solid rgba(157, 24, 48, 0.28);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--rojo-logo);
+    padding: 0.4rem 0.9rem;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 650;
+    cursor: pointer;
+}
+
+#botonGuardarMatricula {
+    background: var(--rojo-logo);
+    border-color: var(--rojo-logo);
+    color: #fff;
 }
 
 .avisos-acciones {
@@ -1036,10 +1120,26 @@ body.oscuro .avisos-acciones button {
     color: #f3c3cb;
 }
 
-body.oscuro .dialogo-avisos {
+body.oscuro .dialogo-avisos,
+body.oscuro .dialogo-matricula {
     background: #2b2b30;
     color: #f3f3f3;
     border: 2px solid #c45c6c;
+}
+
+body.oscuro .fila-matricula select,
+body.oscuro .fila-matricula input,
+body.oscuro .fila-matricula .quitar-matricula,
+body.oscuro .matricula-acciones button {
+    background: #3a3a40;
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #f3f3f3;
+}
+
+body.oscuro #botonGuardarMatricula {
+    background: #c45c6c;
+    border-color: #c45c6c;
+    color: #1a1a1a;
 }
 
 body.oscuro .actividad-dia,
@@ -1105,7 +1205,7 @@ body.oscuro .flecha-volver {
     }
 
     .agenda-horario {
-        --alto-hora: 20px;
+        --alto-hora: 24px;
     }
 
     .avatar {

@@ -1,3 +1,7 @@
+from datetime import date
+
+from Servidor.Dominio.DominioEntities.evento import Evento
+from Servidor.Dominio.DominioEnums.tipo_evento import TipoEvento
 from Servidor.Dominio.DominioQueries.obtener_marcas_calendario_query import ObtenerMarcasCalendarioQuery
 from Servidor.Dominio.DominioUseCases.asegurar_catalogo_asignaturas_use_case import AsegurarCatalogoAsignaturasUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_eventos_muestra_use_case import AsegurarEventosMuestraUseCase
@@ -7,53 +11,42 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_cursos_mem
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos_memoria import RepositorioEventosMemoria
 
 
-def _octubre():
+def _repos():
     cursos = RepositorioCursosMemoria()
     asignaturas = RepositorioAsignaturasMemoria()
     eventos = RepositorioEventosMemoria()
     AsegurarCatalogoAsignaturasUseCase(cursos, asignaturas).ejecutar()
+    return eventos, asignaturas
+
+
+def prueba_asegurar_eventos_limpia_la_semilla_ficticia():
+    eventos, asignaturas = _repos()
+    eventos.reemplazar(
+        [
+            Evento(date(2026, 10, 11), "42300", TipoEvento.EXAMEN, "09:00", "Aula Multiusos"),
+            Evento(date(2026, 11, 19), "42304", TipoEvento.ENTREGA, "23:59", None),
+        ]
+    )
+    AsegurarEventosMuestraUseCase(eventos, asignaturas).ejecutar()
+    assert eventos.obtener_todos() == []
+
+
+def prueba_octubre_sin_semilla_no_inventa_estrellas():
+    eventos, asignaturas = _repos()
     AsegurarEventosMuestraUseCase(eventos, asignaturas).ejecutar()
     marcas = ObtenerMarcasCalendarioUseCase(eventos, asignaturas).ejecutar(ObtenerMarcasCalendarioQuery(2026, 10))
-    return {marca.dia: [simbolo.tipo for simbolo in marca.simbolos] for marca in marcas}, marcas
-
-
-def prueba_octubre_lista_cinco_examenes_y_pone_las_estrellas_delante():
-    por_dia, marcas = _octubre()
-    assert por_dia[11] == ["estrella"] * 5
-    assert por_dia[16] == ["estrella", "estrella", "punto"]
-    assert por_dia[27] == ["estrella", "punto", "punto"]
-    assert por_dia[7] == ["punto"]
-    assert len(por_dia) < 20
-    assert all(simbolo.codigo and simbolo.nombre and simbolo.hora for marca in marcas for simbolo in marca.simbolos)
-    once = next(simbolo for marca in marcas for simbolo in marca.simbolos if simbolo.tipo == "estrella")
-    assert once.lugar
-    entrega = next(simbolo for marca in marcas for simbolo in marca.simbolos if simbolo.tipo == "punto")
-    assert entrega.lugar is None
-
-
-def prueba_otro_mes_no_repite_las_marcas_de_octubre():
-    cursos = RepositorioCursosMemoria()
-    asignaturas = RepositorioAsignaturasMemoria()
-    eventos = RepositorioEventosMemoria()
-    AsegurarCatalogoAsignaturasUseCase(cursos, asignaturas).ejecutar()
-    AsegurarEventosMuestraUseCase(eventos, asignaturas).ejecutar()
-    noviembre = ObtenerMarcasCalendarioUseCase(eventos, asignaturas).ejecutar(ObtenerMarcasCalendarioQuery(2026, 11))
-    assert noviembre
-    assert {marca.dia for marca in noviembre} != {4, 7, 11, 16, 21, 27}
-
-
-def prueba_noviembre_incluye_avisos_de_la_matricula_demo():
-    cursos = RepositorioCursosMemoria()
-    asignaturas = RepositorioAsignaturasMemoria()
-    eventos = RepositorioEventosMemoria()
-    AsegurarCatalogoAsignaturasUseCase(cursos, asignaturas).ejecutar()
-    AsegurarEventosMuestraUseCase(eventos, asignaturas).ejecutar()
-    noviembre = ObtenerMarcasCalendarioUseCase(eventos, asignaturas).ejecutar(ObtenerMarcasCalendarioQuery(2026, 11))
-    por_codigo = {
-        simbolo.codigo
-        for marca in noviembre
+    estrellas = [
+        simbolo
+        for marca in marcas
         for simbolo in marca.simbolos
-    }
-    assert {"42300", "42302", "42304", "42305", "42314", "42322"} <= por_codigo
-    dias = {marca.dia for marca in noviembre}
-    assert {19, 20, 21, 25, 26} <= dias
+        if simbolo.tipo == "estrella"
+    ]
+    assert estrellas == []
+
+
+def prueba_avisos_reales_del_profesor_siguen_marcando():
+    eventos, asignaturas = _repos()
+    eventos.guardar(Evento(date(2026, 12, 15), "42302", TipoEvento.ENTREGA, "23:59", None))
+    marcas = ObtenerMarcasCalendarioUseCase(eventos, asignaturas).ejecutar(ObtenerMarcasCalendarioQuery(2026, 12))
+    del_15 = next(marca for marca in marcas if marca.dia == 15)
+    assert any(simbolo.tipo == "punto" and simbolo.codigo == "42302" for simbolo in del_15.simbolos)

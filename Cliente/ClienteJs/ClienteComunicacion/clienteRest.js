@@ -73,6 +73,10 @@ class ClienteRest {
         return this.clienteHttp.peticion("GET", ruta);
     }
 
+    guardarMatricula(asignaturas) {
+        return this.clienteHttp.peticion("PUT", "/matricula", { asignaturas });
+    }
+
     obtenerMarcas(anio, mes) {
         return this.clienteHttp.peticion("GET", `/agenda/marcas?anio=${anio}&mes=${mes}`);
     }

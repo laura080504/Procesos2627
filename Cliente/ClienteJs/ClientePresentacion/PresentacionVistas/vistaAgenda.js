@@ -147,7 +147,7 @@ const VistaAgenda = (() => {
                 || ahora.getMonth() !== this.hoy.getMonth()
                 || ahora.getFullYear() !== this.hoy.getFullYear();
             this.hoy = ahora;
-            const yAhora = topAhora(this.hoy);
+            const yAhora = topAhora(this.hoy, altoHora());
             const finSemana = new Date(this.lunes.getFullYear(), this.lunes.getMonth(), this.lunes.getDate() + 7);
             const contieneHoy = yAhora !== null && this.hoy >= this.lunes && this.hoy < finSemana;
             const linea = document.querySelector("#rejillaHorario .linea-ahora");
@@ -662,6 +662,7 @@ const VistaAgenda = (() => {
             const dias = document.createElement("div");
             dias.className = "horario-dias";
 
+            const pxHora = altoHora();
             const porDia = new Map();
             this.franjasVisibles().forEach((franja) => {
                 const lista = porDia.get(franja.dia) || [];
@@ -670,12 +671,12 @@ const VistaAgenda = (() => {
             });
 
             for (let indice = 0; indice < 7; indice += 1) {
-                dias.append(this.crearColumnaDia(indice, porDia.get(indice) || [], ingles));
+                dias.append(this.crearColumnaDia(indice, porDia.get(indice) || [], ingles, pxHora));
             }
 
             marco.append(horas, dias);
             rejilla.append(marco);
-            this.dibujarLineaAhora(dias, domingo);
+            this.dibujarLineaAhora(dias, domingo, pxHora);
         }
 
         crearEjeHoras() {
@@ -693,7 +694,7 @@ const VistaAgenda = (() => {
             return horas;
         }
 
-        crearColumnaDia(indice, franjasDelDia, ingles) {
+        crearColumnaDia(indice, franjasDelDia, ingles, pxHora) {
             const fecha = new Date(this.lunes.getFullYear(), this.lunes.getMonth(), this.lunes.getDate() + indice);
             const columna = document.createElement("div");
             columna.className = "horario-dia";
@@ -714,8 +715,8 @@ const VistaAgenda = (() => {
 
             const pista = document.createElement("div");
             pista.className = "horario-pista";
-            pista.style.height = `${(HORA_FIN - HORA_INICIO) * altoHora()}px`;
-            colocarFranjas(franjasDelDia).forEach((franja) => {
+            pista.style.height = `${(HORA_FIN - HORA_INICIO) * pxHora}px`;
+            layoutFranjas(franjasDelDia, pxHora).forEach((franja) => {
                 pista.append(this.crearBloqueFranja(franja, ingles));
             });
             columna.append(cabecera, pista);
@@ -726,10 +727,12 @@ const VistaAgenda = (() => {
             const bloque = document.createElement("div");
             bloque.className = "franja";
             bloque.dataset.codigo = franja.codigo;
-            bloque.style.top = `${topFranja(franja.inicio)}px`;
-            bloque.style.height = `${Math.max(topFranja(franja.fin) - topFranja(franja.inicio) - 2, 16)}px`;
+            bloque.style.top = `${franja.y0}px`;
+            bloque.style.height = `${franja.alto}px`;
+            bloque.style.maxHeight = `${franja.alto}px`;
             bloque.style.left = `calc(${(franja.columna * 100) / franja.columnasVisibles}% + 1px)`;
             bloque.style.width = `calc(${100 / franja.columnasVisibles}% - 2px)`;
+            bloque.style.zIndex = String(2 + Math.floor(minutosFranja(franja.inicio) / 30));
             bloque.style.background = tonoFranja(franja.codigo);
             const nombre = ingles ? franja.nombre_ingles : franja.nombre;
             const tipo = franja.tipo === "teoria" ? this.textos.teoria : this.textos.practicas;
@@ -744,8 +747,8 @@ const VistaAgenda = (() => {
             return bloque;
         }
 
-        dibujarLineaAhora(dias, domingo) {
-            const yAhora = topAhora(this.hoy);
+        dibujarLineaAhora(dias, domingo, pxHora) {
+            const yAhora = topAhora(this.hoy, pxHora);
             const finDia = new Date(domingo.getFullYear(), domingo.getMonth(), domingo.getDate() + 1);
             const contieneHoy = yAhora !== null && this.hoy >= this.lunes && this.hoy < finDia;
             if (!contieneHoy) {
@@ -860,9 +863,10 @@ const VistaAgenda = (() => {
     }
 
     function altoHora() {
-        const crudo = getComputedStyle(document.querySelector(".agenda-horario")).getPropertyValue("--alto-hora");
+        const nodo = document.querySelector(".agenda-horario");
+        const crudo = nodo ? getComputedStyle(nodo).getPropertyValue("--alto-hora") : "";
         const valor = parseFloat(crudo);
-        return Number.isFinite(valor) && valor > 0 ? valor : 18;
+        return Number.isFinite(valor) && valor > 0 ? valor : 28;
     }
 
     function lunesDe(fecha) {
@@ -875,53 +879,148 @@ const VistaAgenda = (() => {
     }
 
     function minutosFranja(hora) {
-        const [horas, minutos] = hora.split(":").map(Number);
+        const [horas, minutos] = String(hora).split(":").map(Number);
         return horas * 60 + minutos;
     }
 
-    function topFranja(hora) {
-        return ((minutosFranja(hora) - HORA_INICIO * 60) / 60) * altoHora();
+    function topFranja(hora, pxHora) {
+        return ((minutosFranja(hora) - HORA_INICIO * 60) / 60) * pxHora;
     }
 
-    function topAhora(fecha) {
+    function topAhora(fecha, pxHora) {
         const minutos = fecha.getHours() * 60 + fecha.getMinutes();
         if (minutos < HORA_INICIO * 60 || minutos > HORA_FIN * 60) {
             return null;
         }
-        return ((minutos - HORA_INICIO * 60) / 60) * altoHora();
+        return ((minutos - HORA_INICIO * 60) / 60) * pxHora;
     }
 
     function tonoFranja(codigo) {
         return TONOS_FRANJA[Number(codigo) % TONOS_FRANJA.length];
     }
 
+    // ESIIAB a veces choca 5 min (p.ej. Gestión 16:00-17:35 y Procesos 17:30-19:00).
+    // Eso no debe partir la columna a la mitad: se tratan como consecutivas.
+    const SOLAPE_MINIMO_MINUTOS = 6;
+
+    function minutosSolape(una, otra) {
+        const inicio = Math.max(minutosFranja(una.inicio), minutosFranja(otra.inicio));
+        const fin = Math.min(minutosFranja(una.fin), minutosFranja(otra.fin));
+        return Math.max(0, fin - inicio);
+    }
+
     function solapan(una, otra) {
-        return una.inicio < otra.fin && otra.inicio < una.fin;
+        return minutosSolape(una, otra) >= SOLAPE_MINIMO_MINUTOS;
     }
 
     function colocarFranjas(franjas) {
-        // 1) Ordenar por inicio.
         const ordenadas = [...franjas].sort(
-            (a, b) => a.inicio.localeCompare(b.inicio) || a.codigo.localeCompare(b.codigo),
+            (a, b) => a.inicio.localeCompare(b.inicio) || a.fin.localeCompare(b.fin) || a.codigo.localeCompare(b.codigo),
         );
-        // 2) Asignar la primera columna libre (finPorColumna guarda hasta cuándo está ocupada).
-        const finPorColumna = [];
-        const conColumna = ordenadas.map((franja) => {
-            let columna = finPorColumna.findIndex((fin) => fin <= franja.inicio);
-            if (columna < 0) {
-                columna = finPorColumna.length;
-                finPorColumna.push(franja.fin);
-            } else {
-                finPorColumna[columna] = franja.fin;
+        const n = ordenadas.length;
+        if (n === 0) {
+            return [];
+        }
+
+        // Componentes conexos solo por solapes reales (>= SOLAPE_MINIMO_MINUTOS).
+        const padre = ordenadas.map((_, indice) => indice);
+        const encontrar = (i) => {
+            let actual = i;
+            while (padre[actual] !== actual) {
+                padre[actual] = padre[padre[actual]];
+                actual = padre[actual];
             }
-            return { ...franja, columna };
+            return actual;
+        };
+        const unir = (i, j) => {
+            const a = encontrar(i);
+            const b = encontrar(j);
+            if (a !== b) {
+                padre[b] = a;
+            }
+        };
+        for (let i = 0; i < n; i += 1) {
+            for (let j = i + 1; j < n; j += 1) {
+                if (solapan(ordenadas[i], ordenadas[j])) {
+                    unir(i, j);
+                }
+            }
+        }
+
+        const grupos = new Map();
+        ordenadas.forEach((franja, indice) => {
+            const raiz = encontrar(indice);
+            const lista = grupos.get(raiz) || [];
+            lista.push(indice);
+            grupos.set(raiz, lista);
         });
-        // 3) El ancho depende de cuántas columnas usa el grupo que solapa.
-        return conColumna.map((franja) => {
-            const grupo = conColumna.filter((otra) => solapan(franja, otra));
-            const columnasVisibles = Math.max(...grupo.map((otra) => otra.columna)) + 1;
-            return { ...franja, columnasVisibles };
+
+        const resultado = new Array(n);
+        grupos.forEach((indices) => {
+            // Columnas 0..k solo dentro del grupo: un solape de tarde no estrecha la mañana.
+            const finPorColumna = [];
+            const locales = indices
+                .slice()
+                .sort((a, b) => ordenadas[a].inicio.localeCompare(ordenadas[b].inicio)
+                    || ordenadas[a].fin.localeCompare(ordenadas[b].fin)
+                    || ordenadas[a].codigo.localeCompare(ordenadas[b].codigo));
+            locales.forEach((indice) => {
+                const franja = ordenadas[indice];
+                let columna = finPorColumna.findIndex(
+                    (fin) => minutosFranja(fin) <= minutosFranja(franja.inicio),
+                );
+                if (columna < 0) {
+                    columna = finPorColumna.length;
+                    finPorColumna.push(franja.fin);
+                } else {
+                    finPorColumna[columna] = franja.fin;
+                }
+                resultado[indice] = {
+                    ...franja,
+                    columna,
+                    columnasVisibles: 1,
+                };
+            });
+            const total = Math.max(finPorColumna.length, 1);
+            locales.forEach((indice) => {
+                resultado[indice].columnasVisibles = total;
+            });
         });
+        return resultado;
+    }
+
+    function layoutFranjas(franjas, pxHora) {
+        const HUECO = 4;
+        const colocadas = colocarFranjas(franjas).map((franja) => {
+            const y0 = Math.round(topFranja(franja.inicio, pxHora));
+            const y1 = Math.round(topFranja(franja.fin, pxHora));
+            return {
+                ...franja,
+                y0,
+                y1,
+                alto: Math.max(y1 - y0 - HUECO, 12),
+            };
+        });
+        // En la misma columna, una franja nunca puede pintar encima de la siguiente
+        // (consecutivas 13:05|13:05 o redondeos de píxel).
+        const porColumna = new Map();
+        colocadas.forEach((franja, indice) => {
+            const lista = porColumna.get(franja.columna) || [];
+            lista.push(indice);
+            porColumna.set(franja.columna, lista);
+        });
+        porColumna.forEach((indices) => {
+            indices.sort((a, b) => colocadas[a].y0 - colocadas[b].y0 || colocadas[a].y1 - colocadas[b].y1);
+            for (let i = 0; i < indices.length - 1; i += 1) {
+                const actual = colocadas[indices[i]];
+                const siguiente = colocadas[indices[i + 1]];
+                const maxAlto = Math.max(siguiente.y0 - actual.y0 - HUECO, 10);
+                if (actual.alto > maxAlto) {
+                    actual.alto = maxAlto;
+                }
+            }
+        });
+        return colocadas;
     }
 
     function iconoCampana() {
