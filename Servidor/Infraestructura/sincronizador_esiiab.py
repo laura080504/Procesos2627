@@ -410,11 +410,15 @@ class SincronizadorEsiiab:
 
 
 def _ficha_obsoleta(ficha: FichaEsiiab) -> bool:
-    """Fichas antiguas metían el mismo bloque en ambos cuatrimestres."""
+    """Detecta el bug viejo que duplicaba el bloque entero de tutorías en ambos cuatris.
+
+    Un profesor puede tener las mismas franjas en 1.º y 2.º de verdad (p. ej. Sahori
+    en Sistemas Distribuidos); eso no invalida la ficha. Solo es obsoleta si el
+    mapa completo primer==segundo y hay franjas (copia wholesale del parser antiguo).
+    """
     if not ficha.profesores:
         return True
-    return any(
-        profesor.tutorias_primer
-        and profesor.tutorias_primer == profesor.tutorias_segundo
-        for profesor in ficha.profesores
-    )
+    mapa_primer = tuple((normalizar_texto(p.nombre), p.tutorias_primer) for p in ficha.profesores)
+    mapa_segundo = tuple((normalizar_texto(p.nombre), p.tutorias_segundo) for p in ficha.profesores)
+    hay_franjas = any(p.tutorias_primer or p.tutorias_segundo for p in ficha.profesores)
+    return hay_franjas and mapa_primer == mapa_segundo
