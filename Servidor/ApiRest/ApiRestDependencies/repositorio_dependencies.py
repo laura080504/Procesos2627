@@ -31,13 +31,19 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos_mo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas_memoria import RepositorioMatriculasMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas_mongo import RepositorioMatriculasMongo
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_esiiab import RepositorioEsiiab
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_esiiab_memoria import RepositorioEsiiabMemoria
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_esiiab_mongo import RepositorioEsiiabMongo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_mongo import RepositorioUsuariosMongo
+from Servidor.Dominio.DominioServices.horario_esiiab import configurar_proveedor_sesiones
 from Servidor.Dominio.DominioUseCases.asegurar_administrador_use_case import AsegurarAdministradorUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_catalogo_asignaturas_use_case import AsegurarCatalogoAsignaturasUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_eventos_muestra_use_case import AsegurarEventosMuestraUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_matriculas_muestra_use_case import AsegurarMatriculasMuestraUseCase
+from Servidor.Infraestructura.cliente_horarios_esiiab import ClienteHorariosEsiiab
+from Servidor.Infraestructura.sincronizador_esiiab import SincronizadorEsiiab
 
 
 def crear_repositorios(
@@ -51,6 +57,7 @@ def crear_repositorios(
     RepositorioAsignaturas,
     RepositorioEventos,
     RepositorioMatriculas,
+    RepositorioEsiiab,
 ]:
     if configuracion.motor_datos == "memoria":
         return (
@@ -62,6 +69,7 @@ def crear_repositorios(
             RepositorioAsignaturasMemoria(),
             RepositorioEventosMemoria(),
             RepositorioMatriculasMemoria(),
+            RepositorioEsiiabMemoria(),
         )
     if configuracion.motor_datos == "mongo":
         base_datos = BaseDatosMongo(
@@ -79,6 +87,7 @@ def crear_repositorios(
             RepositorioAsignaturasMongo(base_datos),
             RepositorioEventosMongo(base_datos),
             RepositorioMatriculasMongo(base_datos),
+            RepositorioEsiiabMongo(base_datos),
         )
     raise ValueError(f"El motor de datos '{configuracion.motor_datos}' no existe. Usa memoria o mongo.")
 
@@ -93,6 +102,7 @@ _configuracion = obtener_configuracion()
     _repositorio_asignaturas,
     _repositorio_eventos,
     _repositorio_matriculas,
+    _repositorio_esiiab,
 ) = crear_repositorios(_configuracion)
 _enviador_correo = EnviadorCorreoBrevo(
     _configuracion.brevo_smtp_servidor,
@@ -103,6 +113,18 @@ _enviador_correo = EnviadorCorreoBrevo(
     _configuracion.brevo_remitente_nombre,
     _configuracion.brevo_api_clave,
 )
+_cliente_horarios_esiiab = ClienteHorariosEsiiab(
+    url=_configuracion.horarios_esiiab_url,
+    ttl_segundos=_configuracion.horarios_esiiab_ttl_segundos,
+    vivo=_configuracion.horarios_esiiab_vivo,
+)
+_sincronizador_esiiab = SincronizadorEsiiab(
+    _cliente_horarios_esiiab,
+    _repositorio_esiiab,
+    ttl_segundos=_configuracion.horarios_esiiab_ttl_segundos,
+)
+configurar_proveedor_sesiones(_sincronizador_esiiab.sesiones)
+_sincronizador_esiiab.iniciar_en_segundo_plano()
 if _configuracion.admin_email and _configuracion.admin_contrasena:
     AsegurarAdministradorUseCase(_repositorio_usuarios, obtener_hasher_contrasenas()).ejecutar(
         _configuracion.admin_email, _configuracion.admin_contrasena
@@ -151,3 +173,11 @@ def obtener_repositorio_matriculas() -> RepositorioMatriculas:
 
 def obtener_enviador_correo() -> EnviadorCorreo:
     return _enviador_correo
+
+
+def obtener_cliente_horarios_esiiab() -> SincronizadorEsiiab:
+    return _sincronizador_esiiab
+
+
+def obtener_repositorio_esiiab() -> RepositorioEsiiab:
+    return _repositorio_esiiab
