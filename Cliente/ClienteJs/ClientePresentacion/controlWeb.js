@@ -37,6 +37,12 @@ class ControlWeb {
             alNoCoinciden: () => this.mostrarMensaje(this.textos.contrasenasNoCoinciden, true),
         });
         this.socketAvisos = null;
+        this.cacheMarcas = new Map();
+        this.cacheMatricula = null;
+        this.peticionMatricula = null;
+        this.cargandoMarcas = null;
+        this.temporizadorMes = null;
+        this.refrescoFichas = null;
         this.vistaUsuarios = new VistaUsuarios({
             alEliminar: (email) => this.eliminarUsuario(email),
             alRefrescar: () => this.refrescarUsuarios(),
@@ -52,7 +58,8 @@ class ControlWeb {
             alCambiarTema: () => this.alternarTema(),
             alCambiarIdioma: () => this.alternarIdioma(),
             alLeer: (texto) => this.leerPantalla(texto),
-            alCambiarMes: () => this.cargarMarcas(),
+            alCambiarMes: () => this.programarCargaMarcas(),
+            alAbrirAsignatura: (asignatura) => this.asegurarFichaAsignatura(asignatura),
         });
         this.vistaEditarDatos = new VistaEditarDatos({
             alGuardar: (datos) => this.guardarEdicion(datos),
@@ -252,6 +259,7 @@ class ControlWeb {
             `${this.textos.avisoNuevoRecibido}: ${tipo} · ${nombre} · ${this.textos.fechaFinalizacion}: ${fecha}`,
         );
         if (!this.vistaAgenda.seccion.hidden) {
+            this.invalidarCacheMarcas();
             await this.cargarMarcas();
             this.vistaAgenda.actualizarAvisos();
         }
@@ -286,26 +294,69 @@ class ControlWeb {
         return periodos;
     }
 
-    async obtenerMarcasAntelacion() {
+    claveMarcas(anio, mes) {
+        return `${anio}-${mes}`;
+    }
+
+    invalidarCacheMarcas() {
+        this.cacheMarcas.clear();
+    }
+
+    async obtenerMarcasMes(anio, mes) {
+        const clave = this.claveMarcas(anio, mes);
+        if (this.cacheMarcas.has(clave)) {
+            return this.cacheMarcas.get(clave);
+        }
+        const marcas = await this.rest.obtenerMarcas(anio, mes);
+        this.cacheMarcas.set(clave, marcas);
+        return marcas;
+    }
+
+    resumenMarcasCache() {
         const periodoVista = this.vistaAgenda.periodo();
-        const periodos = this.periodosAntelacion();
-        const respuestas = await Promise.all(
-            periodos.map((periodo) => this.rest.obtenerMarcas(periodo.anio, periodo.mes)),
-        );
-        let marcasVista = [];
+        const marcasVista = this.cacheMarcas.get(this.claveMarcas(periodoVista.anio, periodoVista.mes)) || [];
         const marcasAntelacion = [];
-        respuestas.forEach((marcas, indice) => {
-            const periodo = periodos[indice];
-            if (periodo.anio === periodoVista.anio && periodo.mes === periodoVista.mes) {
-                marcasVista = marcas;
+        this.periodosAntelacion().forEach((periodo) => {
+            const marcas = this.cacheMarcas.get(this.claveMarcas(periodo.anio, periodo.mes));
+            if (marcas) {
+                marcasAntelacion.push(...marcas);
             }
-            marcasAntelacion.push(...marcas);
         });
         return { marcasVista, marcasAntelacion };
     }
 
+    guardarPeriodosMarcas(periodos) {
+        Object.entries(periodos || {}).forEach(([clave, marcas]) => {
+            this.cacheMarcas.set(clave, marcas);
+        });
+    }
+
+    async obtenerMarcasAntelacion({ soloVista = false } = {}) {
+        const periodoVista = this.vistaAgenda.periodo();
+        if (soloVista) {
+            await this.obtenerMarcasMes(periodoVista.anio, periodoVista.mes);
+            return this.resumenMarcasCache();
+        }
+        const periodos = this.periodosAntelacion();
+        const faltan = periodos.some(
+            (periodo) => !this.cacheMarcas.has(this.claveMarcas(periodo.anio, periodo.mes)),
+        );
+        if (faltan) {
+            const primero = periodos[0];
+            const respuesta = await this.rest.obtenerMarcasRango(primero.anio, primero.mes, periodos.length);
+            this.guardarPeriodosMarcas(respuesta.periodos);
+        }
+        return this.resumenMarcasCache();
+    }
+
+    programarCargaMarcas() {
+        clearTimeout(this.temporizadorMes);
+        this.temporizadorMes = setTimeout(() => this.cargarMarcas({ soloVista: true }), 50);
+    }
+
     async cambiarPreferenciasAvisos(preferencias) {
         this.vistaAgenda.aplicarPreferenciasAvisos(preferencias);
+        this.invalidarCacheMarcas();
         if (!this.vistaAgenda.seccion.hidden) {
             await this.cargarMarcas();
         }
@@ -313,25 +364,131 @@ class ControlWeb {
 
     async cargarAgenda() {
         try {
-            const [matricula, marcas] = await Promise.all([
-                this.rest.obtenerMatricula(this.vistaAgenda.textoBusqueda()),
-                this.obtenerMarcasAntelacion(),
+            const periodo = this.vistaAgenda.periodo();
+            const [matricula, marcasVista] = await Promise.all([
+                this.obtenerMatriculaCacheada(this.vistaAgenda.textoBusqueda()),
+                this.obtenerMarcasMes(periodo.anio, periodo.mes),
             ]);
             this.matricula = matricula;
             this.vistaAgenda.pintar(
                 matricula.asignaturas,
-                marcas.marcasVista,
+                marcasVista,
                 matricula.horario,
-                marcas.marcasAntelacion,
+                marcasVista,
             );
+            this.programarRefrescoFichas();
+            // Avisos del resto de meses en segundo plano (una sola petición).
+            this.obtenerMarcasAntelacion().then((marcas) => {
+                if (this.vistaAgenda.seccion.hidden) {
+                    return;
+                }
+                this.vistaAgenda.pintar(
+                    this.vistaAgenda.asignaturas,
+                    marcas.marcasVista,
+                    undefined,
+                    marcas.marcasAntelacion,
+                );
+            }).catch(() => {});
         } catch (error) {
             this.gestionarError(error);
         }
     }
 
-    async cargarMarcas() {
+    async obtenerMatriculaCacheada(nombre = "", { forzar = false } = {}) {
+        const clave = (nombre || "").trim().toLowerCase();
+        if (
+            !forzar
+            && this.cacheMatricula
+            && this.cacheMatricula.clave === clave
+            && Date.now() - this.cacheMatricula.en < 15000
+        ) {
+            return this.cacheMatricula.datos;
+        }
+        if (
+            this.peticionMatricula
+            && this.peticionMatricula.clave === clave
+            && !forzar
+        ) {
+            return this.peticionMatricula.promesa;
+        }
+        const promesa = this.rest.obtenerMatricula(nombre).then((datos) => {
+            this.cacheMatricula = { clave, datos, en: Date.now() };
+            this.matricula = datos;
+            if (this.peticionMatricula && this.peticionMatricula.promesa === promesa) {
+                this.peticionMatricula = null;
+            }
+            return datos;
+        }).catch((error) => {
+            if (this.peticionMatricula && this.peticionMatricula.promesa === promesa) {
+                this.peticionMatricula = null;
+            }
+            throw error;
+        });
+        this.peticionMatricula = { clave, promesa };
+        return promesa;
+    }
+
+    programarRefrescoFichas() {
+        clearTimeout(this.refrescoFichas);
+        const faltan = (this.matricula?.asignaturas || []).some(
+            (asignatura) => !asignatura.profesores || asignatura.profesores.length === 0,
+        );
+        if (!faltan) {
+            return;
+        }
+        this.refrescoFichas = setTimeout(() => {
+            this.obtenerMatriculaCacheada(this.vistaAgenda.textoBusqueda(), { forzar: true })
+                .then((matricula) => {
+                    if (this.vistaAgenda.seccion.hidden) {
+                        return;
+                    }
+                    this.vistaAgenda.pintar(
+                        matricula.asignaturas,
+                        this.vistaAgenda.marcas,
+                        matricula.horario,
+                        this.vistaAgenda.marcasAntelacion,
+                    );
+                })
+                .catch(() => {});
+        }, 700);
+    }
+
+    async asegurarFichaAsignatura(asignatura) {
+        if (!asignatura) {
+            return;
+        }
+        if (asignatura.profesores && asignatura.profesores.length) {
+            return;
+        }
         try {
-            const marcas = await this.obtenerMarcasAntelacion();
+            const matricula = await this.obtenerMatriculaCacheada(this.vistaAgenda.textoBusqueda(), { forzar: true });
+            const actualizada = matricula.asignaturas.find((item) => item.codigo === asignatura.codigo);
+            if (!actualizada || this.vistaAgenda.seccion.hidden) {
+                return;
+            }
+            if (this.vistaAgenda.abierta?.codigo === asignatura.codigo) {
+                this.vistaAgenda.abierta = actualizada;
+                this.vistaAgenda.pintarFicha();
+            }
+            this.vistaAgenda.pintar(
+                matricula.asignaturas,
+                this.vistaAgenda.marcas,
+                matricula.horario,
+                this.vistaAgenda.marcasAntelacion,
+            );
+        } catch {
+            /* silencioso: la ficha se completará en el siguiente refresco */
+        }
+    }
+
+    async cargarMarcas({ soloVista = false } = {}) {
+        const peticion = this.obtenerMarcasAntelacion({ soloVista });
+        this.cargandoMarcas = peticion;
+        try {
+            const marcas = await peticion;
+            if (this.cargandoMarcas !== peticion) {
+                return;
+            }
             this.vistaAgenda.pintar(
                 this.vistaAgenda.asignaturas,
                 marcas.marcasVista,
@@ -339,13 +496,36 @@ class ControlWeb {
                 marcas.marcasAntelacion,
             );
         } catch (error) {
-            this.gestionarError(error);
+            if (this.cargandoMarcas === peticion) {
+                this.gestionarError(error);
+            }
         }
     }
 
     async buscarAsignaturas(nombre) {
         try {
-            const matricula = await this.rest.obtenerMatricula(nombre);
+            const texto = (nombre || "").trim().toLowerCase();
+            if (
+                this.cacheMatricula
+                && this.cacheMatricula.clave === ""
+                && Date.now() - this.cacheMatricula.en < 15000
+            ) {
+                const filtradas = texto
+                    ? this.cacheMatricula.datos.asignaturas.filter((asignatura) => {
+                        const es = (asignatura.nombre || "").toLowerCase();
+                        const en = (asignatura.nombre_ingles || "").toLowerCase();
+                        return es.includes(texto) || en.includes(texto);
+                    })
+                    : this.cacheMatricula.datos.asignaturas;
+                this.vistaAgenda.pintar(
+                    filtradas,
+                    this.vistaAgenda.marcas,
+                    this.cacheMatricula.datos.horario,
+                    this.vistaAgenda.marcasAntelacion,
+                );
+                return;
+            }
+            const matricula = await this.obtenerMatriculaCacheada(nombre);
             this.vistaAgenda.pintar(
                 matricula.asignaturas,
                 this.vistaAgenda.marcas,

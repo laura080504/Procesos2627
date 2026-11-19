@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 from Servidor.Dominio.DominioEntities.asignatura import Asignatura
-from Servidor.Dominio.DominioServices.horario_esiiab import sesiones_de
+from Servidor.Dominio.DominioServices.horario_esiiab import mapa_sesiones
+from Servidor.Dominio.DominioServices.normalizar_texto import normalizar_texto
 
 
 @dataclass(frozen=True)
@@ -27,9 +28,11 @@ def franjas_de(
     """
     franjas = []
     grupos = grupos_por_codigo or {}
+    mapa = mapa_sesiones()
     for asignatura in asignaturas:
         grupo_alumno = (grupos.get(asignatura.codigo) or "").strip()
-        for dia, inicio, fin, tipo, aula, grupo in _desempaquetar(sesiones_de(asignatura.nombre)):
+        sesiones = mapa.get(normalizar_texto(asignatura.nombre), ())
+        for dia, inicio, fin, tipo, aula, grupo in _desempaquetar(sesiones):
             if grupo_alumno and grupo and grupo_alumno != grupo:
                 continue
             franjas.append(

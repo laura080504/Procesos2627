@@ -18,3 +18,7 @@ class MarcaCalendarioSalida(BaseModel):
 
     dia: int
     simbolos: list[SimboloCalendarioSalida]
+
+
+class MarcasRangoSalida(BaseModel):
+    periodos: dict[str, list[MarcaCalendarioSalida]]

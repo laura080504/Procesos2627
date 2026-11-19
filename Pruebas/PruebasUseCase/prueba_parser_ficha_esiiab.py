@@ -17,7 +17,9 @@ def prueba_el_parser_extrae_profesores_y_tutorias():
     assert "BARBA SANCHEZ, VIRGINIA" in nombres
     assert "LÓPEZ HERNÁNDEZ, ALBERTO" in nombres
     barba = next(profesor for profesor in ficha.profesores if "BARBA" in profesor.nombre)
-    assert any("Martes" in franja for franja in barba.tutorias)
+    assert any("Martes" in franja for franja in barba.tutorias_primer)
+    assert any("10:00" in franja for franja in barba.tutorias_segundo)
+    assert not any("11:15" in franja for franja in barba.tutorias_segundo)
     assert barba.url.endswith("/personal/barba-sanchez-virginia/")
 
 
