@@ -37,6 +37,14 @@ def prueba_el_parser_incluye_todos_los_grupos_e_intensificaciones():
     assert any(franja[5] == "B" and franja[0] == 0 and franja[1] == "08:15" for franja in calculo)
 
 
+def prueba_el_parser_incluye_aspectos_profesionales_sin_cabecera_grupo():
+    horario = parsear_horarios_html(OFFLINE.read_text(encoding="utf-8"))
+    aspectos = horario.sesiones["aspectos profesionales de la informatica"]
+    assert aspectos
+    assert any(franja[1] == "11:35" and franja[2] == "13:05" for franja in aspectos)
+    assert any(franja[1] == "13:05" and franja[2] == "14:35" for franja in aspectos)
+
+
 def prueba_el_cliente_refresca_desde_html_y_usa_cache():
     html = FIXTURE.read_text(encoding="utf-8")
     descargas = {"n": 0}

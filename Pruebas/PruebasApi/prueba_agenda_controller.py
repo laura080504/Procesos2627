@@ -14,28 +14,32 @@ def prueba_un_usuario_lista_y_busca_asignaturas(cliente_autenticado):
     assert busqueda.json()[0]["curso"] == "primero"
 
 
-def prueba_las_marcas_llegan_con_estrellas_delante(cliente_autenticado):
-    respuesta = cliente_autenticado.get("/api/agenda/marcas", params={"anio": 2026, "mes": 10})
+def prueba_las_marcas_no_traen_semilla_ficticia(cliente_autenticado):
+    respuesta = cliente_autenticado.get("/api/agenda/marcas", params={"anio": 2026, "mes": 11})
     assert respuesta.status_code == 200
-    marcas = {marca["dia"]: [simbolo["tipo"] for simbolo in marca["simbolos"]] for marca in respuesta.json()}
-    assert marcas[11] == ["estrella"] * 5
-    assert marcas[16] == ["estrella", "estrella", "punto"]
-    assert marcas[27] == ["estrella", "punto", "punto"]
-    simbolo = respuesta.json()[0]["simbolos"][0]
-    assert simbolo["codigo"]
-    assert simbolo["hora"]
-    assert simbolo["fecha"]
-    assert "lugar" in simbolo
+    simbolos = [simbolo for marca in respuesta.json() for simbolo in marca["simbolos"]]
+    inventados = [
+        simbolo
+        for simbolo in simbolos
+        if simbolo["tipo"] in ("estrella", "punto")
+        and simbolo.get("codigo") in {"42300", "42304", "42302", "42314"}
+        and simbolo.get("fecha", "").startswith("2026-11-")
+    ]
+    assert inventados == []
+    # Pueden quedar marcas oficiales del calendario académico (festivo, periodo…).
+    for simbolo in simbolos:
+        assert simbolo["tipo"]
+        assert simbolo["fecha"]
 
 
-def prueba_un_usuario_sin_matricula_recibe_asignaturas_de_muestra(cliente_autenticado):
+def prueba_un_usuario_sin_matricula_empieza_vacio(cliente_autenticado):
     respuesta = cliente_autenticado.get("/api/matricula")
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
-    assert len(cuerpo["asignaturas"]) == 6
-    assert len(cuerpo["horario"]) >= 1
-    assert cuerpo["creditos_aprobados"] >= 0
-    assert cuerpo["creditos_convalidados"] >= 0
+    assert cuerpo["asignaturas"] == []
+    assert cuerpo["horario"] == []
+    assert cuerpo["creditos_aprobados"] == 0
+    assert cuerpo["creditos_convalidados"] == 0
 
 
 def prueba_profesor_publica_evento_y_aparece_en_marcas(cliente, administrador, usuario_registrado):

@@ -31,17 +31,47 @@ def prueba_el_horario_reproduce_el_grupo_a_de_la_esiiab():
         assert franja.grupo == "A"
 
 
-def prueba_el_horario_de_laura_cruza_matricula_con_su_grupo():
+def prueba_el_horario_cruza_matricula_con_grupo_esiiab():
+    asignaturas = _catalogo()
+    matriculas = RepositorioMatriculasMemoria()
+    # Solo 1º cuatrimestre: en noviembre el horario filtra por periodo vigente.
+    codigos = ["42314", "42322", "42324"]
+    grupos = {"42314": "A", "42322": "B", "42324": "B"}
+    matriculas.reemplazar_alumno("alumno@ejemplo.com", codigos, grupos)
+    resultado = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar("alumno@ejemplo.com")
+    assert {franja.codigo for franja in resultado.horario} == set(codigos)
+    for franja in resultado.horario:
+        assert franja.grupo == grupos[franja.codigo]
+    distribuidos = [franja for franja in resultado.horario if franja.codigo == "42322"]
+    assert distribuidos and all(franja.grupo == "B" for franja in distribuidos)
+    software = [franja for franja in resultado.horario if franja.codigo == "42314"]
+    assert software and all(franja.grupo == "A" for franja in software)
+    assert any(franja.dia == 3 and franja.inicio == "11:35" and franja.fin == "13:05" for franja in software)
+
+
+def prueba_laura_guarda_grupos_oficiales_de_campus():
     asignaturas = _catalogo()
     matriculas = RepositorioMatriculasMemoria()
     matriculas.reemplazar_alumno(EMAIL_LAURA, list(CODIGOS_LAURA), dict(GRUPOS_LAURA))
     resultado = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar(EMAIL_LAURA)
-    assert {franja.codigo for franja in resultado.horario} == set(CODIGOS_LAURA)
-    for franja in resultado.horario:
-        assert franja.grupo == GRUPOS_LAURA[franja.codigo]
-    algebra = [franja for franja in resultado.horario if franja.codigo == "42305"]
-    assert algebra and all(franja.grupo == "B" for franja in algebra)
-    assert any(franja.dia == 4 and franja.inicio == "08:15" and franja.tipo == "teoria" for franja in algebra)
-    software = [franja for franja in resultado.horario if franja.codigo == "42314"]
-    assert software and all(franja.grupo == "A" for franja in software)
-    assert any(franja.dia == 3 and franja.inicio == "11:35" and franja.fin == "13:05" for franja in software)
+    assert {asignatura.codigo for asignatura in resultado.asignaturas} == set(CODIGOS_LAURA)
+    assert {asignatura.codigo: asignatura.grupo for asignatura in resultado.asignaturas} == dict(GRUPOS_LAURA)
+
+
+def prueba_laura_ve_horario_traduciendo_grupos_de_campus():
+    asignaturas = _catalogo()
+    matriculas = RepositorioMatriculasMemoria()
+    matriculas.reemplazar_alumno(EMAIL_LAURA, list(CODIGOS_LAURA), dict(GRUPOS_LAURA))
+    resultado = ObtenerMatriculaUseCase(matriculas, asignaturas).ejecutar(EMAIL_LAURA)
+    por_codigo = {franja.codigo for franja in resultado.horario}
+    # En noviembre (1º cuatri) solo salen asignaturas de ese cuatrimestre.
+    assert {"42322", "42324", "42330", "42332", "42333"} <= por_codigo
+    assert "42305" not in por_codigo
+    assert "42326" not in por_codigo
+    assert "42366" not in por_codigo
+    # La lista de matrícula sigue completa.
+    assert {asignatura.codigo for asignatura in resultado.asignaturas} == set(CODIGOS_LAURA)
+    distribuidos = [franja for franja in resultado.horario if franja.codigo == "42322"]
+    assert distribuidos and all(franja.grupo == "B" for franja in distribuidos)
+    procesos = [franja for franja in resultado.horario if franja.codigo == "42330"]
+    assert procesos and all(franja.grupo == "ING. SOFTWARE" for franja in procesos)

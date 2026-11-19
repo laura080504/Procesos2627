@@ -83,3 +83,6 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
                 },
                 upsert=True,
             )
+
+    def vaciar_todos_excepto(self, email: str) -> None:
+        self.base_datos.coleccion("matricula").delete_many({"email": {"$ne": email.strip().lower()}})

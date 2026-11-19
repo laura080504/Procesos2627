@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import (
     crear_crear_evento_use_case,
+    crear_guardar_matricula_use_case,
     crear_listar_asignaturas_use_case,
     crear_obtener_marcas_calendario_use_case,
     crear_obtener_matricula_use_case,
@@ -16,6 +17,7 @@ from Servidor.ApiRest.ApiRestSchemas.asignatura_salida import AsignaturaSalida
 from Servidor.ApiRest.ApiRestSchemas.evento_entrada import EventoEntrada
 from Servidor.ApiRest.ApiRestSchemas.evento_salida import EventoSalida
 from Servidor.ApiRest.ApiRestSchemas.marca_calendario_salida import MarcaCalendarioSalida, MarcasRangoSalida
+from Servidor.ApiRest.ApiRestSchemas.matricula_entrada import MatriculaEntrada
 from Servidor.ApiRest.ApiRestSchemas.matricula_salida import MatriculaSalida
 from Servidor.ApiWs.gestor_conexiones import gestor
 from Servidor.Dominio.DominioCommands.crear_evento_command import CrearEventoCommand
@@ -24,6 +26,10 @@ from Servidor.Dominio.DominioExceptions.estado_no_valido import EstadoNoValido
 from Servidor.Dominio.DominioQueries.listar_asignaturas_query import ListarAsignaturasQuery
 from Servidor.Dominio.DominioQueries.obtener_marcas_calendario_query import ObtenerMarcasCalendarioQuery
 from Servidor.Dominio.DominioUseCases.crear_evento_use_case import CrearEventoUseCase
+from Servidor.Dominio.DominioUseCases.guardar_matricula_use_case import (
+    AsignaturaMatriculaEntrada,
+    GuardarMatriculaUseCase,
+)
 from Servidor.Dominio.DominioUseCases.listar_asignaturas_use_case import ListarAsignaturasUseCase
 from Servidor.Dominio.DominioUseCases.obtener_marcas_calendario_use_case import ObtenerMarcasCalendarioUseCase
 from Servidor.Dominio.DominioUseCases.obtener_matricula_use_case import ObtenerMatriculaUseCase
@@ -48,6 +54,24 @@ def obtener_matricula(
     use_case: ObtenerMatriculaUseCase = Depends(crear_obtener_matricula_use_case),
 ):
     return use_case.ejecutar(usuario.email, nombre)
+
+
+@router.put("/api/matricula", response_model=MatriculaSalida)
+def guardar_matricula(
+    cuerpo: MatriculaEntrada,
+    usuario: Usuario = Depends(obtener_usuario_actual),
+    use_case: GuardarMatriculaUseCase = Depends(crear_guardar_matricula_use_case),
+):
+    try:
+        return use_case.ejecutar(
+            usuario.email,
+            [
+                AsignaturaMatriculaEntrada(asignatura.codigo, asignatura.grupo)
+                for asignatura in cuerpo.asignaturas
+            ],
+        )
+    except EstadoNoValido as error:
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
 
 
 @router.get("/api/agenda/marcas", response_model=list[MarcaCalendarioSalida])

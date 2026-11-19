@@ -51,6 +51,7 @@ class ControlWeb {
             alVolverAgenda: () => this.mostrarAgenda(),
             alCambiarPreferenciasAvisos: (preferencias) => this.cambiarPreferenciasAvisos(preferencias),
             alCrearEvento: (datos) => this.crearEventoProfesor(datos),
+            alGuardarMatricula: (asignaturas) => this.guardarMatriculaAlumno(asignaturas),
         });
         this.vistaAgenda = new VistaAgenda({
             alBuscar: (nombre) => this.buscarAsignaturas(nombre),
@@ -670,11 +671,47 @@ class ControlWeb {
         }
     }
 
+    async guardarMatriculaAlumno(asignaturas) {
+        if (!asignaturas || !asignaturas.length) {
+            this.mostrarMensaje(this.textos.matriculaVacia, true);
+            return;
+        }
+        try {
+            const matricula = await this.rest.guardarMatricula(asignaturas);
+            this.matricula = matricula;
+            this.cacheMatricula = { clave: "", datos: matricula, en: Date.now() };
+            this.invalidarCacheMarcas();
+            this.vistaUsuarios.cerrarEditorMatricula();
+            this.vistaUsuarios.pintar(
+                [this.usuarioActual],
+                this.usuarioActual.email,
+                this.usuarioActual.rol,
+                matricula,
+            );
+            if (!this.vistaAgenda.seccion.hidden) {
+                this.vistaAgenda.pintar(
+                    matricula.asignaturas,
+                    this.vistaAgenda.marcas,
+                    matricula.horario,
+                    this.vistaAgenda.marcasAntelacion,
+                );
+            }
+            this.mostrarMensaje(this.textos.matriculaGuardada);
+            this.cargarMarcas().catch(() => {});
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
     async refrescarUsuarios() {
         const esGestion = this.esGestion(this.usuarioActual.rol);
         if (!esGestion) {
             try {
                 this.matricula = await this.rest.obtenerMatricula("");
+                this.cacheMatricula = { clave: "", datos: this.matricula, en: Date.now() };
+                if (!this.vistaUsuarios.catalogoAsignaturas.length) {
+                    this.vistaUsuarios.cargarCatalogoAsignaturas(await this.rest.listarAsignaturas(""));
+                }
             } catch (error) {
                 this.gestionarError(error);
                 return;

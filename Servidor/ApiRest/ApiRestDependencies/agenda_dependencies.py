@@ -5,6 +5,7 @@ from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
     obtener_repositorio_matriculas,
 )
 from Servidor.Dominio.DominioUseCases.crear_evento_use_case import CrearEventoUseCase
+from Servidor.Dominio.DominioUseCases.guardar_matricula_use_case import GuardarMatriculaUseCase
 from Servidor.Dominio.DominioUseCases.listar_asignaturas_use_case import ListarAsignaturasUseCase
 from Servidor.Dominio.DominioUseCases.obtener_marcas_calendario_use_case import ObtenerMarcasCalendarioUseCase
 from Servidor.Dominio.DominioUseCases.obtener_matricula_use_case import ObtenerMatriculaUseCase
@@ -21,6 +22,11 @@ _obtener_matricula = ObtenerMatriculaUseCase(
     obtener_repositorio_asignaturas(),
     obtener_cliente_horarios_esiiab(),
 )
+_guardar_matricula = GuardarMatriculaUseCase(
+    obtener_repositorio_matriculas(),
+    obtener_repositorio_asignaturas(),
+    _obtener_matricula,
+)
 _crear_evento = CrearEventoUseCase(obtener_repositorio_eventos(), obtener_repositorio_asignaturas())
 
 
@@ -34,6 +40,10 @@ def crear_obtener_marcas_calendario_use_case() -> ObtenerMarcasCalendarioUseCase
 
 def crear_obtener_matricula_use_case() -> ObtenerMatriculaUseCase:
     return _obtener_matricula
+
+
+def crear_guardar_matricula_use_case() -> GuardarMatriculaUseCase:
+    return _guardar_matricula
 
 
 def crear_crear_evento_use_case() -> CrearEventoUseCase:
