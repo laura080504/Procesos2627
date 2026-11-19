@@ -22,13 +22,30 @@ _RE_DIA = re.compile(
     r"(Lunes|Martes|Mi[eé]rcoles|Jueves|Viernes|S[aá]bado|Domingo)\s*:\s*\d{1,2}:\d{2}\s*[-–—]\s*\d{1,2}:\d{2}",
     re.IGNORECASE,
 )
+_RE_SEGUNDO = re.compile(r"Segundo\s+[Cc]uatrimestre", re.IGNORECASE)
+_RE_PRIMER = re.compile(r"Primer\s+[Cc]uatrimestre", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
 class ProfesorEsiiab:
     nombre: str
     url: str
-    tutorias: tuple[str, ...] = ()
+    tutorias_primer: tuple[str, ...] = ()
+    tutorias_segundo: tuple[str, ...] = ()
+
+    @property
+    def tutorias(self) -> tuple[str, ...]:
+        """Compat: todas las franjas (útil en tests legacy). Preferir tutorias_de()."""
+        vistos: list[str] = []
+        for franja in (*self.tutorias_primer, *self.tutorias_segundo):
+            if franja not in vistos:
+                vistos.append(franja)
+        return tuple(vistos)
+
+    def tutorias_de(self, cuatrimestre: int) -> tuple[str, ...]:
+        if cuatrimestre == 2:
+            return self.tutorias_segundo
+        return self.tutorias_primer
 
 
 @dataclass(frozen=True)
@@ -43,19 +60,28 @@ def parsear_ficha_html(html: str, url: str = "") -> FichaEsiiab:
     codigo = _codigo_de(html)
     nombre = _nombre_de(html)
     profesores = _profesores_de(html)
-    tutorias = _tutorias_por_profesor(html)
+    primer, segundo = _tutorias_por_cuatrimestre(html)
     enriquecidos = []
     for profesor in profesores:
         clave = normalizar_texto(profesor.nombre)
         enriquecidos.append(
-            ProfesorEsiiab(profesor.nombre, profesor.url, tutorias.get(clave, ()))
-        )
-    if not enriquecidos and tutorias:
-        enriquecidos = [
-            ProfesorEsiiab(nombre=nombre_prof, url="", tutorias=franjas)
-            for nombre_prof, franjas in (
-                (_nombre_desde_clave(clave), valores) for clave, valores in tutorias.items()
+            ProfesorEsiiab(
+                profesor.nombre,
+                profesor.url,
+                primer.get(clave, ()),
+                segundo.get(clave, ()),
             )
+        )
+    if not enriquecidos and (primer or segundo):
+        claves = set(primer) | set(segundo)
+        enriquecidos = [
+            ProfesorEsiiab(
+                _nombre_desde_clave(clave),
+                "",
+                primer.get(clave, ()),
+                segundo.get(clave, ()),
+            )
+            for clave in claves
         ]
     return FichaEsiiab(codigo, nombre, url, tuple(enriquecidos))
 
@@ -90,8 +116,23 @@ def _profesores_de(html: str) -> list[ProfesorEsiiab]:
     return resultado
 
 
-def _tutorias_por_profesor(html: str) -> dict[str, tuple[str, ...]]:
-    """Une las franjas de ambos cuatrimestres por nombre de profesor."""
+def _tutorias_por_cuatrimestre(html: str) -> tuple[dict[str, tuple[str, ...]], dict[str, tuple[str, ...]]]:
+    """Separa las franjas del primer y del segundo cuatrimestre."""
+    corte = _RE_SEGUNDO.search(html)
+    if corte:
+        html_primer = html[: corte.start()]
+        html_segundo = html[corte.start() :]
+        # Si no hay cabecera de primer cuatri, lo anterior al segundo sigue siendo el primero.
+        return _tutorias_en_bloque(html_primer), _tutorias_en_bloque(html_segundo)
+
+    if _RE_PRIMER.search(html):
+        return _tutorias_en_bloque(html), {}
+    # Sin marcas de cuatrimestre: se asumen vigentes para ambos hasta que haya ficha completa.
+    unicas = _tutorias_en_bloque(html)
+    return unicas, unicas
+
+
+def _tutorias_en_bloque(html: str) -> dict[str, tuple[str, ...]]:
     acumulado: dict[str, list[str]] = {}
     for bloque in _RE_BLOQUE_TUTORIAS.finditer(html):
         clave = normalizar_texto(unescape(bloque.group(1)))

@@ -119,10 +119,10 @@ body.con-agenda .herramientas {
 
 .agenda-cuerpo {
     display: grid;
-    grid-template-columns: minmax(260px, 0.72fr) minmax(460px, 1.35fr);
+    grid-template-columns: minmax(240px, 0.62fr) minmax(520px, 1.55fr);
     gap: 1.15rem;
     align-items: start;
-    width: min(1100px, calc(100% - 2rem));
+    width: min(1240px, calc(100% - 2rem));
     margin: 0.9rem auto 2.6rem;
     padding: 0;
 }
@@ -563,17 +563,78 @@ body.con-agenda .herramientas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 4.7rem;
-    padding: 0.28rem 0.12rem 0.35rem;
+    min-height: 3.35rem;
+    padding: 0.2rem 0.1rem 0.28rem;
 }
 
 .dia.otro {
     opacity: 0.38;
 }
 
+.dia.finde {
+    border-radius: 10px;
+    background: rgba(90, 90, 98, 0.1);
+}
+
+.dia.finde.otro {
+    background: rgba(90, 90, 98, 0.06);
+}
+
 .dia.semana-hoy {
     border-radius: 10px;
     background: rgba(157, 24, 48, 0.08);
+}
+
+.dia.finde.semana-hoy {
+    background: linear-gradient(180deg, rgba(90, 90, 98, 0.1), rgba(157, 24, 48, 0.08));
+}
+
+.dia.dia-cambio-cuatri {
+    border-radius: 10px;
+    background: rgba(12, 122, 112, 0.18);
+}
+
+.dia.dia-festivo,
+.dia.dia-vacaciones {
+    border-radius: 10px;
+    background: rgba(108, 52, 131, 0.14);
+}
+
+.dia.dia-periodo {
+    border-radius: 10px;
+    background: rgba(157, 24, 48, 0.12);
+}
+
+.dia.dia-cambio-cuatri.dia-periodo {
+    background: linear-gradient(90deg, rgba(12, 122, 112, 0.2), rgba(157, 24, 48, 0.12));
+}
+
+.dia.dia-festivo.dia-periodo,
+.dia.dia-vacaciones.dia-periodo {
+    background: linear-gradient(90deg, rgba(108, 52, 131, 0.16), rgba(157, 24, 48, 0.12));
+}
+
+.marca-periodo {
+    display: inline-grid;
+    place-items: center;
+    min-width: 0.85rem;
+    height: 0.85rem;
+    padding: 0 0.15rem;
+    border-radius: 3px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background: #6c3483;
+}
+
+.marca-periodo.marca-cambio_cuatrimestre {
+    background: #0c7a70;
+}
+
+.marca-periodo.marca-semana_examenes,
+.marca-periodo.marca-periodo {
+    background: var(--rojo-logo);
 }
 
 .numero {
@@ -593,11 +654,12 @@ body.con-agenda .herramientas {
 
 .marcas {
     display: flex;
-    flex-direction: column;
+    flex-flow: row wrap;
+    justify-content: center;
     align-items: center;
-    gap: 2px;
+    gap: 2px 3px;
     width: 100%;
-    margin-top: 0.12rem;
+    margin-top: 0.08rem;
 }
 
 .fila-marcas {
@@ -668,8 +730,23 @@ body.con-agenda .herramientas {
     height: 7px;
 }
 
+.leyenda-icono.cambio-cuatri {
+    border-radius: 3px;
+    background: #0c7a70;
+}
+
+.leyenda-icono.festivo {
+    border-radius: 3px;
+    background: #6c3483;
+}
+
+.leyenda-icono.semana-examenes {
+    border-radius: 3px;
+    background: var(--rojo-logo);
+}
+
 .dialogo-dia {
-    width: min(22rem, calc(100vw - 2rem));
+    width: min(44rem, calc(100vw - 2rem));
     border: 0;
     border-radius: 16px;
     padding: 0;
@@ -827,44 +904,62 @@ body.con-agenda .herramientas {
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 0.75rem;
-    max-height: min(50vh, 22rem);
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 0.7rem;
+    max-height: min(48vh, 20rem);
     overflow: auto;
 }
 
 .actividad-dia {
-    padding: 0.7rem 0.8rem;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+    padding: 0.65rem 0.9rem;
     border-radius: 12px;
     background: #f8eef0;
+    min-width: 0;
 }
 
 .actividad-cabecera {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     gap: 0.4rem 0.55rem;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 .actividad-cabecera .estrella {
     width: 11px;
     height: 11px;
+    flex: 0 0 auto;
 }
 
 .actividad-cabecera .punto {
     width: 7px;
     height: 7px;
+    flex: 0 0 auto;
+}
+
+.actividad-cabecera strong {
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .actividad-nombre {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
+    min-width: 0;
     font-weight: 500;
 }
 
 .actividad-detalle {
-    margin: 0.35rem 0 0;
+    margin: 0;
     color: #6d5a5e;
-    font-size: 0.86rem;
+    font-size: 0.84rem;
+    white-space: nowrap;
 }
 
 .sin-actividades {
@@ -891,8 +986,29 @@ body.oscuro .horario-dia.hoy header {
 }
 
 body.oscuro .horario-dia.hoy .horario-pista,
+body.oscuro .dia.finde {
+    background: rgba(160, 160, 170, 0.16);
+}
+
 body.oscuro .dia.semana-hoy {
     background-color: rgba(157, 24, 48, 0.28);
+}
+
+body.oscuro .dia.finde.semana-hoy {
+    background: linear-gradient(180deg, rgba(160, 160, 170, 0.14), rgba(157, 24, 48, 0.24));
+}
+
+body.oscuro .dia.dia-cambio-cuatri {
+    background: rgba(36, 168, 156, 0.28);
+}
+
+body.oscuro .dia.dia-festivo,
+body.oscuro .dia.dia-vacaciones {
+    background: rgba(156, 89, 182, 0.28);
+}
+
+body.oscuro .dia.dia-periodo {
+    background: rgba(157, 24, 48, 0.24);
 }
 
 body.oscuro .horario-pista {

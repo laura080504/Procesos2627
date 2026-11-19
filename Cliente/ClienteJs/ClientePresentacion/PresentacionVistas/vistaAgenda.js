@@ -4,7 +4,7 @@ const VistaAgenda = (() => {
     const TONOS_FRANJA = ["#9d1830", "#7a1528", "#c45c6c", "#5c101c", "#a33d4e", "#8e3044"];
 
     class VistaAgenda {
-        constructor({ alBuscar, alAbrirPerfil, alCambiarTema, alCambiarIdioma, alLeer, alCambiarMes }) {
+        constructor({ alBuscar, alAbrirPerfil, alCambiarTema, alCambiarIdioma, alLeer, alCambiarMes, alAbrirAsignatura }) {
             this.seccion = document.getElementById("vistaAgenda");
             this.lista = document.getElementById("listaAsignaturas");
             this.vacio = document.getElementById("sinAsignaturas");
@@ -44,6 +44,7 @@ const VistaAgenda = (() => {
             this.vista = new Date(this.hoy.getFullYear(), this.hoy.getMonth(), 1);
             this.alBuscar = alBuscar;
             this.alCambiarMes = alCambiarMes;
+            this.alAbrirAsignatura = alAbrirAsignatura;
             this.temporizador = null;
             document.getElementById("botonPerfil").addEventListener("click", alAbrirPerfil);
             document.getElementById("botonTemaAgenda").addEventListener("click", alCambiarTema);
@@ -101,6 +102,15 @@ const VistaAgenda = (() => {
             if (iconos[1]) {
                 iconos[1].classList.add("punto");
             }
+            if (iconos[2]) {
+                iconos[2].classList.add("cambio-cuatri");
+            }
+            if (iconos[3]) {
+                iconos[3].classList.add("festivo");
+            }
+            if (iconos[4]) {
+                iconos[4].classList.add("semana-examenes");
+            }
         }
 
         mostrar(usuario, textos) {
@@ -117,9 +127,6 @@ const VistaAgenda = (() => {
             this.preferenciasAvisos = PreferenciasNotificaciones.leer();
             this.aplicarPreferenciasAvisos(this.preferenciasAvisos);
             this.rellenarSelectores();
-            this.pintarCalendario();
-            this.pintarHorario();
-            this.actualizarAvisos();
             this.iniciarReloj();
         }
 
@@ -190,8 +197,9 @@ const VistaAgenda = (() => {
             if (marcasAntelacion !== undefined) {
                 this.marcasAntelacion = marcasAntelacion;
             }
-            if (horario) {
-                this.horario = horario;
+            const horarioCambio = horario !== undefined;
+            if (horarioCambio) {
+                this.horario = horario || [];
             }
             if (this.abierta) {
                 const sigue = asignaturas.find((asignatura) => asignatura.codigo === this.abierta.codigo);
@@ -202,13 +210,17 @@ const VistaAgenda = (() => {
                 this.abierta = sigue;
                 this.pintarFicha();
                 this.pintarCalendario();
-                this.pintarHorario();
+                if (horarioCambio) {
+                    this.pintarHorario();
+                }
                 this.actualizarAvisos();
                 return;
             }
             this.pintarLista();
             this.pintarCalendario();
-            this.pintarHorario();
+            if (horarioCambio) {
+                this.pintarHorario();
+            }
             this.actualizarAvisos();
         }
 
@@ -339,14 +351,14 @@ const VistaAgenda = (() => {
             const diasPrevios = new Date(anio, mes, 0).getDate();
             const primeraCelda = new Date(anio, mes, 1 - inicio);
 
-            this.rejilla.replaceChildren();
+            const fragmento = document.createDocumentFragment();
             for (let indice = 0; indice < 42; indice += 1) {
                 const fechaCelda = new Date(
                     primeraCelda.getFullYear(),
                     primeraCelda.getMonth(),
                     primeraCelda.getDate() + indice,
                 );
-                const celda = this.crearCeldaDia({
+                fragmento.append(this.crearCeldaDia({
                     indice,
                     inicio,
                     diasMes,
@@ -357,9 +369,9 @@ const VistaAgenda = (() => {
                     lunesSemana,
                     despuesSemana,
                     marcasPorDia,
-                });
-                this.rejilla.append(celda);
+                }));
             }
+            this.rejilla.replaceChildren(fragmento);
         }
 
         pintarCabeceraSemana() {
@@ -406,6 +418,10 @@ const VistaAgenda = (() => {
             if (fechaCelda >= lunesSemana && fechaCelda < despuesSemana) {
                 celda.classList.add("semana-hoy");
             }
+            const diaSemana = fechaCelda.getDay();
+            if (diaSemana === 0 || diaSemana === 6) {
+                celda.classList.add("finde");
+            }
 
             numero.textContent = String(diaMes);
             const esHoy = deEsteMes
@@ -433,14 +449,43 @@ const VistaAgenda = (() => {
             estrellas.className = "fila-marcas";
             puntos.className = "fila-marcas";
 
+            if (simbolos.some((simbolo) => simbolo.tipo === "cambio_cuatrimestre")) {
+                celda.classList.add("dia-cambio-cuatri");
+            }
+            if (simbolos.some((simbolo) => simbolo.tipo === "festivo")) {
+                celda.classList.add("dia-festivo");
+            }
+            if (simbolos.some((simbolo) => simbolo.tipo === "vacaciones")) {
+                celda.classList.add("dia-vacaciones");
+            }
+            if (simbolos.some((simbolo) => simbolo.tipo === "semana_examenes" || simbolo.tipo === "periodo")) {
+                celda.classList.add("dia-periodo");
+            }
+
             simbolos.forEach((simbolo) => {
-                const icono = simbolo.tipo === "estrella" ? iconoEstrella() : iconoPunto();
                 const nombre = ingles ? simbolo.nombre_ingles : simbolo.nombre;
-                const etiqueta = simbolo.tipo === "estrella" ? this.textos.examen : this.textos.entrega;
-                icono.dataset.tipo = simbolo.tipo;
-                icono.dataset.nombre = nombre;
-                icono.setAttribute("title", `${etiqueta}: ${nombre}`);
-                (simbolo.tipo === "estrella" ? estrellas : puntos).append(icono);
+                if (simbolo.tipo === "estrella" || simbolo.tipo === "punto") {
+                    const icono = simbolo.tipo === "estrella" ? iconoEstrella() : iconoPunto();
+                    const etiqueta = simbolo.tipo === "estrella" ? this.textos.examen : this.textos.entrega;
+                    icono.dataset.tipo = simbolo.tipo;
+                    icono.dataset.nombre = nombre;
+                    icono.setAttribute("title", `${etiqueta}: ${nombre}`);
+                    (simbolo.tipo === "estrella" ? estrellas : puntos).append(icono);
+                    return;
+                }
+                const pastilla = document.createElement("span");
+                pastilla.className = `marca-periodo marca-${simbolo.tipo}`;
+                pastilla.dataset.tipo = simbolo.tipo;
+                pastilla.dataset.nombre = nombre;
+                pastilla.setAttribute("title", nombre);
+                if (simbolo.tipo === "cambio_cuatrimestre") {
+                    pastilla.textContent = this.textos.abrevCambioCuatri || "C";
+                } else if (simbolo.tipo === "festivo" || simbolo.tipo === "vacaciones") {
+                    pastilla.textContent = this.textos.abrevFestivo || "F";
+                } else {
+                    pastilla.textContent = this.textos.abrevPeriodo || "P";
+                }
+                marcasNodo.append(pastilla);
             });
 
             if (estrellas.childNodes.length) {
@@ -483,23 +528,33 @@ const VistaAgenda = (() => {
                         item.className = "actividad-dia";
                         const cabecera = document.createElement("div");
                         cabecera.className = "actividad-cabecera";
-                        const icono = simbolo.tipo === "estrella" ? iconoEstrella() : iconoPunto();
                         const tipo = document.createElement("strong");
-                        tipo.textContent = simbolo.tipo === "estrella" ? this.textos.examen : this.textos.entrega;
+                        tipo.textContent = this.etiquetaSimbolo(simbolo.tipo);
                         const nombre = document.createElement("span");
                         nombre.className = "actividad-nombre";
-                        nombre.textContent = ingles ? simbolo.nombre_ingles : simbolo.nombre;
-                        cabecera.append(icono, tipo, nombre);
-                        const detalle = document.createElement("p");
-                        detalle.className = "actividad-detalle";
+                        const textoNombre = ingles ? simbolo.nombre_ingles : simbolo.nombre;
+                        nombre.textContent = textoNombre;
+                        if (simbolo.tipo === "estrella" || simbolo.tipo === "punto") {
+                            const icono = simbolo.tipo === "estrella" ? iconoEstrella() : iconoPunto();
+                            cabecera.append(icono, tipo, nombre);
+                        } else {
+                            cabecera.append(tipo, nombre);
+                        }
+                        item.append(cabecera);
+                        let detalleTexto = "";
                         if (simbolo.tipo === "estrella") {
-                            detalle.textContent = simbolo.lugar
+                            detalleTexto = simbolo.lugar
                                 ? `${simbolo.hora} · ${simbolo.lugar}`
                                 : simbolo.hora;
-                        } else {
-                            detalle.textContent = `${this.textos.hastaLas} ${simbolo.hora}`;
+                        } else if (simbolo.tipo === "punto") {
+                            detalleTexto = `${this.textos.hastaLas} ${simbolo.hora}`;
                         }
-                        item.append(cabecera, detalle);
+                        if (detalleTexto && detalleTexto !== textoNombre) {
+                            const detalle = document.createElement("p");
+                            detalle.className = "actividad-detalle";
+                            detalle.textContent = detalleTexto;
+                            item.append(detalle);
+                        }
                         this.listaDialogo.append(item);
                     });
             }
@@ -512,10 +567,20 @@ const VistaAgenda = (() => {
 
         filtrarMarcas(marcas) {
             const codigos = new Set(this.asignaturas.map((asignatura) => asignatura.codigo));
+            const academicos = new Set([
+                "festivo",
+                "vacaciones",
+                "periodo",
+                "semana_examenes",
+                "cambio_cuatrimestre",
+            ]);
             return (marcas || [])
                 .map((marca) => ({
                     dia: marca.dia,
                     simbolos: (marca.simbolos || []).filter((simbolo) => {
+                        if (academicos.has(simbolo.tipo) || simbolo.codigo === "calendario") {
+                            return !this.abierta;
+                        }
                         if (this.abierta) {
                             return simbolo.codigo === this.abierta.codigo;
                         }
@@ -523,6 +588,25 @@ const VistaAgenda = (() => {
                     }),
                 }))
                 .filter((marca) => marca.simbolos.length);
+        }
+
+        etiquetaSimbolo(tipo) {
+            if (tipo === "estrella") {
+                return this.textos.examen;
+            }
+            if (tipo === "punto") {
+                return this.textos.entrega;
+            }
+            if (tipo === "cambio_cuatrimestre") {
+                return this.textos.leyendaCambioCuatri || "Cambio de cuatrimestre";
+            }
+            if (tipo === "festivo" || tipo === "vacaciones") {
+                return this.textos.leyendaFestivo || "Festivo";
+            }
+            if (tipo === "semana_examenes") {
+                return this.textos.leyendaSemanaExamenes || "Exámenes";
+            }
+            return this.textos.leyendaPeriodo || "Calendario";
         }
 
         abrirAsignatura(asignatura) {
@@ -534,6 +618,9 @@ const VistaAgenda = (() => {
             this.pintarFicha();
             this.pintarCalendario();
             this.pintarHorario();
+            if (typeof this.alAbrirAsignatura === "function") {
+                this.alAbrirAsignatura(asignatura);
+            }
         }
 
         cerrarAsignatura() {

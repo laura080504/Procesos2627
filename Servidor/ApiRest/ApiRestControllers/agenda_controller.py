@@ -8,13 +8,14 @@ from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import (
     crear_listar_asignaturas_use_case,
     crear_obtener_marcas_calendario_use_case,
     crear_obtener_matricula_use_case,
+    invalidar_cache_marcas,
 )
 from Servidor.ApiRest.ApiRestDependencies.auth_dependencies import obtener_usuario_actual
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import obtener_repositorio_asignaturas
 from Servidor.ApiRest.ApiRestSchemas.asignatura_salida import AsignaturaSalida
 from Servidor.ApiRest.ApiRestSchemas.evento_entrada import EventoEntrada
 from Servidor.ApiRest.ApiRestSchemas.evento_salida import EventoSalida
-from Servidor.ApiRest.ApiRestSchemas.marca_calendario_salida import MarcaCalendarioSalida
+from Servidor.ApiRest.ApiRestSchemas.marca_calendario_salida import MarcaCalendarioSalida, MarcasRangoSalida
 from Servidor.ApiRest.ApiRestSchemas.matricula_salida import MatriculaSalida
 from Servidor.ApiWs.gestor_conexiones import gestor
 from Servidor.Dominio.DominioCommands.crear_evento_command import CrearEventoCommand
@@ -60,6 +61,20 @@ def obtener_marcas(
     return use_case.ejecutar(ObtenerMarcasCalendarioQuery(anio or hoy.year, mes or hoy.month))
 
 
+@router.get("/api/agenda/marcas-rango", response_model=MarcasRangoSalida)
+def obtener_marcas_rango(
+    anio: int | None = None,
+    mes: int | None = Query(default=None, ge=1, le=12),
+    cantidad: int = Query(default=1, ge=1, le=14),
+    _: Usuario = Depends(obtener_usuario_actual),
+    use_case: ObtenerMarcasCalendarioUseCase = Depends(crear_obtener_marcas_calendario_use_case),
+):
+    hoy = date.today()
+    return MarcasRangoSalida(
+        periodos=use_case.ejecutar_rango(anio or hoy.year, mes or hoy.month, cantidad)
+    )
+
+
 @router.post("/api/eventos", response_model=EventoSalida, status_code=status.HTTP_201_CREATED)
 async def crear_evento(
     cuerpo: EventoEntrada,
@@ -81,6 +96,7 @@ async def crear_evento(
     except EstadoNoValido as error:
         return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
 
+    invalidar_cache_marcas()
     asignatura = next(
         (item for item in repositorio_asignaturas.obtener_todas() if item.codigo == evento.codigo),
         None,

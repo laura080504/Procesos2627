@@ -17,6 +17,11 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from Servidor.Dominio.DominioServices.normalizar_texto import normalizar_texto
+from Servidor.Dominio.DominioServices.parser_calendario_esiiab import (
+    CalendarioAcademicoEsiiab,
+    parsear_calendario_html,
+)
+from Servidor.Dominio.DominioServices.parser_examenes_esiiab import ExamenesEsiiab, parsear_examenes_html
 from Servidor.Dominio.DominioServices.parser_ficha_esiiab import FichaEsiiab, parsear_ficha_html
 from Servidor.Dominio.DominioServices.parser_horarios_esiiab import (
     HorarioPublicoEsiiab,
@@ -25,14 +30,13 @@ from Servidor.Dominio.DominioServices.parser_horarios_esiiab import (
 )
 
 URL_HORARIOS_ESIIAB = "https://esiiab.uclm.es/horarios/"
+URL_CALENDARIO_ESIIAB = "https://esiiab.uclm.es/calendario-academico/"
+URL_EXAMENES_ESIIAB = "https://esiiab.uclm.es/examenes/"
 TTL_POR_DEFECTO_SEGUNDOS = 5 * 60
-HTML_OFFLINE = (
-    Path(__file__).resolve().parents[2]
-    / "Pruebas"
-    / "PruebasUseCase"
-    / "fixtures"
-    / "horarios_esiiab_offline.html"
-)
+_FIXTURES = Path(__file__).resolve().parents[2] / "Pruebas" / "PruebasUseCase" / "fixtures"
+HTML_OFFLINE = _FIXTURES / "horarios_esiiab_offline.html"
+HTML_CALENDARIO_OFFLINE = _FIXTURES / "calendario_academico_esiiab_offline.html"
+HTML_EXAMENES_OFFLINE = _FIXTURES / "examenes_esiiab_offline.html"
 
 _log = logging.getLogger(__name__)
 
@@ -45,12 +49,20 @@ class ClienteHorariosEsiiab:
         vivo: bool = True,
         descargar: Callable[[str], str] | None = None,
         html_offline: Path | None = HTML_OFFLINE,
+        url_calendario: str = URL_CALENDARIO_ESIIAB,
+        url_examenes: str = URL_EXAMENES_ESIIAB,
+        html_calendario_offline: Path | None = HTML_CALENDARIO_OFFLINE,
+        html_examenes_offline: Path | None = HTML_EXAMENES_OFFLINE,
     ) -> None:
         self.url = url
+        self.url_calendario = url_calendario
+        self.url_examenes = url_examenes
         self.ttl_segundos = max(30, ttl_segundos)
         self.vivo = vivo
         self._descargar = descargar or _descargar_html
         self._html_offline = html_offline
+        self._html_calendario_offline = html_calendario_offline
+        self._html_examenes_offline = html_examenes_offline
         self._candado = threading.Lock()
         self._horario: HorarioPublicoEsiiab | None = None
         self._caduca_en = 0.0
@@ -130,15 +142,26 @@ class ClienteHorariosEsiiab:
                     return self._horario
                 return HorarioPublicoEsiiab({}, {}, ())
 
+    def calendario(self) -> CalendarioAcademicoEsiiab:
+        html = self._html_de(self.url_calendario, self._html_calendario_offline, "calendario académico")
+        return parsear_calendario_html(html)
+
+    def examenes(self) -> ExamenesEsiiab:
+        html = self._html_de(self.url_examenes, self._html_examenes_offline, "exámenes")
+        return parsear_examenes_html(html)
+
     def _html_horarios(self) -> str:
+        return self._html_de(self.url, self._html_offline, "horarios")
+
+    def _html_de(self, url: str, offline: Path | None, etiqueta: str) -> str:
         if self.vivo:
-            return self._descargar(self.url)
-        return self._leer_offline()
+            return self._descargar(url)
+        if offline and offline.is_file():
+            return offline.read_text(encoding="utf-8")
+        raise FileNotFoundError(f"No hay HTML offline de {etiqueta} ESIIAB")
 
     def _leer_offline(self) -> str:
-        if self._html_offline and self._html_offline.is_file():
-            return self._html_offline.read_text(encoding="utf-8")
-        raise FileNotFoundError("No hay HTML offline de horarios ESIIAB")
+        return self._html_de(self.url, self._html_offline, "horarios")
 
     def _ficha_cacheada(self, url: str) -> FichaEsiiab | None:
         with self._candado:

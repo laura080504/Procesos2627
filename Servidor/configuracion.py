@@ -33,7 +33,7 @@ class Configuracion:
     url_publica: str | None = None
     horarios_esiiab_vivo: bool = True
     horarios_esiiab_url: str = "https://esiiab.uclm.es/horarios/"
-    horarios_esiiab_ttl_segundos: int = 5 * 60
+    horarios_esiiab_ttl_segundos: int = 30 * 60
 
 
 def cargar_configuracion() -> Configuracion:
@@ -68,7 +68,7 @@ def cargar_configuracion() -> Configuracion:
     url_publica = os.getenv("URL_PUBLICA", "").strip().rstrip("/") or None
     horarios_vivo = os.getenv("HORARIOS_ESIIAB_VIVO", "true").lower() != "false"
     horarios_url = os.getenv("HORARIOS_ESIIAB_URL", "https://esiiab.uclm.es/horarios/").strip()
-    horarios_ttl = int(os.getenv("HORARIOS_ESIIAB_TTL_SEGUNDOS", str(5 * 60)))
+    horarios_ttl = int(os.getenv("HORARIOS_ESIIAB_TTL_SEGUNDOS", str(30 * 60)))
     return Configuracion(
         duracion_sesion=timedelta(hours=float(os.getenv("SESION_DURACION_HORAS", "8"))),
         cookie_segura=os.getenv("COOKIE_SEGURA", "false").lower() == "true",

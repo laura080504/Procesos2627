@@ -77,6 +77,13 @@ class ClienteRest {
         return this.clienteHttp.peticion("GET", `/agenda/marcas?anio=${anio}&mes=${mes}`);
     }
 
+    obtenerMarcasRango(anio, mes, cantidad) {
+        return this.clienteHttp.peticion(
+            "GET",
+            `/agenda/marcas-rango?anio=${anio}&mes=${mes}&cantidad=${cantidad}`,
+        );
+    }
+
     crearEvento({ codigo, tipo, fecha, hora, lugar }) {
         const cuerpo = { codigo, tipo, fecha, hora };
         if (lugar) {
