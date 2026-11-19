@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=14">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=22">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=30">
     <link rel="stylesheet" href="ClienteShared/agenda.css?v=24">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
@@ -277,10 +277,10 @@
 
             <section id="vistaUsuarios" class="tarjeta" hidden>
                 <h1>
-                    <span id="tituloVistaUsuarios">Gestión de usuarios</span>
-                    <span id="contadorUsuarios"> (<span id="numeroUsuarios">0</span>)</span>
+                    <span id="tituloVistaUsuarios">Perfil</span>
+                    <span id="contadorUsuarios" hidden> (<span id="numeroUsuarios">0</span>)</span>
                 </h1>
-                <div id="vistaAdministrador">
+                <div id="vistaAdministrador" hidden>
                     <p class="sesion-actual">
                         <span id="usuarioActual"></span>
                         <span class="botones-linea">
@@ -289,7 +289,7 @@
                             <button id="botonEliminarSesion" type="button" data-texto="eliminarCuenta">Eliminar cuenta</button>
                         </span>
                     </p>
-                    <section id="formularioEventoProfesor" class="formulario-evento">
+                    <section id="formularioEventoProfesor" class="formulario-evento" hidden>
                         <h2 data-texto="nuevoAvisoProfesor">Nuevo aviso para alumnos</h2>
                         <form id="formCrearEvento" class="fila-evento">
                             <label class="campo-evento">
@@ -318,7 +318,7 @@
                             <button class="boton-entrar" type="submit" data-texto="publicarAviso">Publicar aviso</button>
                         </form>
                     </section>
-                    <button id="botonRefrescar" type="button" data-texto="refrescar">Refrescar</button>
+                    <button id="botonRefrescar" type="button" data-texto="refrescar" hidden>Refrescar</button>
                     <ul id="listaUsuarios"></ul>
                 </div>
                 <div id="vistaCuenta" class="perfil-estudiante" hidden>
@@ -339,22 +339,9 @@
                     <section id="preferenciasAvisos" class="preferencias-avisos">
                         <header class="preferencias-cabecera">
                             <h2 data-texto="preferenciasAvisos">Notificaciones</h2>
-                            <p class="preferencias-ayuda" data-texto="preferenciasAvisosAyuda">Elige cómo quieres ver los avisos y qué te interesa.</p>
+                            <p class="preferencias-ayuda" data-texto="preferenciasAvisosAyuda">Elige qué avisos quieres y con cuánta antelación.</p>
                         </header>
                         <div class="preferencias-fila">
-                            <fieldset class="preferencias-grupo">
-                                <legend data-texto="iconoAvisos">Aspecto de los avisos</legend>
-                                <div class="preferencias-opciones">
-                                    <label class="preferencia-opcion">
-                                        <input type="radio" name="iconoAvisos" value="campana" checked>
-                                        <span data-texto="iconoCampana">Campanita</span>
-                                    </label>
-                                    <label class="preferencia-opcion">
-                                        <input type="radio" name="iconoAvisos" value="mascota">
-                                        <span data-texto="iconoMascota">Mascota</span>
-                                    </label>
-                                </div>
-                            </fieldset>
                             <fieldset class="preferencias-grupo">
                                 <legend data-texto="tiposAvisos">Qué avisos quiero</legend>
                                 <div class="preferencias-opciones">
@@ -516,18 +503,18 @@
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=18"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=28"></script>
-    <script src="ClienteJs/ClientePresentacion/preferenciasNotificaciones.js?v=6"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=30"></script>
+    <script src="ClienteJs/ClientePresentacion/preferenciasNotificaciones.js?v=9"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=13"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=20"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=21"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=24"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=25"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=11"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=23"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=24"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>
