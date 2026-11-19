@@ -4,10 +4,12 @@ const VistaAgenda = (() => {
     const TONOS_FRANJA = ["#9d1830", "#7a1528", "#c45c6c", "#5c101c", "#a33d4e", "#8e3044"];
 
     class VistaAgenda {
-        constructor({ alBuscar, alAbrirPerfil, alCambiarTema, alCambiarIdioma, alLeer, alCambiarMes, alAbrirAsignatura }) {
+        constructor({ alBuscar, alAbrirPerfil, alCambiarTema, alCambiarIdioma, alLeer, alCambiarMes, alAbrirAsignatura, alEditarMatricula }) {
             this.seccion = document.getElementById("vistaAgenda");
             this.lista = document.getElementById("listaAsignaturas");
             this.vacio = document.getElementById("sinAsignaturas");
+            this.textoVacio = document.getElementById("textoSinAsignaturas");
+            this.botonMatriculaVacia = document.getElementById("botonMatriculaVacia");
             this.buscador = document.getElementById("buscadorAsignatura");
             this.nick = document.getElementById("nickAgenda");
             this.mes = document.getElementById("mesAgenda");
@@ -45,8 +47,14 @@ const VistaAgenda = (() => {
             this.alBuscar = alBuscar;
             this.alCambiarMes = alCambiarMes;
             this.alAbrirAsignatura = alAbrirAsignatura;
+            this.alEditarMatricula = alEditarMatricula;
             this.temporizador = null;
             document.getElementById("botonPerfil").addEventListener("click", alAbrirPerfil);
+            this.botonMatriculaVacia.addEventListener("click", () => {
+                if (this.alEditarMatricula) {
+                    this.alEditarMatricula();
+                }
+            });
             document.getElementById("botonTemaAgenda").addEventListener("click", alCambiarTema);
             document.getElementById("botonIdiomaAgenda").addEventListener("click", alCambiarIdioma);
             document.getElementById("botonVozAgenda").addEventListener("click", () => alLeer(this.textoEnPantalla()));
@@ -94,23 +102,30 @@ const VistaAgenda = (() => {
         }
 
         prepararLeyenda() {
-            const iconos = document.querySelectorAll("#leyendaCalendario .leyenda-icono");
-            if (!iconos.length) {
+            const leyenda = document.getElementById("leyendaCalendario");
+            if (!leyenda) {
                 return;
             }
-            iconos[0].replaceChildren(iconoEstrella());
-            if (iconos[1]) {
-                iconos[1].classList.add("punto");
+            const estrella = leyenda.querySelector(".leyenda-estrella");
+            const punto = leyenda.querySelector(".leyenda-punto");
+            if (estrella) {
+                estrella.replaceChildren(iconoEstrella());
             }
-            if (iconos[2]) {
-                iconos[2].classList.add("cambio-cuatri");
+            if (punto) {
+                punto.replaceChildren();
+                punto.append(iconoPunto());
             }
-            if (iconos[3]) {
-                iconos[3].classList.add("festivo");
-            }
-            if (iconos[4]) {
-                iconos[4].classList.add("semana-examenes");
-            }
+            const letras = {
+                ".cambio-cuatri": this.textos.abrevCambioCuatri || "C",
+                ".festivo": this.textos.abrevFestivo || "F",
+                ".semana-examenes": this.textos.abrevPeriodo || "P",
+            };
+            Object.entries(letras).forEach(([selector, texto]) => {
+                const icono = leyenda.querySelector(`.leyenda-letra${selector}`);
+                if (icono) {
+                    icono.textContent = texto;
+                }
+            });
         }
 
         mostrar(usuario, textos) {
@@ -119,6 +134,7 @@ const VistaAgenda = (() => {
             this.seccion.hidden = false;
             this.nick.textContent = usuario.nick;
             aplicarTextos(this.seccion, textos);
+            this.prepararLeyenda();
             this.buscador.placeholder = textos.buscarAsignatura;
             this.abierta = null;
             this.ficha.hidden = true;
@@ -317,7 +333,16 @@ const VistaAgenda = (() => {
         pintarLista() {
             const ingles = this.textos.codigo === "EN";
             this.lista.replaceChildren();
-            this.vacio.hidden = this.asignaturas.length > 0;
+            const hayAsignaturas = this.asignaturas.length > 0;
+            this.vacio.hidden = hayAsignaturas;
+            if (!hayAsignaturas) {
+                const buscando = Boolean((this.buscador.value || "").trim());
+                this.textoVacio.textContent = buscando
+                    ? this.textos.sinAsignaturas
+                    : this.textos.sinMatriculaAsignaturas;
+                this.botonMatriculaVacia.hidden = buscando;
+                this.botonMatriculaVacia.textContent = this.textos.irEditarMatricula || this.textos.editarMatricula;
+            }
             this.asignaturas.forEach((asignatura) => {
                 const nombre = ingles ? asignatura.nombre_ingles : asignatura.nombre;
                 const fila = document.createElement("li");

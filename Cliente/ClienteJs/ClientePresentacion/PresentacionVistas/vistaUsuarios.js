@@ -22,9 +22,12 @@ class VistaUsuarios {
         this.formCrearEvento = document.getElementById("formCrearEvento");
         this.selectCodigoEvento = document.getElementById("codigoEvento");
         this.dialogoMatricula = document.getElementById("dialogoMatricula");
+        this.dialogoResumenMatricula = document.getElementById("dialogoResumenMatricula");
         this.listaMatriculaEditable = document.getElementById("listaMatriculaEditable");
+        this.listaResumenMatricula = document.getElementById("listaResumenMatricula");
         this.formMatricula = document.getElementById("formMatricula");
         this.botonEditarMatricula = document.getElementById("botonEditarMatricula");
+        this.botonVerMatricula = document.getElementById("botonVerMatricula");
         this.rolVisor = "usuario";
         this.alEliminar = alEliminar;
         this.alEditarUsuario = alEditarUsuario;
@@ -36,7 +39,7 @@ class VistaUsuarios {
         this.emailActual = "";
         this.matricula = null;
         this.catalogoAsignaturas = [];
-        this.gruposMatricula = ["A", "B", "C", "I"];
+        this.gruposMatricula = GRUPOS_MATRICULA;
         document.getElementById("botonRefrescar").addEventListener("click", alRefrescar);
         const eliminarCuenta = () => this.alEliminar(this.emailActual);
         document.getElementById("botonEliminarCuenta").addEventListener("click", eliminarCuenta);
@@ -45,6 +48,11 @@ class VistaUsuarios {
         document.getElementById("botonEditarCuenta").addEventListener("click", alEditar);
         document.getElementById("botonVolverAgenda").addEventListener("click", alVolverAgenda);
         this.botonEditarMatricula.addEventListener("click", () => this.abrirEditorMatricula());
+        this.botonVerMatricula.addEventListener("click", () => this.abrirResumenMatricula());
+        document.getElementById("botonEditarDesdeResumen").addEventListener("click", () => {
+            this.cerrarResumenMatricula();
+            this.abrirEditorMatricula();
+        });
         document.getElementById("botonAnadirAsignaturaMatricula").addEventListener("click", () => {
             this.anadirFilaMatricula();
         });
@@ -67,6 +75,9 @@ class VistaUsuarios {
         if (this.dialogoMatricula) {
             aplicarTextos(this.dialogoMatricula, textos);
         }
+        if (this.dialogoResumenMatricula) {
+            aplicarTextos(this.dialogoResumenMatricula, textos);
+        }
         if (!this.seccion.hidden) {
             this.pintar(this.ultimos, this.emailActual, this.rolVisor, this.matricula);
         }
@@ -86,6 +97,7 @@ class VistaUsuarios {
         this.preferenciasAvisos.hidden = gestion;
         this.contadorUsuarios.hidden = !gestion;
         this.botonEditarMatricula.hidden = gestion;
+        this.botonVerMatricula.hidden = gestion;
         document.getElementById("botonEliminarSesion").hidden = gestion;
         document.getElementById("tituloVistaUsuarios").textContent = gestion
             ? this.textos.gestionUsuarios
@@ -118,7 +130,7 @@ class VistaUsuarios {
         if (!this.esGestion(rolVisor)) {
             const usuario = usuarios[0];
             if (usuario) {
-                pintarDatosUsuario(this.cuentaActual, usuario, this.textos);
+                this.pintarIdentidadEstudiante(usuario);
             } else {
                 this.cuentaActual.replaceChildren();
             }
@@ -159,6 +171,18 @@ class VistaUsuarios {
         this.numeroUsuarios.textContent = usuarios.length;
     }
 
+    pintarIdentidadEstudiante(usuario) {
+        this.cuentaActual.replaceChildren();
+        const nick = document.createElement("span");
+        nick.className = "perfil-nick";
+        nick.textContent = usuario.nick;
+        const email = document.createElement("a");
+        email.className = "perfil-email";
+        email.href = `mailto:${usuario.email}`;
+        email.textContent = usuario.email;
+        this.cuentaActual.append(nick, email);
+    }
+
     pintarCurso(matricula) {
         const resumen = document.getElementById("resumenCurso");
         const curso = document.getElementById("cursoAlumno");
@@ -191,10 +215,10 @@ class VistaUsuarios {
             ? `${this.textos.mediaCarrera}: ${this.textos.sinMedia}`
             : `${this.textos.mediaCarrera}: ${formatearMedia(matricula.media, this.textos.codigo)}`;
         const colores = {
-            primero: "#9d1830",
-            segundo: "#c45c6c",
-            tercero: "#e4b4bc",
-            cuarto: "#5c101c",
+            primero: "#f3c6ce",
+            segundo: "#e08a98",
+            tercero: "#c45c6c",
+            cuarto: "#6b1424",
         };
         grafico.replaceChildren();
         leyenda.replaceChildren();
@@ -305,9 +329,9 @@ class VistaUsuarios {
         }
         const filas = (this.matricula?.asignaturas || []).map((asignatura) => ({
             codigo: asignatura.codigo,
-            grupo: asignatura.grupo || "A",
+            grupo: normalizarGrupoCampus(asignatura.grupo),
         }));
-        this.pintarEditorMatricula(filas.length ? filas : [{ codigo: "", grupo: "A" }]);
+        this.pintarEditorMatricula(filas.length ? filas : [{ codigo: "", grupo: "" }]);
         if (this.dialogoMatricula.open) {
             return;
         }
@@ -318,50 +342,148 @@ class VistaUsuarios {
         }
     }
 
+    abrirResumenMatricula() {
+        if (!this.dialogoResumenMatricula) {
+            return;
+        }
+        this.pintarResumenMatricula();
+        if (this.dialogoResumenMatricula.open) {
+            return;
+        }
+        try {
+            this.dialogoResumenMatricula.showModal();
+        } catch {
+            this.dialogoResumenMatricula.setAttribute("open", "");
+        }
+    }
+
+    pintarResumenMatricula() {
+        this.listaResumenMatricula.replaceChildren();
+        const asignaturas = this.matricula?.asignaturas || [];
+        if (!asignaturas.length) {
+            const vacio = document.createElement("li");
+            vacio.className = "resumen-vacio";
+            vacio.textContent = this.textos.matriculaSinAsignaturas;
+            this.listaResumenMatricula.append(vacio);
+            return;
+        }
+        const ingles = this.textos.codigo === "EN";
+        asignaturas.forEach((asignatura) => {
+            const item = document.createElement("li");
+            const nombre = document.createElement("span");
+            nombre.className = "resumen-nombre";
+            const ficha = this.catalogoAsignaturas.find((a) => a.codigo === asignatura.codigo);
+            const titulo = ficha
+                ? `${ficha.codigo} · ${ingles ? ficha.nombre_ingles : ficha.nombre}`
+                : `${asignatura.codigo} · ${ingles ? asignatura.nombre_ingles || asignatura.nombre : asignatura.nombre}`;
+            nombre.textContent = titulo;
+            const grupo = document.createElement("span");
+            grupo.className = "resumen-grupo";
+            grupo.textContent = etiquetaGrupoCampus(asignatura.grupo);
+            item.append(nombre, grupo);
+            this.listaResumenMatricula.append(item);
+        });
+    }
+
     pintarEditorMatricula(filas) {
         this.listaMatriculaEditable.replaceChildren();
         filas.forEach((fila) => this.anadirFilaMatricula(fila.codigo, fila.grupo));
     }
 
-    anadirFilaMatricula(codigo = "", grupo = "A") {
+    anadirFilaMatricula(codigo = "", grupo = "") {
         const fila = document.createElement("div");
         fila.className = "fila-matricula";
 
-        const select = document.createElement("select");
-        select.className = "codigo-matricula";
-        const vacia = document.createElement("option");
-        vacia.value = "";
-        vacia.textContent = this.textos.elegirAsignatura;
-        select.append(vacia);
+        const combo = document.createElement("div");
+        combo.className = "combo-asignatura";
+        const buscar = document.createElement("input");
+        buscar.type = "text";
+        buscar.className = "buscar-asignatura";
+        buscar.autocomplete = "off";
+        buscar.placeholder = this.textos.elegirAsignatura;
+        buscar.setAttribute("aria-label", this.textos.elegirAsignatura);
+        const codigoOculto = document.createElement("input");
+        codigoOculto.type = "hidden";
+        codigoOculto.className = "codigo-matricula";
+        const sugerencias = document.createElement("ul");
+        sugerencias.className = "sugerencias-asignatura";
+        sugerencias.hidden = true;
+
         const ingles = this.textos.codigo === "EN";
-        this.catalogoAsignaturas.forEach((asignatura) => {
-            const opcion = document.createElement("option");
-            opcion.value = asignatura.codigo;
-            opcion.textContent = `${asignatura.codigo} · ${ingles ? asignatura.nombre_ingles : asignatura.nombre}`;
-            select.append(opcion);
-        });
+        const etiquetaDe = (asignatura) =>
+            `${asignatura.codigo} · ${ingles ? asignatura.nombre_ingles : asignatura.nombre}`;
+
         if (codigo) {
-            select.value = codigo;
+            const elegida = this.catalogoAsignaturas.find((asignatura) => asignatura.codigo === codigo);
+            codigoOculto.value = codigo;
+            buscar.value = elegida ? etiquetaDe(elegida) : codigo;
         }
 
-        const grupoInput = document.createElement("input");
-        grupoInput.className = "grupo-matricula";
-        grupoInput.type = "text";
-        grupoInput.maxLength = 24;
-        grupoInput.placeholder = this.textos.grupoMatricula;
-        grupoInput.setAttribute("list", "gruposMatriculaSugeridos");
-        grupoInput.value = grupo || "A";
-        grupoInput.setAttribute("aria-label", this.textos.grupoMatricula);
+        const cerrarSugerencias = () => {
+            sugerencias.hidden = true;
+            sugerencias.replaceChildren();
+        };
 
-        if (!document.getElementById("gruposMatriculaSugeridos")) {
-            const lista = document.createElement("datalist");
-            lista.id = "gruposMatriculaSugeridos";
-            this.gruposMatricula.forEach((valor) => {
-                const opcion = document.createElement("option");
-                opcion.value = valor;
-                lista.append(opcion);
+        const elegirAsignatura = (asignatura) => {
+            codigoOculto.value = asignatura.codigo;
+            buscar.value = etiquetaDe(asignatura);
+            cerrarSugerencias();
+        };
+
+        const pintarSugerencias = (texto) => {
+            const coincidencias = filtrarAsignaturas(this.catalogoAsignaturas, texto, ingles).slice(0, 12);
+            sugerencias.replaceChildren();
+            if (!coincidencias.length) {
+                cerrarSugerencias();
+                return;
+            }
+            coincidencias.forEach((asignatura) => {
+                const item = document.createElement("li");
+                const boton = document.createElement("button");
+                boton.type = "button";
+                boton.textContent = etiquetaDe(asignatura);
+                boton.addEventListener("mousedown", (evento) => {
+                    evento.preventDefault();
+                    elegirAsignatura(asignatura);
+                });
+                item.append(boton);
+                sugerencias.append(item);
             });
-            document.body.append(lista);
+            sugerencias.hidden = false;
+        };
+
+        buscar.addEventListener("input", () => {
+            codigoOculto.value = "";
+            pintarSugerencias(buscar.value);
+        });
+        buscar.addEventListener("focus", () => pintarSugerencias(buscar.value));
+        buscar.addEventListener("blur", () => {
+            window.setTimeout(cerrarSugerencias, 120);
+        });
+        buscar.addEventListener("keydown", (evento) => {
+            if (evento.key === "Escape") {
+                cerrarSugerencias();
+            }
+        });
+
+        combo.append(buscar, codigoOculto, sugerencias);
+
+        const grupoSelect = document.createElement("select");
+        grupoSelect.className = "grupo-matricula";
+        grupoSelect.setAttribute("aria-label", this.textos.grupoMatricula);
+        const vacio = document.createElement("option");
+        vacio.value = "";
+        vacio.textContent = this.textos.elegirGrupo;
+        grupoSelect.append(vacio);
+        this.gruposMatricula.forEach((opcionGrupo) => {
+            const opcion = document.createElement("option");
+            opcion.value = opcionGrupo.valor;
+            opcion.textContent = opcionGrupo.etiqueta;
+            grupoSelect.append(opcion);
+        });
+        const grupoNormalizado = normalizarGrupoCampus(grupo);
+        if (grupoNormalizado) {
+            grupoSelect.value = grupoNormalizado;
         }
 
         const quitar = document.createElement("button");
@@ -375,7 +497,7 @@ class VistaUsuarios {
             }
         });
 
-        fila.append(select, grupoInput, quitar);
+        fila.append(combo, grupoSelect, quitar);
         this.listaMatriculaEditable.append(fila);
     }
 
@@ -383,23 +505,86 @@ class VistaUsuarios {
         return [...this.listaMatriculaEditable.querySelectorAll(".fila-matricula")]
             .map((fila) => ({
                 codigo: fila.querySelector(".codigo-matricula")?.value || "",
-                grupo: (fila.querySelector(".grupo-matricula")?.value || "A").trim().toUpperCase() || "A",
+                grupo: (fila.querySelector(".grupo-matricula")?.value || "").trim(),
             }))
-            .filter((item) => item.codigo);
+            .filter((item) => item.codigo && item.grupo);
     }
 
     enviarMatricula() {
-        const asignaturas = this.leerMatriculaEditor();
         if (this.alGuardarMatricula) {
-            this.alGuardarMatricula(asignaturas);
+            this.alGuardarMatricula(this.leerMatriculaEditor());
         }
     }
 
     cerrarEditorMatricula() {
-        if (this.dialogoMatricula.open) {
+        if (this.dialogoMatricula?.open) {
             this.dialogoMatricula.close();
         }
     }
+
+    cerrarResumenMatricula() {
+        if (this.dialogoResumenMatricula?.open) {
+            this.dialogoResumenMatricula.close();
+        }
+    }
+}
+
+const GRUPOS_MATRICULA = [
+    { valor: "10", etiqueta: "A-10" },
+    { valor: "11", etiqueta: "B-11" },
+    { valor: "12", etiqueta: "C-12" },
+    { valor: "13", etiqueta: "I-13" },
+    { valor: "14", etiqueta: "ING. SOFTWARE-14" },
+    { valor: "17", etiqueta: "O1-17" },
+];
+
+const MAPA_GRUPO_CAMPUS = {
+    A: "10",
+    10: "10",
+    B: "11",
+    11: "11",
+    C: "12",
+    12: "12",
+    I: "13",
+    13: "13",
+    "ING. SOFTWARE": "14",
+    14: "14",
+    O1: "17",
+    17: "17",
+};
+
+function normalizarGrupoCampus(grupo) {
+    const crudo = String(grupo || "").trim().toUpperCase();
+    return MAPA_GRUPO_CAMPUS[crudo] || "";
+}
+
+function etiquetaGrupoCampus(grupo) {
+    const valor = normalizarGrupoCampus(grupo) || String(grupo || "").trim();
+    const hallado = GRUPOS_MATRICULA.find((opcion) => opcion.valor === valor);
+    return hallado ? hallado.etiqueta : (valor || "—");
+}
+
+function normalizarBusqueda(texto) {
+    return String(texto || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+}
+
+function filtrarAsignaturas(catalogo, texto, ingles) {
+    const consulta = normalizarBusqueda(texto);
+    if (!consulta) {
+        return catalogo.slice();
+    }
+    return catalogo.filter((asignatura) => {
+        const nombre = normalizarBusqueda(ingles ? asignatura.nombre_ingles : asignatura.nombre);
+        const codigo = normalizarBusqueda(asignatura.codigo);
+        return codigo.startsWith(consulta)
+            || nombre.startsWith(consulta)
+            || nombre.includes(` ${consulta}`)
+            || nombre.includes(consulta);
+    });
 }
 
 function formatearMedia(media, codigo) {
