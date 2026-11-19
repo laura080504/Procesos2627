@@ -11,6 +11,15 @@ CONTRASENA_PRUEBA = "prueba1234"
 
 # Álgebra, distribuidos, gestión, programación I, y dos más de otros cursos.
 CODIGOS_LAURA = ("42305", "42322", "42304", "42302", "42300", "42314")
+# Cada asignatura puede ir en un grupo distinto (como en la matrícula real).
+GRUPOS_LAURA = {
+    "42300": "A",
+    "42302": "B",
+    "42304": "A",
+    "42305": "B",
+    "42314": "A",
+    "42322": "B",
+}
 # Álgebra queda suspensa para que no sume créditos. El resto aprueba.
 NOTAS_LAURA = {
     "42300": 7.0,
@@ -74,6 +83,16 @@ def codigos_aleatorios_para(email: str) -> tuple[str, ...]:
     return tuple(sorted(elegidos))
 
 
+def grupos_de_muestra(email: str, codigos: tuple[str, ...] | list[str]) -> dict[str, str]:
+    if email == EMAIL_LAURA:
+        return {codigo: GRUPOS_LAURA.get(codigo, "A") for codigo in codigos}
+    letras = ("A", "B", "C")
+    return {
+        codigo: letras[int(codigo) % len(letras)]
+        for codigo in codigos
+    }
+
+
 def asegurar_matricula_de(repositorio_matriculas: RepositorioMatriculas, email: str, codigos: tuple[str, ...] | None = None) -> list[str]:
     email = email.strip().lower()
     actuales = repositorio_matriculas.obtener_codigos(email)
@@ -81,7 +100,7 @@ def asegurar_matricula_de(repositorio_matriculas: RepositorioMatriculas, email: 
         repositorio_matriculas.rellenar_notas(email, notas_de_muestra(email, actuales))
         return actuales
     elegidos = list(codigos if codigos is not None else codigos_aleatorios_para(email))
-    repositorio_matriculas.reemplazar_alumno(email, elegidos)
+    repositorio_matriculas.reemplazar_alumno(email, elegidos, grupos_de_muestra(email, elegidos))
     repositorio_matriculas.rellenar_notas(email, notas_de_muestra(email, elegidos))
     return elegidos
 
