@@ -31,17 +31,25 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos_mo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas_memoria import RepositorioMatriculasMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas_mongo import RepositorioMatriculasMongo
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia import RepositorioDocencia
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia_memoria import RepositorioDocenciaMemoria
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia_mongo import RepositorioDocenciaMongo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_esiiab import RepositorioEsiiab
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_esiiab_memoria import RepositorioEsiiabMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_esiiab_mongo import RepositorioEsiiabMongo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_mongo import RepositorioUsuariosMongo
+from Servidor.Dominio.DominioServices.docencia_muestra import (
+    asegurar_docencia_muestra,
+    asegurar_rol_profesor_gallud,
+)
 from Servidor.Dominio.DominioServices.horario_esiiab import configurar_proveedor_sesiones
 from Servidor.Dominio.DominioUseCases.asegurar_administrador_use_case import AsegurarAdministradorUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_catalogo_asignaturas_use_case import AsegurarCatalogoAsignaturasUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_eventos_muestra_use_case import AsegurarEventosMuestraUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_matriculas_muestra_use_case import AsegurarMatriculasMuestraUseCase
+from Servidor.Dominio.DominioUseCases.asegurar_secretaria_use_case import AsegurarSecretariaUseCase
 from Servidor.Infraestructura.cliente_horarios_esiiab import ClienteHorariosEsiiab
 from Servidor.Infraestructura.sincronizador_esiiab import SincronizadorEsiiab
 
@@ -58,6 +66,7 @@ def crear_repositorios(
     RepositorioEventos,
     RepositorioMatriculas,
     RepositorioEsiiab,
+    RepositorioDocencia,
 ]:
     if configuracion.motor_datos == "memoria":
         return (
@@ -70,6 +79,7 @@ def crear_repositorios(
             RepositorioEventosMemoria(),
             RepositorioMatriculasMemoria(),
             RepositorioEsiiabMemoria(),
+            RepositorioDocenciaMemoria(),
         )
     if configuracion.motor_datos == "mongo":
         base_datos = BaseDatosMongo(
@@ -88,6 +98,7 @@ def crear_repositorios(
             RepositorioEventosMongo(base_datos),
             RepositorioMatriculasMongo(base_datos),
             RepositorioEsiiabMongo(base_datos),
+            RepositorioDocenciaMongo(base_datos),
         )
     raise ValueError(f"El motor de datos '{configuracion.motor_datos}' no existe. Usa memoria o mongo.")
 
@@ -103,6 +114,7 @@ _configuracion = obtener_configuracion()
     _repositorio_eventos,
     _repositorio_matriculas,
     _repositorio_esiiab,
+    _repositorio_docencia,
 ) = crear_repositorios(_configuracion)
 _enviador_correo = EnviadorCorreoBrevo(
     _configuracion.brevo_smtp_servidor,
@@ -126,14 +138,21 @@ _sincronizador_esiiab = SincronizadorEsiiab(
 configurar_proveedor_sesiones(_sincronizador_esiiab.sesiones)
 _sincronizador_esiiab.iniciar_en_segundo_plano()
 if _configuracion.admin_email and _configuracion.admin_contrasena:
+    # ADMIN_* = profesor (administrador académico), no secretaría.
     AsegurarAdministradorUseCase(_repositorio_usuarios, obtener_hasher_contrasenas()).ejecutar(
         _configuracion.admin_email, _configuracion.admin_contrasena
+    )
+if _configuracion.secretaria_email and _configuracion.secretaria_contrasena:
+    AsegurarSecretariaUseCase(_repositorio_usuarios, obtener_hasher_contrasenas()).ejecutar(
+        _configuracion.secretaria_email, _configuracion.secretaria_contrasena
     )
 AsegurarCatalogoAsignaturasUseCase(_repositorio_cursos, _repositorio_asignaturas).ejecutar()
 AsegurarEventosMuestraUseCase(_repositorio_eventos, _repositorio_asignaturas).ejecutar()
 AsegurarMatriculasMuestraUseCase(
     _repositorio_usuarios, _repositorio_matriculas, obtener_hasher_contrasenas()
 ).ejecutar()
+asegurar_docencia_muestra(_repositorio_docencia)
+asegurar_rol_profesor_gallud(_repositorio_usuarios)
 _base = getattr(_repositorio_asignaturas, "base_datos", None)
 if _base is not None and "asignaturas" in _base.base.list_collection_names():
     _base.base.drop_collection("asignaturas")
@@ -169,6 +188,10 @@ def obtener_repositorio_eventos() -> RepositorioEventos:
 
 def obtener_repositorio_matriculas() -> RepositorioMatriculas:
     return _repositorio_matriculas
+
+
+def obtener_repositorio_docencia() -> RepositorioDocencia:
+    return _repositorio_docencia
 
 
 def obtener_enviador_correo() -> EnviadorCorreo:

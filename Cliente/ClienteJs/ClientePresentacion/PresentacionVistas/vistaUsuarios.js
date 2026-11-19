@@ -60,6 +60,10 @@ class VistaUsuarios {
         document.getElementById("botonEditarDatos").addEventListener("click", alEditar);
         document.getElementById("botonEditarCuenta").addEventListener("click", alEditar);
         document.getElementById("botonVolverAgenda").addEventListener("click", alVolverAgenda);
+        const volverAdmin = document.getElementById("botonVolverAgendaAdmin");
+        if (volverAdmin) {
+            volverAdmin.addEventListener("click", alVolverAgenda);
+        }
         this.botonEditarMatricula.addEventListener("click", () => this.abrirEditorMatricula());
         this.botonVerMatricula.addEventListener("click", () => this.abrirResumenMatricula());
         this.botonHistorial.addEventListener("click", () => {

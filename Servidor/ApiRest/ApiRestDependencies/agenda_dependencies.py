@@ -1,6 +1,7 @@
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
     obtener_cliente_horarios_esiiab,
     obtener_repositorio_asignaturas,
+    obtener_repositorio_docencia,
     obtener_repositorio_eventos,
     obtener_repositorio_matriculas,
 )
@@ -23,6 +24,7 @@ _obtener_matricula = ObtenerMatriculaUseCase(
     obtener_repositorio_matriculas(),
     obtener_repositorio_asignaturas(),
     obtener_cliente_horarios_esiiab(),
+    obtener_repositorio_docencia(),
 )
 _guardar_matricula = GuardarMatriculaUseCase(
     obtener_repositorio_matriculas(),

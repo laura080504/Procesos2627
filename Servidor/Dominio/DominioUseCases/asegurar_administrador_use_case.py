@@ -5,18 +5,18 @@ from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasena
 
 
 class AsegurarAdministradorUseCase:
+    """Asegura la cuenta de administrador (= profesor), no de secretaría.
+
+    El superadministrador es solo secretaría; se crea aparte con
+    ``AsegurarSecretariaUseCase``.
+    """
+
     def __init__(self, repositorio_usuarios: RepositorioUsuarios, hasher: HasherContrasenas):
         self.repositorio_usuarios = repositorio_usuarios
         self.hasher = hasher
 
     def ejecutar(self, email: str, contrasena: str) -> None:
         email = email.strip().lower()
-        usuarios = self.repositorio_usuarios.obtener_todos()
-        for usuario in usuarios:
-            if usuario.rol == Rol.PROFESOR and usuario.email != email:
-                self.repositorio_usuarios.actualizar(usuario)
-        if any(usuario.rol == Rol.SUPERADMINISTRADOR for usuario in usuarios):
-            return
         existente = self.repositorio_usuarios.obtener_por_email(email)
         if existente is None:
             self.repositorio_usuarios.insertar(
@@ -24,9 +24,10 @@ class AsegurarAdministradorUseCase:
                     email=email,
                     nick=email.split("@")[0][:30],
                     contrasena_hash=self.hasher.hashear(contrasena),
-                    rol=Rol.SUPERADMINISTRADOR,
+                    rol=Rol.PROFESOR,
                 )
             )
             return
-        existente.rol = Rol.SUPERADMINISTRADOR
-        self.repositorio_usuarios.actualizar(existente)
+        if existente.rol != Rol.PROFESOR:
+            existente.rol = Rol.PROFESOR
+            self.repositorio_usuarios.actualizar(existente)

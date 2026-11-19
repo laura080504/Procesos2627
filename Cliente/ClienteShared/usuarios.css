@@ -96,7 +96,8 @@ body.oscuro #listaUsuarios li {
     width: 100%;
 }
 
-#botonVolverAgenda {
+#botonVolverAgenda,
+#botonVolverAgendaAdmin {
     position: absolute;
     top: 0.85rem;
     left: 1rem;

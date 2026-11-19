@@ -207,7 +207,9 @@ const PreferenciasNotificaciones = (() => {
                 .filter((franja) => franja.dia === diaSemana)
                 .forEach((franja) => {
                     const nombre = ingles ? franja.nombre_ingles : franja.nombre;
-                    const tipo = franja.tipo === "teoria" ? textos.teoria : textos.practicas;
+                    const tipo = franja.tipo === "tutoria"
+                        ? textos.tutorias
+                        : (franja.tipo === "teoria" ? textos.teoria : textos.practicas);
                     avisos.push({
                         id: `horario-${franja.codigo}-${franja.inicio}`,
                         tipo: "horario",

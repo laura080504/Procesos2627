@@ -217,10 +217,7 @@ class ControlWeb {
 
     async abrirTrasSesion() {
         this.conectarAvisos();
-        if (this.esGestion(this.usuarioActual.rol)) {
-            await this.mostrarPanel();
-            return;
-        }
+        // Profesores/admins entran a la agenda (solo sus asignaturas); la gestión va en el perfil.
         await this.mostrarAgenda();
     }
 
@@ -368,6 +365,14 @@ class ControlWeb {
         }
     }
 
+    metaHorario(matricula) {
+        const datos = matricula || this.matricula || {};
+        return {
+            inicioSegundo: datos.inicio_segundo || null,
+            cuatrimestreActual: datos.cuatrimestre_actual || 1,
+        };
+    }
+
     async cargarAgenda() {
         try {
             const periodo = this.vistaAgenda.periodo();
@@ -381,6 +386,7 @@ class ControlWeb {
                 marcasVista,
                 matricula.horario,
                 marcasVista,
+                this.metaHorario(matricula),
             );
             this.programarRefrescoFichas();
             // Avisos del resto de meses en segundo plano (una sola petición).
@@ -453,6 +459,7 @@ class ControlWeb {
                         this.vistaAgenda.marcas,
                         matricula.horario,
                         this.vistaAgenda.marcasAntelacion,
+                        this.metaHorario(matricula),
                     );
                 })
                 .catch(() => {});
@@ -481,6 +488,7 @@ class ControlWeb {
                 this.vistaAgenda.marcas,
                 matricula.horario,
                 this.vistaAgenda.marcasAntelacion,
+                this.metaHorario(matricula),
             );
         } catch {
             /* silencioso: la ficha se completará en el siguiente refresco */
@@ -528,6 +536,7 @@ class ControlWeb {
                     this.vistaAgenda.marcas,
                     this.cacheMatricula.datos.horario,
                     this.vistaAgenda.marcasAntelacion,
+                    this.metaHorario(this.cacheMatricula.datos),
                 );
                 return;
             }
@@ -537,6 +546,7 @@ class ControlWeb {
                 this.vistaAgenda.marcas,
                 matricula.horario,
                 this.vistaAgenda.marcasAntelacion,
+                this.metaHorario(matricula),
             );
         } catch (error) {
             this.gestionarError(error);
@@ -706,6 +716,7 @@ class ControlWeb {
                     this.vistaAgenda.marcas,
                     matricula.horario,
                     this.vistaAgenda.marcasAntelacion,
+                    this.metaHorario(matricula),
                 );
             }
             this.mostrarMensaje(this.textos.matriculaGuardada);

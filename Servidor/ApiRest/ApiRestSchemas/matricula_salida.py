@@ -16,6 +16,7 @@ class FranjaHorarioSalida(BaseModel):
     tipo: str
     aula: str = ""
     grupo: str = ""
+    cuatrimestre: int = 0
 
 
 class TramoCursoSalida(BaseModel):
@@ -37,3 +38,7 @@ class MatriculaSalida(BaseModel):
     media: float | None
     horario: list[FranjaHorarioSalida]
     intensificacion: str | None = None
+    modo: str = "alumno"
+    nombre_docente: str | None = None
+    cuatrimestre_actual: int = 1
+    inicio_segundo: str | None = None

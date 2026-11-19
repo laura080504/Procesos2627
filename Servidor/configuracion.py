@@ -16,6 +16,8 @@ class Configuracion:
     nivel_registro: str = "INFO"
     admin_email: str | None = None
     admin_contrasena: str | None = field(default=None, repr=False)
+    secretaria_email: str | None = None
+    secretaria_contrasena: str | None = field(default=None, repr=False)
     nombre_cookie_sesion: str = "sesion"
     mongo_uri: str | None = field(default=None, repr=False)
     mongo_db: str = "procesos"
@@ -61,6 +63,14 @@ def cargar_configuracion() -> Configuracion:
         raise ValueError("ADMIN_EMAIL y ADMIN_PASSWORD deben indicarse juntos.")
     if admin_contrasena and not 8 <= len(admin_contrasena) <= 64:
         raise ValueError("ADMIN_PASSWORD debe tener entre 8 y 64 caracteres.")
+    secretaria_email = os.getenv("SECRETARIA_EMAIL", "").strip().lower()
+    secretaria_contrasena = os.getenv("SECRETARIA_PASSWORD", "")
+    if bool(secretaria_email) != bool(secretaria_contrasena):
+        raise ValueError("SECRETARIA_EMAIL y SECRETARIA_PASSWORD deben indicarse juntos.")
+    if secretaria_contrasena and not 8 <= len(secretaria_contrasena) <= 64:
+        raise ValueError("SECRETARIA_PASSWORD debe tener entre 8 y 64 caracteres.")
+    if admin_email and secretaria_email and admin_email == secretaria_email:
+        raise ValueError("ADMIN_EMAIL y SECRETARIA_EMAIL deben ser correos distintos.")
     google_client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip() or None
     google_client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "") or None
     if bool(google_client_id) != bool(google_client_secret):
@@ -76,6 +86,8 @@ def cargar_configuracion() -> Configuracion:
         nivel_registro=nivel,
         admin_email=admin_email or None,
         admin_contrasena=admin_contrasena or None,
+        secretaria_email=secretaria_email or None,
+        secretaria_contrasena=secretaria_contrasena or None,
         mongo_uri=mongo_uri,
         mongo_db=mongo_db,
         mongo_usuario=mongo_usuario,

@@ -37,6 +37,8 @@ const VistaAgenda = (() => {
             this.marcas = [];
             this.marcasAntelacion = [];
             this.horario = [];
+            this.inicioSegundo = null;
+            this.cuatrimestreActual = 1;
             this.avisos = [];
             this.preferenciasAvisos = PreferenciasNotificaciones.leer();
             this.abierta = null;
@@ -207,11 +209,19 @@ const VistaAgenda = (() => {
             return { anio: this.vista.getFullYear(), mes: this.vista.getMonth() + 1 };
         }
 
-        pintar(asignaturas, marcas, horario, marcasAntelacion) {
+        pintar(asignaturas, marcas, horario, marcasAntelacion, meta) {
             this.asignaturas = asignaturas;
             this.marcas = marcas;
             if (marcasAntelacion !== undefined) {
                 this.marcasAntelacion = marcasAntelacion;
+            }
+            if (meta) {
+                if (meta.inicioSegundo !== undefined) {
+                    this.inicioSegundo = meta.inicioSegundo || null;
+                }
+                if (meta.cuatrimestreActual !== undefined) {
+                    this.cuatrimestreActual = meta.cuatrimestreActual || 1;
+                }
             }
             const horarioCambio = horario !== undefined;
             if (horarioCambio) {
@@ -254,7 +264,7 @@ const VistaAgenda = (() => {
                 : this.marcasVisibles();
             this.avisos = PreferenciasNotificaciones.construirAvisos({
                 marcas: marcasAvisos,
-                horario: this.franjasVisibles(),
+                horario: this.horarioDelCuatrimestre(this.cuatrimestreActual || 1),
                 textos: this.textos,
                 preferencias: this.preferenciasAvisos,
                 ahora: this.hoy,
@@ -340,7 +350,9 @@ const VistaAgenda = (() => {
                 this.textoVacio.textContent = buscando
                     ? this.textos.sinAsignaturas
                     : this.textos.sinMatriculaAsignaturas;
-                this.botonMatriculaVacia.hidden = buscando;
+                const esGestion = this.usuario
+                    && (this.usuario.rol === "profesor" || this.usuario.rol === "superadministrador");
+                this.botonMatriculaVacia.hidden = buscando || esGestion;
                 this.botonMatriculaVacia.textContent = this.textos.irEditarMatricula || this.textos.editarMatricula;
             }
             this.asignaturas.forEach((asignatura) => {
@@ -658,11 +670,30 @@ const VistaAgenda = (() => {
             this.pintarHorario();
         }
 
+        cuatrimestreSemanaVista() {
+            const domingo = new Date(
+                this.lunes.getFullYear(),
+                this.lunes.getMonth(),
+                this.lunes.getDate() + 6,
+            );
+            return cuatrimestreDeFecha(domingo, this.inicioSegundo);
+        }
+
+        horarioDelCuatrimestre(cuatrimestre) {
+            return (this.horario || []).filter((franja) => {
+                if (!franja.cuatrimestre) {
+                    return true;
+                }
+                return franja.cuatrimestre === cuatrimestre;
+            });
+        }
+
         franjasVisibles() {
+            const base = this.horarioDelCuatrimestre(this.cuatrimestreSemanaVista());
             if (!this.abierta) {
-                return this.horario;
+                return base;
             }
-            return this.horario.filter((franja) => franja.codigo === this.abierta.codigo);
+            return base.filter((franja) => franja.codigo === this.abierta.codigo);
         }
 
         cambiarSemana(delta) {
@@ -760,7 +791,12 @@ const VistaAgenda = (() => {
             bloque.style.zIndex = String(2 + Math.floor(minutosFranja(franja.inicio) / 30));
             bloque.style.background = tonoFranja(franja.codigo);
             const nombre = ingles ? franja.nombre_ingles : franja.nombre;
-            const tipo = franja.tipo === "teoria" ? this.textos.teoria : this.textos.practicas;
+            const tipo = franja.tipo === "tutoria"
+                ? this.textos.tutorias
+                : (franja.tipo === "teoria" ? this.textos.teoria : this.textos.practicas);
+            if (franja.tipo === "tutoria") {
+                bloque.classList.add("franja-tutoria");
+            }
             const grupo = franja.grupo ? ` · ${franja.grupo}` : "";
             const aula = franja.aula ? ` · ${franja.aula}` : "";
             bloque.title = `${nombre} · ${tipo}${grupo}${aula} · ${franja.inicio}–${franja.fin}`;
@@ -897,6 +933,20 @@ const VistaAgenda = (() => {
     function lunesDe(fecha) {
         const delta = fecha.getDay() === 0 ? -6 : 1 - fecha.getDay();
         return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate() + delta);
+    }
+
+    /** Cuatrimestre de una fecha: usa inicio del 2.º del calendario ESIIAB si viene en la matrícula. */
+    function cuatrimestreDeFecha(fecha, inicioSegundoIso) {
+        if (inicioSegundoIso) {
+            const partes = String(inicioSegundoIso).slice(0, 10).split("-").map(Number);
+            if (partes.length === 3 && partes.every((n) => Number.isFinite(n))) {
+                const inicio = new Date(partes[0], partes[1] - 1, partes[2]);
+                const dia = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+                return dia >= inicio ? 2 : 1;
+            }
+        }
+        const mes = fecha.getMonth() + 1;
+        return mes >= 9 || mes === 1 ? 1 : 2;
     }
 
     function desplazamientoLunes(diaJs) {

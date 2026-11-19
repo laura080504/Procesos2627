@@ -21,10 +21,10 @@ class RepositorioEsiiabMongo(RepositorioEsiiab):
         meta = self.base_datos.coleccion("esiiab_meta")
         documentos = []
         for nombre, franjas in horario.sesiones.items():
-            for dia, inicio, fin, tipo, aula, grupo in franjas:
+            for dia, inicio, fin, tipo, aula, grupo, cuatrimestre in franjas:
                 documentos.append(
                     {
-                        "_id": f"{nombre}|{grupo}|{dia}|{inicio}|{fin}|{tipo}|{aula}",
+                        "_id": f"{nombre}|{cuatrimestre}|{grupo}|{dia}|{inicio}|{fin}|{tipo}|{aula}",
                         "nombre_normalizado": nombre,
                         "grupo": grupo,
                         "dia": dia,
@@ -32,6 +32,7 @@ class RepositorioEsiiabMongo(RepositorioEsiiab):
                         "fin": fin,
                         "tipo": tipo,
                         "aula": aula,
+                        "cuatrimestre": int(cuatrimestre or 0),
                     }
                 )
         sesiones.delete_many({})
@@ -62,6 +63,7 @@ class RepositorioEsiiabMongo(RepositorioEsiiab):
                 documento["tipo"],
                 documento.get("aula") or "",
                 documento.get("grupo") or "",
+                int(documento.get("cuatrimestre") or 0),
             )
             acumulado.setdefault(nombre, []).append(sesion)
         return HorarioPublicoEsiiab(
