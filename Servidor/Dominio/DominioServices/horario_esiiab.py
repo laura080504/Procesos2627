@@ -24,11 +24,15 @@ def configurar_proveedor_sesiones(proveedor: ProveedorSesiones | None) -> None:
     _proveedor_sesiones = proveedor
 
 
-def sesiones_de(nombre: str) -> tuple[Sesion, ...]:
-    clave = normalizar_texto(nombre)
+def mapa_sesiones() -> dict[str, tuple[Sesion, ...]]:
+    """Una sola lectura del proveedor para no repetir sync por asignatura."""
     if _proveedor_sesiones is None:
-        return ()
+        return {}
     try:
-        return _proveedor_sesiones().get(clave, ())
+        return _proveedor_sesiones() or {}
     except Exception:
-        return ()
+        return {}
+
+
+def sesiones_de(nombre: str) -> tuple[Sesion, ...]:
+    return mapa_sesiones().get(normalizar_texto(nombre), ())

@@ -173,6 +173,9 @@ const PreferenciasNotificaciones = (() => {
                     if (fecha < inicioHoy || fecha > limite) {
                         return;
                     }
+                    if (simbolo.tipo !== "estrella" && simbolo.tipo !== "punto") {
+                        return;
+                    }
                     const esExamen = simbolo.tipo === "estrella";
                     if (esExamen && !prefs.avisos.examenes) {
                         return;
