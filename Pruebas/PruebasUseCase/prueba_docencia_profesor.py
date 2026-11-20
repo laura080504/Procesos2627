@@ -112,7 +112,59 @@ def prueba_admin_ve_solo_asignaturas_impartidas_y_horario_del_cuatri():
     assert tutorias
     assert all(franja.codigo == "42330" for franja in tutorias)
     assert {(franja.dia, franja.inicio) for franja in tutorias} == {(1, "10:00"), (3, "16:00")}
+    # Las tutorías del 2.º cuatrimestre viajan igual: la agenda las pinta al navegar allí.
+    tutorias_segundo = [franja for franja in del_segundo if franja.tipo == "tutoria"]
+    assert tutorias_segundo
+    assert all(franja.codigo == "42327" for franja in tutorias_segundo)
+    assert {(franja.dia, franja.inicio) for franja in tutorias_segundo} == {(2, "09:00")}
+    # La agenda no repite la misma franja aunque la publiquen dos asignaturas.
+    claves = [
+        (franja.cuatrimestre, franja.dia, franja.inicio, franja.fin)
+        for franja in resultado.horario
+        if franja.tipo == "tutoria"
+    ]
+    assert len(claves) == len(set(claves))
     # Ficha: tutorías del cuatrimestre real (PC), no de la semana navegada.
     procesos = next(a for a in resultado.asignaturas if a.codigo == "42330")
     assert procesos.profesores
     assert any("10:00" in linea for linea in procesos.profesores[0].tutorias)
+
+
+class _ClienteFichaSoloPrimerCuatrimestre:
+    """Caso real de ESIIAB: publica las tutorías solo en el bloque del primer cuatrimestre."""
+
+    def urls_asignaturas(self):
+        return {}
+
+    def fichas_de(self, pares):
+        return {
+            codigo: FichaEsiiab(
+                codigo,
+                nombre,
+                "",
+                (ProfesorEsiiab(NOMBRE_GALLUD, "", ("Lunes: 11:00 - 13:00",), ()),),
+            )
+            for codigo, nombre in pares
+        }
+
+
+def prueba_tutorias_publicadas_en_el_bloque_equivocado_van_a_su_cuatrimestre():
+    asignaturas = _catalogo()
+    matriculas = RepositorioMatriculasMemoria()
+    docencia = RepositorioDocenciaMemoria()
+    asegurar_docencia_muestra(docencia)
+    resultado = ObtenerMatriculaUseCase(
+        matriculas,
+        asignaturas,
+        _ClienteFichaSoloPrimerCuatrimestre(),
+        docencia,
+    ).ejecutar(EMAIL_GALLUD)
+
+    tutorias = [franja for franja in resultado.horario if franja.tipo == "tutoria"]
+    primer_cuatri = {(franja.dia, franja.inicio) for franja in tutorias if franja.cuatrimestre == 1}
+    segundo_cuatri = {(franja.dia, franja.inicio) for franja in tutorias if franja.cuatrimestre == 2}
+    assert primer_cuatri == {(1, "11:00")}
+    # Diseño de Software es del 2.º cuatrimestre: su tutoría no se pinta en el 1.º.
+    assert segundo_cuatri == {(1, "11:00")}
+    assert all(franja.codigo == "42330" for franja in tutorias if franja.cuatrimestre == 1)
+    assert all(franja.codigo == "42327" for franja in tutorias if franja.cuatrimestre == 2)

@@ -168,7 +168,7 @@ class ObtenerMatriculaUseCase:
         propias = [por_codigo[codigo] for codigo in codigos if codigo in por_codigo]
         visibles = _filtrar_por_nombre(propias, nombre)
         visibles.sort(key=lambda asignatura: asignatura.codigo)
-        # Clases de ambos cuatrimestres; tutorías etiquetadas por cuatrimestre.
+        # Clases y tutorías de ambos cuatrimestres: el cliente pinta el de la semana vista.
         horario = franjas_de(propias, {})
         periodo_ficha, inicio_segundo = self._periodo_real()
         fichas, urls = self._datos_esiiab(visibles)
@@ -187,6 +187,7 @@ class ObtenerMatriculaUseCase:
             for asignatura in visibles
         ]
         horario_completo = list(horario)
+        vistos: set[tuple[int, int, str, str]] = set()
         for asignatura in propias:
             ficha = fichas.get(asignatura.codigo)
             if not ficha:
@@ -194,18 +195,19 @@ class ObtenerMatriculaUseCase:
             for profesor in ficha.profesores:
                 if nombre_docente and normalizar_texto(profesor.nombre) != normalizar_texto(nombre_docente):
                     continue
-                for periodo in (1, 2):
-                    if asignatura.cuatrimestre and asignatura.cuatrimestre != periodo:
-                        continue
-                    horario_completo.extend(
-                        franjas_tutorias_de(
-                            asignatura.codigo,
-                            asignatura.nombre,
-                            asignatura.nombre_ingles,
-                            profesor.tutorias_de(periodo),
-                            periodo,
-                        )
-                    )
+                for cuatrimestre, lineas in _tutorias_del_docente(profesor, asignatura.cuatrimestre):
+                    for franja in franjas_tutorias_de(
+                        asignatura.codigo,
+                        asignatura.nombre,
+                        asignatura.nombre_ingles,
+                        lineas,
+                        cuatrimestre,
+                    ):
+                        clave = (franja.cuatrimestre, franja.dia, franja.inicio, franja.fin)
+                        if clave in vistos:
+                            continue
+                        vistos.add(clave)
+                        horario_completo.append(franja)
         horario_completo.sort(
             key=lambda franja: (franja.cuatrimestre, franja.dia, franja.inicio, franja.codigo, franja.tipo)
         )
@@ -302,6 +304,27 @@ def _profesor_vigente(profesor: ProfesorEsiiab, cuatrimestre_vigente: int) -> Pr
         profesor.url,
         profesor.tutorias_de(cuatrimestre_vigente),
     )
+
+
+def _tutorias_del_docente(
+    profesor: ProfesorEsiiab,
+    cuatrimestre_asignatura: int,
+) -> list[tuple[int, tuple[str, ...]]]:
+    """Tutorías del profesor con el cuatrimestre en el que se imparte la asignatura.
+
+    La agenda del profesor enseña las tutorías de la semana que se está viendo, así
+    que cada bloque viaja etiquetado con su cuatrimestre. ESIIAB las publica en dos
+    bloques (primer/segundo cuatrimestre) y a veces deja vacío el bloque que no toca;
+    en ese caso se usan las del otro bloque, porque son las del profesor y así puede
+    planificar el cuatrimestre que todavía no ha empezado. Las asignaturas anuales
+    valen para todo el curso (cuatrimestre 0).
+    """
+    if cuatrimestre_asignatura in (1, 2):
+        lineas = profesor.tutorias_de(cuatrimestre_asignatura) or profesor.tutorias_de(
+            3 - cuatrimestre_asignatura
+        )
+        return [(cuatrimestre_asignatura, lineas)]
+    return [(0, profesor.tutorias)]
 
 
 def _filtrar_por_nombre(asignaturas: list[Asignatura], nombre: str) -> list[Asignatura]:
