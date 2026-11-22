@@ -144,7 +144,7 @@ class VistaUsuarios {
         }
         document.getElementById("botonEliminarSesion").hidden = gestion;
         document.getElementById("tituloVistaUsuarios").textContent = gestion
-            ? this.textos.gestionUsuarios
+            ? (rolVisor === "profesor" ? this.textos.alumnosProfesor : this.textos.gestionUsuarios)
             : this.textos.perfilEstudiante;
         if (!gestion) {
             this.lista.innerHTML = "";
@@ -216,15 +216,7 @@ class VistaUsuarios {
     }
 
     pintarIdentidadEstudiante(usuario) {
-        this.cuentaActual.replaceChildren();
-        const nick = document.createElement("span");
-        nick.className = "perfil-nick";
-        nick.textContent = usuario.nick;
-        const email = document.createElement("a");
-        email.className = "perfil-email";
-        email.href = `mailto:${usuario.email}`;
-        email.textContent = usuario.email;
-        this.cuentaActual.append(nick, email);
+        pintarIdentidadUsuario(this.cuentaActual, usuario);
     }
 
     pintarCurso(matricula) {
@@ -341,6 +333,13 @@ class VistaUsuarios {
         const ingles = this.textos.codigo === "EN";
         const valor = this.selectCodigoEvento.value;
         this.selectCodigoEvento.replaceChildren();
+        if (!this.catalogoAsignaturas.length) {
+            const opcion = document.createElement("option");
+            opcion.value = "";
+            opcion.textContent = this.textos.sinAsignaturasProfesor;
+            this.selectCodigoEvento.append(opcion);
+            return;
+        }
         this.catalogoAsignaturas.forEach((asignatura) => {
             const opcion = document.createElement("option");
             opcion.value = asignatura.codigo;

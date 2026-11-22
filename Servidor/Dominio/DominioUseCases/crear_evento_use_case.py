@@ -4,13 +4,20 @@ from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioExceptions.estado_no_valido import EstadoNoValido
 from Servidor.Dominio.DominioExceptions.permiso_insuficiente import PermisoInsuficiente
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas import RepositorioAsignaturas
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia import RepositorioDocencia
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos import RepositorioEventos
 
 
 class CrearEventoUseCase:
-    def __init__(self, repositorio_eventos: RepositorioEventos, repositorio_asignaturas: RepositorioAsignaturas):
+    def __init__(
+        self,
+        repositorio_eventos: RepositorioEventos,
+        repositorio_asignaturas: RepositorioAsignaturas,
+        repositorio_docencia: RepositorioDocencia | None = None,
+    ):
         self.repositorio_eventos = repositorio_eventos
         self.repositorio_asignaturas = repositorio_asignaturas
+        self.repositorio_docencia = repositorio_docencia
 
     def ejecutar(self, command: CrearEventoCommand) -> Evento:
         if command.solicitante_rol not in (Rol.PROFESOR, Rol.SUPERADMINISTRADOR):
@@ -23,6 +30,15 @@ class CrearEventoUseCase:
         )
         if asignatura is None:
             raise EstadoNoValido(f"No existe la asignatura {codigo}")
+
+        if command.solicitante_rol == Rol.PROFESOR:
+            codigos_docencia = (
+                self.repositorio_docencia.obtener_codigos(command.solicitante_email)
+                if self.repositorio_docencia is not None
+                else []
+            )
+            if codigo not in codigos_docencia:
+                raise PermisoInsuficiente()
 
         lugar = command.lugar.strip() if command.lugar else None
         if not lugar:

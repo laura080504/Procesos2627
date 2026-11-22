@@ -6,7 +6,7 @@ class VistaCabecera {
     }
 
     mostrar(usuario, textos) {
-        pintarDatosUsuario(this.usuarioActual, usuario, textos);
+        pintarIdentidadUsuario(this.usuarioActual, usuario);
     }
 
     ocultar() {

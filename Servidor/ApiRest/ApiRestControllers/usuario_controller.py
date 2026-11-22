@@ -37,10 +37,15 @@ router = APIRouter(prefix="/api/usuarios", tags=["usuarios"])
 
 @router.get("", response_model=list[UsuarioSalida])
 def obtener_usuarios(
-    _: Usuario = Depends(obtener_gestor),
+    usuario: Usuario = Depends(obtener_gestor),
     use_case: ObtenerUsuariosUseCase = Depends(crear_obtener_usuarios_use_case),
 ):
-    return use_case.ejecutar(ObtenerUsuariosQuery())
+    return use_case.ejecutar(
+        ObtenerUsuariosQuery(
+            solicitante_rol=usuario.rol,
+            solicitante_email=usuario.email,
+        )
+    )
 
 
 @router.patch("/me", response_model=UsuarioSalida)

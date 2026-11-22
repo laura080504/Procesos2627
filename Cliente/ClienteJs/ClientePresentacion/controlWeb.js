@@ -561,7 +561,7 @@ class ControlWeb {
         if (this.esGestion(this.usuarioActual.rol)) {
             this.cabecera.mostrar(this.usuarioActual, this.textos);
             try {
-                const asignaturas = await this.rest.listarAsignaturas("");
+                const asignaturas = await this.asignaturasParaAvisos();
                 this.vistaUsuarios.cargarCatalogoAsignaturas(asignaturas);
             } catch (error) {
                 this.gestionarError(error);
@@ -570,6 +570,15 @@ class ControlWeb {
             this.vistaUsuarios.pintarIdentidadEstudiante(this.usuarioActual);
         }
         await this.refrescarUsuarios();
+    }
+
+    async asignaturasParaAvisos() {
+        // El superadministrador puede publicar en cualquier asignatura; el profesor solo en las suyas.
+        if (this.usuarioActual.rol === "superadministrador") {
+            return this.rest.listarAsignaturas("");
+        }
+        const matricula = await this.obtenerMatriculaCacheada("");
+        return matricula.asignaturas || [];
     }
 
     async abrirEdicionMatriculaDesdeAgenda() {

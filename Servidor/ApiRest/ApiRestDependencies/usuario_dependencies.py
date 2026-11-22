@@ -2,13 +2,12 @@ from fastapi import Depends
 
 from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_hasher_contrasenas
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
+    obtener_repositorio_docencia,
+    obtener_repositorio_matriculas,
     obtener_repositorio_recuperaciones,
     obtener_repositorio_sesiones,
     obtener_repositorio_usuarios,
 )
-from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
-from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones import RepositorioSesiones
-from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
 from Servidor.Dominio.DominioUseCases.asignar_administrador_use_case import AsignarAdministradorUseCase
 from Servidor.Dominio.DominioUseCases.editar_datos_use_case import EditarDatosUseCase
@@ -16,12 +15,23 @@ from Servidor.Dominio.DominioUseCases.eliminar_usuario_use_case import EliminarU
 from Servidor.Dominio.DominioUseCases.numero_usuarios_use_case import NumeroUsuariosUseCase
 from Servidor.Dominio.DominioUseCases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
 from Servidor.Dominio.DominioUseCases.usuario_activo_use_case import UsuarioActivoUseCase
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia import RepositorioDocencia
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones import RepositorioSesiones
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 
 
 def crear_obtener_usuarios_use_case(
     repositorio_usuarios: RepositorioUsuarios = Depends(obtener_repositorio_usuarios),
+    repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
+    repositorio_docencia: RepositorioDocencia = Depends(obtener_repositorio_docencia),
 ) -> ObtenerUsuariosUseCase:
-    return ObtenerUsuariosUseCase(repositorio_usuarios)
+    return ObtenerUsuariosUseCase(
+        repositorio_usuarios,
+        repositorio_matriculas,
+        repositorio_docencia,
+    )
 
 
 def crear_usuario_activo_use_case(

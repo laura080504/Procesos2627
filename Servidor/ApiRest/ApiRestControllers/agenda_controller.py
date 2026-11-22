@@ -155,6 +155,7 @@ async def crear_evento(
                 hora=cuerpo.hora,
                 lugar=cuerpo.lugar,
                 solicitante_rol=usuario.rol,
+                solicitante_email=usuario.email,
             )
         )
     except EstadoNoValido as error:
