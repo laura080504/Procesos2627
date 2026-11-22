@@ -1,4 +1,5 @@
 from Pruebas.conftest import CONTRASENA
+from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioEnums.rol import Rol
 
 
@@ -17,13 +18,50 @@ def prueba_un_usuario_no_lista_usuarios(cliente_autenticado):
     assert cliente_autenticado.get("/api/usuarios/laura@ejemplo.com/activo").status_code == 403
 
 
-def prueba_un_administrador_lista_usuarios(cliente_administrador, usuario_registrado, administrador):
+def prueba_un_profesor_lista_solo_sus_alumnos(
+    cliente_administrador, usuario_registrado, administrador, repositorio_docencia, repositorio_matriculas
+):
+    repositorio_docencia.reemplazar(administrador.email, ["42330"])
+    repositorio_matriculas.reemplazar_alumno(usuario_registrado.email, ["42330"])
     respuesta = cliente_administrador.get("/api/usuarios")
     assert respuesta.status_code == 200
-    assert {usuario["email"] for usuario in respuesta.json()} == {usuario_registrado.email, administrador.email}
+    assert {usuario["email"] for usuario in respuesta.json()} == {usuario_registrado.email}
     assert cliente_administrador.get("/api/usuarios/numero").json() == {"numero": 2}
     activo = cliente_administrador.get(f"/api/usuarios/{usuario_registrado.email}/activo")
     assert activo.json() == {"email": usuario_registrado.email, "activo": True}
+
+
+def prueba_un_profesor_no_ve_alumnos_de_otras_asignaturas(
+    cliente_administrador,
+    usuario_registrado,
+    administrador,
+    repositorio_usuarios,
+    repositorio_docencia,
+    repositorio_matriculas,
+    hasher,
+):
+    ajeno = repositorio_usuarios.insertar(
+        Usuario(email="ajeno@ejemplo.com", nick="ajeno", contrasena_hash=hasher.hashear(CONTRASENA))
+    )
+    repositorio_docencia.reemplazar(administrador.email, ["42330"])
+    repositorio_matriculas.reemplazar_alumno(usuario_registrado.email, ["42330"])
+    repositorio_matriculas.reemplazar_alumno(ajeno.email, ["42327"])
+
+    respuesta = cliente_administrador.get("/api/usuarios")
+    assert respuesta.status_code == 200
+    assert {usuario["email"] for usuario in respuesta.json()} == {usuario_registrado.email}
+
+
+def prueba_el_superadministrador_lista_todos_los_usuarios(
+    cliente_superadministrador, usuario_registrado, administrador, superadministrador
+):
+    respuesta = cliente_superadministrador.get("/api/usuarios")
+    assert respuesta.status_code == 200
+    assert {usuario["email"] for usuario in respuesta.json()} == {
+        usuario_registrado.email,
+        administrador.email,
+        superadministrador.email,
+    }
 
 
 def prueba_un_usuario_no_elimina_a_otro(cliente_autenticado, administrador, repositorio_usuarios):

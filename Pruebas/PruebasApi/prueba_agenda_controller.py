@@ -42,9 +42,12 @@ def prueba_un_usuario_sin_matricula_empieza_vacio(cliente_autenticado):
     assert cuerpo["creditos_convalidados"] == 0
 
 
-def prueba_profesor_publica_evento_y_aparece_en_marcas(cliente, administrador, usuario_registrado):
+def prueba_profesor_publica_evento_y_aparece_en_marcas(
+    cliente, administrador, usuario_registrado, repositorio_docencia
+):
     from Pruebas.conftest import CONTRASENA
 
+    repositorio_docencia.reemplazar(administrador.email, ["42302"])
     assert cliente.post(
         "/api/auth/inicio-sesion",
         json={"email": administrador.email, "contrasena": CONTRASENA},
@@ -84,6 +87,21 @@ def prueba_alumno_no_puede_publicar_evento(cliente_autenticado):
             "fecha": "2026-12-16",
             "hora": "09:00",
             "lugar": "Aula 1",
+        },
+    )
+    assert respuesta.status_code == 403
+
+
+def prueba_profesor_no_publica_evento_en_asignatura_ajena(cliente_administrador, repositorio_docencia):
+    repositorio_docencia.reemplazar("admin@ejemplo.com", ["42330"])
+    respuesta = cliente_administrador.post(
+        "/api/eventos",
+        json={
+            "codigo": "42302",
+            "tipo": "entrega",
+            "fecha": "2026-12-17",
+            "hora": "23:59",
+            "lugar": None,
         },
     )
     assert respuesta.status_code == 403

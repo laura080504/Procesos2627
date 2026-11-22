@@ -13,3 +13,4 @@ class CrearEventoCommand:
     hora: str
     lugar: str | None
     solicitante_rol: Rol
+    solicitante_email: str = ""

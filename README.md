@@ -24,7 +24,8 @@ Agenda académica UCLM (ESIIAB Albacete) con matrícula, horario, avisos y exped
 | Rol | Alcance |
 |-----|---------|
 | Alumno | Su agenda, matrícula, historial e intensificación |
-| Profesor / admin | Gestión de usuarios y avisos de eventos |
+| Profesor | Avisos solo en las asignaturas que imparte y listado de sus alumnos matriculados |
+| Superadministrador | Gestión de todos los usuarios y del rol de profesor |
 
 ## Tecnologías
 
@@ -213,7 +214,7 @@ El despliegue deja `DATOS_MOTOR=mongo` y `URL_PUBLICA` con la URL de arriba. `CO
 
 Si `ADMIN_EMAIL` y `ADMIN_PASSWORD` están definidos y todavía no hay un administrador, el arranque crea esa cuenta en estado `activo` o, si el email ya existe, solo le asigna el rol. Esa cuenta no pasa por la confirmación por correo. La contraseña no se sube al repositorio.
 
-El administrador lista los usuarios, edita los de los demás y puede hacer administrador a otro desde esa edición. Un usuario normal solo ve su cuenta, edita la suya y solo puede eliminar la suya. `activo` significa que el correo está confirmado o que entró con Google, y que la cuenta no está eliminada. `pendiente` no puede iniciar sesión. `eliminado` tampoco, y no se puede volver a registrar ese correo.
+El superadministrador lista todos los usuarios, edita los de los demás y puede hacer profesor a otro desde esa edición. Un profesor solo ve a los alumnos matriculados en las asignaturas que imparte, y solo puede publicar avisos en esas asignaturas. Un usuario normal solo ve su cuenta, edita la suya y solo puede eliminar la suya. `activo` significa que el correo está confirmado o que entró con Google, y que la cuenta no está eliminada. `pendiente` no puede iniciar sesión. `eliminado` tampoco, y no se puede volver a registrar ese correo.
 
 ## API REST
 
@@ -229,7 +230,7 @@ El administrador lista los usuarios, edita los de los demás y puede hacer admin
 | POST | `/api/auth/reenviar-confirmacion` | Vuelve a enviar el enlace a una cuenta `pendiente` |
 | GET | `/api/auth/google` | Redirige a Google |
 | GET | `/api/auth/google/callback` | Recibe el código de Google y crea la sesión |
-| GET | `/api/usuarios` | Lista usuarios. Un usuario normal solo se ve a sí mismo |
+| GET | `/api/usuarios` | Lista usuarios. El profesor, solo los alumnos de sus asignaturas; el superadministrador, todos |
 | PATCH | `/api/usuarios/me` | Edita el email, el nombre y, si se envía, la contraseña propios |
 | GET | `/api/usuarios/numero` | Número de usuarios |
 | POST | `/api/usuarios/{email}/administrador` | Un administrador convierte esa cuenta en administrador |
@@ -242,7 +243,7 @@ El administrador lista los usuarios, edita los de los demás y puede hacer admin
 | PUT | `/api/expediente` | Guarda notas y/o intensificación (solo del usuario en sesión) |
 | GET | `/api/agenda/marcas` | Marcas del mes (exámenes, entregas, festivos) |
 | GET | `/api/agenda/marcas-rango` | Marcas de varios meses |
-| POST | `/api/eventos` | Publica un aviso (profesor/admin) |
+| POST | `/api/eventos` | Publica un aviso (el profesor, solo en sus asignaturas) |
 | WS | `/ws` | Canal WebSocket (avisos en tiempo real) |
 
 Las rutas de matrícula y expediente exigen cookie de sesión y solo operan sobre `usuario.email`: nadie ve las notas de otro alumno.

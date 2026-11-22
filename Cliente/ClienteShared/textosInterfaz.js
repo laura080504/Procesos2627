@@ -18,6 +18,7 @@ const TEXTOS = {
         crearCuenta: "Crear cuenta",
         usuarios: "Usuarios",
         gestionUsuarios: "Gestión de usuarios",
+        alumnosProfesor: "Alumnos de mis asignaturas",
         etiquetaRol: "Rol",
         etiquetaEstado: "Estado",
         rolUsuario: "alumno",
@@ -134,6 +135,8 @@ const TEXTOS = {
         sinAvisos: "No tienes avisos con tus preferencias actuales",
         fechaFinalizacion: "Fecha de finalización",
         nuevoAvisoProfesor: "Nuevo aviso para alumnos",
+        ayudaAvisoProfesor: "Solo aparecen las asignaturas que impartes: no puedes publicar avisos en otras.",
+        sinAsignaturasProfesor: "No impartes ninguna asignatura",
         asignaturaEvento: "Asignatura",
         tipoEvento: "Tipo",
         fechaFinEvento: "Fecha de finalización",
@@ -207,6 +210,7 @@ const TEXTOS = {
         crearCuenta: "Create account",
         usuarios: "Users",
         gestionUsuarios: "User management",
+        alumnosProfesor: "Students in my subjects",
         etiquetaRol: "Role",
         etiquetaEstado: "Status",
         rolUsuario: "student",
@@ -323,6 +327,8 @@ const TEXTOS = {
         sinAvisos: "You have no alerts with your current preferences",
         fechaFinalizacion: "Deadline",
         nuevoAvisoProfesor: "New alert for students",
+        ayudaAvisoProfesor: "Only the subjects you teach are listed: you cannot publish alerts in others.",
+        sinAsignaturasProfesor: "You do not teach any subjects",
         asignaturaEvento: "Subject",
         tipoEvento: "Type",
         fechaFinEvento: "Deadline",
@@ -397,6 +403,18 @@ function datosUsuario(usuario, textos) {
         nombre: `${usuario.nick} (${usuario.email})`,
         meta: `${textos.etiquetaRol}: ${rol} · ${textos.etiquetaEstado}: ${estado}`,
     };
+}
+
+function pintarIdentidadUsuario(nodo, usuario) {
+    nodo.replaceChildren();
+    const nick = document.createElement("span");
+    nick.className = "perfil-nick";
+    nick.textContent = usuario.nick;
+    const email = document.createElement("a");
+    email.className = "perfil-email";
+    email.href = `mailto:${usuario.email}`;
+    email.textContent = usuario.email;
+    nodo.append(nick, email);
 }
 
 function pintarDatosUsuario(nodo, usuario, textos) {
