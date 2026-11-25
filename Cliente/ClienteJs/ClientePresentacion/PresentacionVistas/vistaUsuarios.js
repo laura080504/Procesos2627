@@ -19,6 +19,8 @@ class VistaUsuarios {
         this.contadorUsuarios = document.getElementById("contadorUsuarios");
         this.lista = document.getElementById("listaUsuarios");
         this.numeroUsuarios = document.getElementById("numeroUsuarios");
+        this.tituloListadoAlumnos = document.getElementById("tituloListadoAlumnos");
+        this.numeroAlumnosProfesor = document.getElementById("numeroAlumnosProfesor");
         this.botonRefrescar = document.getElementById("botonRefrescar");
         this.preferenciasAvisos = document.getElementById("preferenciasAvisos");
         this.formularioEvento = document.getElementById("formularioEventoProfesor");
@@ -134,7 +136,11 @@ class VistaUsuarios {
         this.formularioEvento.hidden = !gestion;
         this.botonRefrescar.hidden = !gestion;
         this.preferenciasAvisos.hidden = gestion;
-        this.contadorUsuarios.hidden = !gestion;
+        const esProfesor = rolVisor === "profesor";
+        this.contadorUsuarios.hidden = !gestion || esProfesor;
+        if (this.tituloListadoAlumnos) {
+            this.tituloListadoAlumnos.hidden = !esProfesor;
+        }
         this.botonEditarMatricula.hidden = gestion;
         this.botonVerMatricula.hidden = gestion;
         this.botonHistorial.hidden = gestion;
@@ -144,7 +150,7 @@ class VistaUsuarios {
         }
         document.getElementById("botonEliminarSesion").hidden = gestion;
         document.getElementById("tituloVistaUsuarios").textContent = gestion
-            ? (rolVisor === "profesor" ? this.textos.alumnosProfesor : this.textos.gestionUsuarios)
+            ? (esProfesor ? this.textos.alumnosProfesor : this.textos.gestionUsuarios)
             : this.textos.perfilEstudiante;
         if (!gestion) {
             this.lista.innerHTML = "";
@@ -189,7 +195,11 @@ class VistaUsuarios {
             const elemento = document.createElement("li");
             const texto = document.createElement("span");
             texto.className = "usuario-ficha";
-            pintarDatosUsuario(texto, usuario, this.textos);
+            if (this.rolVisor === "profesor") {
+                pintarDatosAlumnoProfesor(texto, usuario, this.textos, this.catalogoAsignaturas);
+            } else {
+                pintarDatosUsuario(texto, usuario, this.textos);
+            }
             elemento.append(texto);
             const acciones = document.createElement("span");
             acciones.className = "acciones-usuario";
@@ -213,6 +223,9 @@ class VistaUsuarios {
             this.lista.appendChild(elemento);
         });
         this.numeroUsuarios.textContent = usuarios.length;
+        if (this.numeroAlumnosProfesor) {
+            this.numeroAlumnosProfesor.textContent = usuarios.length;
+        }
     }
 
     pintarIdentidadEstudiante(usuario) {

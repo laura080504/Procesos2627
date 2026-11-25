@@ -16,6 +16,7 @@ from Servidor.ApiRest.ApiRestDependencies.usuario_dependencies import (
 from Servidor.ApiRest.ApiRestSchemas.editar_datos_entrada import EditarDatosEntrada
 from Servidor.ApiRest.ApiRestSchemas.numero_usuarios_salida import NumeroUsuariosSalida
 from Servidor.ApiRest.ApiRestSchemas.usuario_activo_salida import UsuarioActivoSalida
+from Servidor.ApiRest.ApiRestSchemas.usuario_listado_salida import UsuarioListadoSalida
 from Servidor.ApiRest.ApiRestSchemas.usuario_salida import UsuarioSalida
 from Servidor.Infraestructura.registro_actividad import registro_actividad
 from Servidor.Dominio.DominioCommands.asignar_administrador_command import AsignarAdministradorCommand
@@ -35,17 +36,26 @@ from Servidor.Dominio.DominioUseCases.usuario_activo_use_case import UsuarioActi
 router = APIRouter(prefix="/api/usuarios", tags=["usuarios"])
 
 
-@router.get("", response_model=list[UsuarioSalida])
+@router.get("", response_model=list[UsuarioListadoSalida])
 def obtener_usuarios(
     usuario: Usuario = Depends(obtener_gestor),
     use_case: ObtenerUsuariosUseCase = Depends(crear_obtener_usuarios_use_case),
 ):
-    return use_case.ejecutar(
-        ObtenerUsuariosQuery(
-            solicitante_rol=usuario.rol,
-            solicitante_email=usuario.email,
+    return [
+        UsuarioListadoSalida(
+            email=resultado.usuario.email,
+            nick=resultado.usuario.nick,
+            rol=resultado.usuario.rol,
+            estado=resultado.usuario.estado,
+            asignaturas=resultado.asignaturas,
         )
-    )
+        for resultado in use_case.ejecutar(
+            ObtenerUsuariosQuery(
+                solicitante_rol=usuario.rol,
+                solicitante_email=usuario.email,
+            )
+        )
+    ]
 
 
 @router.patch("/me", response_model=UsuarioSalida)

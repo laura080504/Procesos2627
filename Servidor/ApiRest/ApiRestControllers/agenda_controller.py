@@ -8,6 +8,7 @@ from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import (
     crear_guardar_expediente_use_case,
     crear_guardar_matricula_use_case,
     crear_listar_asignaturas_use_case,
+    crear_obtener_destinatarios_aviso_use_case,
     crear_obtener_expediente_use_case,
     crear_obtener_marcas_calendario_use_case,
     crear_obtener_matricula_use_case,
@@ -39,6 +40,9 @@ from Servidor.Dominio.DominioUseCases.guardar_matricula_use_case import (
     GuardarMatriculaUseCase,
 )
 from Servidor.Dominio.DominioUseCases.listar_asignaturas_use_case import ListarAsignaturasUseCase
+from Servidor.Dominio.DominioUseCases.obtener_destinatarios_aviso_use_case import (
+    ObtenerDestinatariosAvisoUseCase,
+)
 from Servidor.Dominio.DominioUseCases.obtener_expediente_use_case import ObtenerExpedienteUseCase
 from Servidor.Dominio.DominioUseCases.obtener_marcas_calendario_use_case import ObtenerMarcasCalendarioUseCase
 from Servidor.Dominio.DominioUseCases.obtener_matricula_use_case import ObtenerMatriculaUseCase
@@ -145,6 +149,9 @@ async def crear_evento(
     usuario: Usuario = Depends(obtener_usuario_actual),
     use_case: CrearEventoUseCase = Depends(crear_crear_evento_use_case),
     repositorio_asignaturas: RepositorioAsignaturas = Depends(obtener_repositorio_asignaturas),
+    destinatarios_use_case: ObtenerDestinatariosAvisoUseCase = Depends(
+        crear_obtener_destinatarios_aviso_use_case
+    ),
 ):
     try:
         evento = use_case.ejecutar(
@@ -175,6 +182,9 @@ async def crear_evento(
         nombre=asignatura.nombre if asignatura else evento.codigo,
         nombre_ingles=asignatura.nombre_ingles if asignatura else evento.codigo,
     )
+    destinatarios = destinatarios_use_case.ejecutar(
+        salida.codigo, gestor.emails_conectados()
+    )
     await gestor.difundir(
         {
             "tipo": "evento_nuevo",
@@ -185,6 +195,7 @@ async def crear_evento(
             "lugar": salida.lugar,
             "nombre": salida.nombre,
             "nombre_ingles": salida.nombre_ingles,
-        }
+        },
+        destinatarios,
     )
     return salida

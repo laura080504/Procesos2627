@@ -26,6 +26,8 @@ def prueba_un_profesor_lista_solo_sus_alumnos(
     respuesta = cliente_administrador.get("/api/usuarios")
     assert respuesta.status_code == 200
     assert {usuario["email"] for usuario in respuesta.json()} == {usuario_registrado.email}
+    assert respuesta.json()[0]["rol"] == "usuario"
+    assert respuesta.json()[0]["asignaturas"] == ["42330"]
     assert cliente_administrador.get("/api/usuarios/numero").json() == {"numero": 2}
     activo = cliente_administrador.get(f"/api/usuarios/{usuario_registrado.email}/activo")
     assert activo.json() == {"email": usuario_registrado.email, "activo": True}

@@ -18,9 +18,12 @@ const TEXTOS = {
         crearCuenta: "Crear cuenta",
         usuarios: "Usuarios",
         gestionUsuarios: "Gestión de usuarios",
-        alumnosProfesor: "Alumnos de mis asignaturas",
+        alumnosProfesor: "Perfil del profesorado",
+        listadoAlumnos: "Listado de tus alumnos",
         etiquetaRol: "Rol",
         etiquetaEstado: "Estado",
+        etiquetaAsignaturas: "Asignaturas",
+        sinAsignaturasAlumno: "Sin asignaturas",
         rolUsuario: "alumno",
         rolProfesor: "profesor",
         rolSuperadministrador: "superadministrador",
@@ -210,9 +213,12 @@ const TEXTOS = {
         crearCuenta: "Create account",
         usuarios: "Users",
         gestionUsuarios: "User management",
-        alumnosProfesor: "Students in my subjects",
+        alumnosProfesor: "Professor profile",
+        listadoAlumnos: "Your students",
         etiquetaRol: "Role",
         etiquetaEstado: "Status",
+        etiquetaAsignaturas: "Subjects",
+        sinAsignaturasAlumno: "No subjects",
         rolUsuario: "student",
         rolProfesor: "professor",
         rolSuperadministrador: "super administrator",
@@ -426,6 +432,26 @@ function pintarDatosUsuario(nodo, usuario, textos) {
     const meta = document.createElement("span");
     meta.className = "usuario-meta";
     meta.textContent = datos.meta;
+    nodo.append(nombre, meta);
+}
+
+function pintarDatosAlumnoProfesor(nodo, usuario, textos, catalogo = []) {
+    const ingles = textos.codigo === "EN";
+    nodo.replaceChildren();
+    const nombre = document.createElement("span");
+    nombre.className = "usuario-nombre";
+    nombre.textContent = `${usuario.nick} (${usuario.email})`;
+    const meta = document.createElement("span");
+    meta.className = "usuario-meta";
+    const asignaturas = (usuario.asignaturas || []).map((codigo) => {
+        const ficha = (catalogo || []).find((item) => item.codigo === codigo);
+        const nombreAsignatura = ficha ? (ingles ? ficha.nombre_ingles : ficha.nombre) : "";
+        return nombreAsignatura ? `${codigo} · ${nombreAsignatura}` : codigo;
+    });
+    meta.textContent = [
+        `${textos.etiquetaRol}: ${textos.rolUsuario}`,
+        `${textos.etiquetaAsignaturas}: ${asignaturas.length ? asignaturas.join(", ") : textos.sinAsignaturasAlumno}`,
+    ].join(" · ");
     nodo.append(nombre, meta);
 }
 
