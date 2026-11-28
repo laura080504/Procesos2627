@@ -141,3 +141,57 @@ def prueba_el_aviso_llega_al_alumno_matriculado(
     assert mensaje["tipo"] == "evento_nuevo"
     assert mensaje["codigo"] == "42330"
     assert mensaje["fecha"] == "2026-12-20"
+
+
+def prueba_profesor_edita_y_elimina_evento(cliente, administrador, repositorio_docencia):
+    from Pruebas.conftest import CONTRASENA
+
+    repositorio_docencia.reemplazar(administrador.email, ["42302"])
+    assert cliente.post(
+        "/api/auth/inicio-sesion",
+        json={"email": administrador.email, "contrasena": CONTRASENA},
+    ).status_code == 200
+    creado = cliente.post(
+        "/api/eventos",
+        json={
+            "codigo": "42302",
+            "tipo": "examen",
+            "fecha": "2026-12-18",
+            "hora": "09:00",
+            "lugar": "Aula 1.1",
+        },
+    )
+    assert creado.status_code == 201
+    evento_id = creado.json()["id"]
+    assert evento_id
+
+    editado = cliente.put(
+        f"/api/eventos/{evento_id}",
+        json={
+            "codigo": "42302",
+            "tipo": "entrega",
+            "fecha": "2026-12-19",
+            "hora": "23:59",
+            "lugar": None,
+        },
+    )
+    assert editado.status_code == 200
+    assert editado.json()["id"] == evento_id
+    assert editado.json()["tipo"] == "entrega"
+    assert editado.json()["fecha"] == "2026-12-19"
+
+    marcas = cliente.get("/api/agenda/marcas", params={"anio": 2026, "mes": 12})
+    del_19 = next(marca for marca in marcas.json() if marca["dia"] == 19)
+    simbolo = next(item for item in del_19["simbolos"] if item.get("evento_id") == evento_id)
+    assert simbolo["editable"] is True
+    assert simbolo["tipo"] == "punto"
+
+    borrado = cliente.delete(f"/api/eventos/{evento_id}")
+    assert borrado.status_code == 204
+    marcas_tras = cliente.get("/api/agenda/marcas", params={"anio": 2026, "mes": 12})
+    ids = [
+        item.get("evento_id")
+        for marca in marcas_tras.json()
+        for item in marca["simbolos"]
+    ]
+    assert evento_id not in ids

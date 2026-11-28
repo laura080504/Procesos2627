@@ -87,8 +87,9 @@ def prueba_usuario_eliminado_no_inicia_sesion_ni_recupera(cliente_administrador,
     recuperacion = cliente_administrador.post(
         "/api/auth/recuperacion", json={"email": usuario_registrado.email}
     )
-    assert recuperacion.status_code == 403
-    assert recuperacion.json()["detail"] == "Usuario eliminado, no puedes recuperar la contraseña"
+    # Misma respuesta genérica: no se enumera la cuenta.
+    assert recuperacion.status_code == 200
+    assert "registrado" in recuperacion.json()["mensaje"].lower()
 
 
 def prueba_eliminar_usuario_inexistente_devuelve_404(cliente_administrador):

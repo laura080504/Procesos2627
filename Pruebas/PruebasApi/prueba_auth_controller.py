@@ -82,14 +82,23 @@ def prueba_la_sesion_se_mantiene_entre_peticiones(cliente_autenticado, usuario_r
     assert respuesta.json()["email"] == usuario_registrado.email
 
 
-def prueba_recuperacion_de_email_desconocido_devuelve_404(cliente):
-    assert cliente.post("/api/auth/recuperacion", json={"email": "nadie@ejemplo.com"}).status_code == 404
+def _token_recuperacion(enviador_correo):
+    return enviador_correo.mensajes[-1][2].split("?recuperar=")[1].split()[0]
 
 
-def prueba_nueva_contrasena_cambia_el_acceso_y_cierra_la_sesion(cliente_autenticado, usuario_registrado):
+def prueba_recuperacion_de_email_desconocido_no_revela_nada(cliente, enviador_correo):
+    respuesta = cliente.post("/api/auth/recuperacion", json={"email": "nadie@ejemplo.com"})
+    assert respuesta.status_code == 200
+    assert "registrado" in respuesta.json()["mensaje"].lower()
+    assert enviador_correo.mensajes == []
+
+
+def prueba_nueva_contrasena_cambia_el_acceso_y_cierra_la_sesion(
+    cliente_autenticado, usuario_registrado, enviador_correo
+):
     respuesta = cliente_autenticado.post("/api/auth/recuperacion", json={"email": usuario_registrado.email})
     assert respuesta.status_code == 200
-    token = respuesta.json()["token"]
+    token = _token_recuperacion(enviador_correo)
 
     assert (
         cliente_autenticado.post(
@@ -113,9 +122,10 @@ def prueba_nueva_contrasena_cambia_el_acceso_y_cierra_la_sesion(cliente_autentic
 
 
 def prueba_nueva_contrasena_queda_guardada_en_el_repositorio(
-    cliente, usuario_registrado, repositorio_usuarios, hasher
+    cliente, usuario_registrado, repositorio_usuarios, hasher, enviador_correo
 ):
-    token = cliente.post("/api/auth/recuperacion", json={"email": usuario_registrado.email}).json()["token"]
+    assert cliente.post("/api/auth/recuperacion", json={"email": usuario_registrado.email}).status_code == 200
+    token = _token_recuperacion(enviador_correo)
     assert cliente.post("/api/auth/nueva-contrasena", json={"token": token, "contrasena": "nueva-segura"}).status_code == 204
     guardado = repositorio_usuarios.obtener_por_email(usuario_registrado.email)
     assert hasher.verificar("nueva-segura", guardado.contrasena_hash)
@@ -129,8 +139,9 @@ def prueba_nueva_contrasena_con_token_invalido_devuelve_400(cliente):
     assert respuesta.status_code == 400
 
 
-def prueba_el_token_de_recuperacion_solo_sirve_una_vez(cliente, usuario_registrado):
-    token = cliente.post("/api/auth/recuperacion", json={"email": usuario_registrado.email}).json()["token"]
+def prueba_el_token_de_recuperacion_solo_sirve_una_vez(cliente, usuario_registrado, enviador_correo):
+    assert cliente.post("/api/auth/recuperacion", json={"email": usuario_registrado.email}).status_code == 200
+    token = _token_recuperacion(enviador_correo)
     assert cliente.post("/api/auth/nueva-contrasena", json={"token": token, "contrasena": "nueva-segura"}).status_code == 204
     assert cliente.post("/api/auth/nueva-contrasena", json={"token": token, "contrasena": "otra-segura"}).status_code == 400
 
@@ -204,6 +215,13 @@ def prueba_si_el_correo_falla_no_deja_la_cuenta(cliente, repositorio_usuarios):
 
 
 def prueba_google_sin_configurar_avisa(cliente):
+    from dataclasses import replace
+
+    from Servidor.aplicacion import aplicacion
+    from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_configuracion
+
+    config = replace(obtener_configuracion(), google_client_id=None, google_client_secret=None)
+    aplicacion.dependency_overrides[obtener_configuracion] = lambda: config
     respuesta = cliente.get("/api/auth/google", follow_redirects=False)
     assert respuesta.status_code == 302
     assert respuesta.headers["location"] == "/?aviso=google-no-configurado"
@@ -217,11 +235,12 @@ def prueba_google_crea_la_sesion_de_un_usuario_nuevo(cliente, repositorio_usuari
     from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_configuracion
 
     class ClienteGoogleFalso:
-        def url_autorizacion(self, client_id, redirect_uri, estado):
+        def url_autorizacion(self, client_id, redirect_uri, estado, code_challenge=None):
             return f"https://accounts.google.com/o/oauth2/v2/auth?state={estado}"
 
-        def perfil(self, code, redirect_uri, client_id, client_secret):
-            return {"email": "google@ejemplo.com", "name": "Laura Google"}
+        def perfil(self, code, redirect_uri, client_id, client_secret, code_verifier=None):
+            assert code_verifier
+            return {"email": "google@ejemplo.com", "name": "Laura Google", "email_verified": True}
 
     config = replace(obtener_configuracion(), google_client_id="cliente", google_client_secret="secreto")
     aplicacion.dependency_overrides[obtener_configuracion] = lambda: config
@@ -231,6 +250,7 @@ def prueba_google_crea_la_sesion_de_un_usuario_nuevo(cliente, repositorio_usuari
     assert inicio.status_code == 302
     assert "accounts.google.com" in inicio.headers["location"]
     estado = cliente.cookies["oauth_estado"]
+    assert cliente.cookies.get("oauth_pkce")
     callback = cliente.get(
         f"/api/auth/google/callback?code=codigo&state={estado}",
         follow_redirects=False,
@@ -241,4 +261,57 @@ def prueba_google_crea_la_sesion_de_un_usuario_nuevo(cliente, repositorio_usuari
     guardado = repositorio_usuarios.obtener_por_email("google@ejemplo.com")
     assert guardado.estado.value == "activo"
     assert guardado.nick == "Laura Google"
+    assert guardado.contrasena_hash is None
+    assert "google" in guardado.proveedores
     assert cliente.get("/api/auth/sesion").json()["email"] == "google@ejemplo.com"
+
+
+def prueba_uclm_sin_configurar_avisa(cliente):
+    from dataclasses import replace
+
+    from Servidor.aplicacion import aplicacion
+    from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_configuracion
+
+    config = replace(obtener_configuracion(), uclm_client_id=None, uclm_client_secret=None)
+    aplicacion.dependency_overrides[obtener_configuracion] = lambda: config
+    respuesta = cliente.get("/api/auth/uclm", follow_redirects=False)
+    assert respuesta.status_code == 302
+    assert respuesta.headers["location"] == "/?aviso=uclm-no-configurado"
+
+
+def prueba_uclm_crea_la_sesion_de_un_usuario_nuevo(cliente, repositorio_usuarios):
+    from dataclasses import replace
+
+    from Servidor.aplicacion import aplicacion
+    from Servidor.ApiRest.ApiRestDependencies.auth_dependencies import obtener_cliente_uclm
+    from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_configuracion
+
+    class ClienteUclmFalso:
+        def url_autorizacion(self, client_id, redirect_uri, estado, code_challenge=None):
+            return f"https://adas.uclm.es/OAUTH2/authserver.php?state={estado}"
+
+        def perfil(self, code, redirect_uri, client_id, client_secret, code_verifier=None):
+            assert code_verifier
+            return {"email": "alumno@alu.uclm.es", "name": "Laura UCLM", "email_verified": True}
+
+    config = replace(obtener_configuracion(), uclm_client_id="cliente", uclm_client_secret="secreto")
+    aplicacion.dependency_overrides[obtener_configuracion] = lambda: config
+    aplicacion.dependency_overrides[obtener_cliente_uclm] = lambda: ClienteUclmFalso()
+
+    inicio = cliente.get("/api/auth/uclm", follow_redirects=False)
+    assert inicio.status_code == 302
+    assert "adas.uclm.es" in inicio.headers["location"]
+    estado = cliente.cookies["oauth_estado"]
+    assert cliente.cookies.get("oauth_pkce")
+    callback = cliente.get(
+        f"/api/auth/uclm/callback?code=codigo&state={estado}",
+        follow_redirects=False,
+    )
+    assert callback.status_code == 302
+    assert callback.headers["location"] == "/"
+    assert "sesion" in callback.cookies
+    guardado = repositorio_usuarios.obtener_por_email("alumno@alu.uclm.es")
+    assert guardado.estado.value == "activo"
+    assert guardado.nick == "Laura UCLM"
+    assert "uclm" in guardado.proveedores
+    assert cliente.get("/api/auth/sesion").json()["email"] == "alumno@alu.uclm.es"

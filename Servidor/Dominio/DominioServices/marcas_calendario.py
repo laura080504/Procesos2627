@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 from Servidor.Dominio.DominioEntities.asignatura import Asignatura
-from Servidor.Dominio.DominioEntities.evento import Evento
+from Servidor.Dominio.DominioEntities.evento import Evento, identidad_evento
 from Servidor.Dominio.DominioEnums.tipo_evento import TipoEvento
 from Servidor.Dominio.DominioServices.normalizar_texto import normalizar_texto
 from Servidor.Dominio.DominioServices.parser_calendario_esiiab import CalendarioAcademicoEsiiab, FechaAcademica
@@ -26,6 +26,8 @@ class SimboloCalendario:
     hora: str
     fecha: str
     lugar: str | None = None
+    evento_id: str | None = None
+    editable: bool = False
 
 
 @dataclass(frozen=True)
@@ -44,19 +46,24 @@ def marcas_del_mes(
 ) -> list[MarcaCalendario]:
     oficiales = _examenes_como_eventos(examenes, asignaturas_por_codigo) if examenes else []
     oficiales_clave = {(evento.codigo, evento.fecha) for evento in oficiales}
-    mezclados = [
+    propios = [
         evento
         for evento in eventos
         if not (evento.tipo == TipoEvento.EXAMEN and (evento.codigo, evento.fecha) in oficiales_clave)
     ]
-    mezclados.extend(oficiales)
 
     por_dia: dict[int, list[SimboloCalendario]] = {}
-    for evento in mezclados:
+    for evento in propios:
         if evento.fecha.year != anio or evento.fecha.month != mes:
             continue
         por_dia.setdefault(evento.fecha.day, []).append(
-            _simbolo_de(evento, asignaturas_por_codigo.get(evento.codigo))
+            _simbolo_de(evento, asignaturas_por_codigo.get(evento.codigo), editable=True)
+        )
+    for evento in oficiales:
+        if evento.fecha.year != anio or evento.fecha.month != mes:
+            continue
+        por_dia.setdefault(evento.fecha.day, []).append(
+            _simbolo_de(evento, asignaturas_por_codigo.get(evento.codigo), editable=False)
         )
 
     for dia, fechas in _fechas_academicas_del_mes(calendario, anio, mes).items():
@@ -181,7 +188,11 @@ def _prioridad_simbolo(simbolo: SimboloCalendario) -> tuple[int, str, str]:
     return (orden.get(simbolo.tipo, 9), simbolo.hora or "", simbolo.nombre)
 
 
-def _simbolo_de(evento: Evento, asignatura: Asignatura | None) -> SimboloCalendario:
+def _simbolo_de(
+    evento: Evento,
+    asignatura: Asignatura | None,
+    editable: bool,
+) -> SimboloCalendario:
     return SimboloCalendario(
         tipo=_TIPO_SIMBOLO[evento.tipo],
         codigo=evento.codigo,
@@ -190,6 +201,8 @@ def _simbolo_de(evento: Evento, asignatura: Asignatura | None) -> SimboloCalenda
         hora=evento.hora,
         fecha=evento.fecha.isoformat(),
         lugar=evento.lugar,
+        evento_id=identidad_evento(evento) if editable else None,
+        editable=editable,
     )
 
 

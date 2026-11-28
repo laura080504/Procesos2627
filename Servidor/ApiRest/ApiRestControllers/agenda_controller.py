@@ -1,10 +1,12 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 from fastapi.responses import JSONResponse
 
 from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import (
+    crear_actualizar_evento_use_case,
     crear_crear_evento_use_case,
+    crear_eliminar_evento_use_case,
     crear_guardar_expediente_use_case,
     crear_guardar_matricula_use_case,
     crear_listar_asignaturas_use_case,
@@ -25,12 +27,17 @@ from Servidor.ApiRest.ApiRestSchemas.marca_calendario_salida import MarcaCalenda
 from Servidor.ApiRest.ApiRestSchemas.matricula_entrada import MatriculaEntrada
 from Servidor.ApiRest.ApiRestSchemas.matricula_salida import MatriculaSalida
 from Servidor.ApiWs.gestor_conexiones import gestor
+from Servidor.Dominio.DominioCommands.actualizar_evento_command import ActualizarEventoCommand
 from Servidor.Dominio.DominioCommands.crear_evento_command import CrearEventoCommand
+from Servidor.Dominio.DominioCommands.eliminar_evento_command import EliminarEventoCommand
+from Servidor.Dominio.DominioEntities.evento import identidad_evento
 from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioExceptions.estado_no_valido import EstadoNoValido
 from Servidor.Dominio.DominioQueries.listar_asignaturas_query import ListarAsignaturasQuery
 from Servidor.Dominio.DominioQueries.obtener_marcas_calendario_query import ObtenerMarcasCalendarioQuery
+from Servidor.Dominio.DominioUseCases.actualizar_evento_use_case import ActualizarEventoUseCase
 from Servidor.Dominio.DominioUseCases.crear_evento_use_case import CrearEventoUseCase
+from Servidor.Dominio.DominioUseCases.eliminar_evento_use_case import EliminarEventoUseCase
 from Servidor.Dominio.DominioUseCases.guardar_expediente_use_case import (
     CalificacionEntrada,
     GuardarExpedienteUseCase,
@@ -173,21 +180,14 @@ async def crear_evento(
         (item for item in repositorio_asignaturas.obtener_todas() if item.codigo == evento.codigo),
         None,
     )
-    salida = EventoSalida(
-        fecha=evento.fecha,
-        codigo=evento.codigo,
-        tipo=evento.tipo,
-        hora=evento.hora,
-        lugar=evento.lugar,
-        nombre=asignatura.nombre if asignatura else evento.codigo,
-        nombre_ingles=asignatura.nombre_ingles if asignatura else evento.codigo,
-    )
+    salida = _evento_salida(evento, asignatura)
     destinatarios = destinatarios_use_case.ejecutar(
         salida.codigo, gestor.emails_conectados()
     )
     await gestor.difundir(
         {
             "tipo": "evento_nuevo",
+            "id": salida.id,
             "codigo": salida.codigo,
             "tipo_evento": salida.tipo.value,
             "fecha": salida.fecha.isoformat(),
@@ -199,3 +199,103 @@ async def crear_evento(
         destinatarios,
     )
     return salida
+
+
+@router.put("/api/eventos/{evento_id}", response_model=EventoSalida)
+async def actualizar_evento(
+    evento_id: str,
+    cuerpo: EventoEntrada,
+    usuario: Usuario = Depends(obtener_usuario_actual),
+    use_case: ActualizarEventoUseCase = Depends(crear_actualizar_evento_use_case),
+    repositorio_asignaturas: RepositorioAsignaturas = Depends(obtener_repositorio_asignaturas),
+    destinatarios_use_case: ObtenerDestinatariosAvisoUseCase = Depends(
+        crear_obtener_destinatarios_aviso_use_case
+    ),
+):
+    try:
+        evento = use_case.ejecutar(
+            ActualizarEventoCommand(
+                evento_id=evento_id,
+                codigo=cuerpo.codigo,
+                tipo=cuerpo.tipo,
+                fecha=cuerpo.fecha,
+                hora=cuerpo.hora,
+                lugar=cuerpo.lugar,
+                solicitante_rol=usuario.rol,
+                solicitante_email=usuario.email,
+            )
+        )
+    except EstadoNoValido as error:
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
+
+    invalidar_cache_marcas()
+    asignatura = next(
+        (item for item in repositorio_asignaturas.obtener_todas() if item.codigo == evento.codigo),
+        None,
+    )
+    salida = _evento_salida(evento, asignatura)
+    destinatarios = destinatarios_use_case.ejecutar(salida.codigo, gestor.emails_conectados())
+    await gestor.difundir(
+        {
+            "tipo": "evento_actualizado",
+            "id": salida.id,
+            "codigo": salida.codigo,
+            "tipo_evento": salida.tipo.value,
+            "fecha": salida.fecha.isoformat(),
+            "hora": salida.hora,
+            "lugar": salida.lugar,
+            "nombre": salida.nombre,
+            "nombre_ingles": salida.nombre_ingles,
+        },
+        destinatarios,
+    )
+    return salida
+
+
+@router.delete("/api/eventos/{evento_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def eliminar_evento(
+    evento_id: str,
+    usuario: Usuario = Depends(obtener_usuario_actual),
+    use_case: EliminarEventoUseCase = Depends(crear_eliminar_evento_use_case),
+    destinatarios_use_case: ObtenerDestinatariosAvisoUseCase = Depends(
+        crear_obtener_destinatarios_aviso_use_case
+    ),
+):
+    try:
+        existente = use_case.ejecutar(
+            EliminarEventoCommand(
+                evento_id=evento_id,
+                solicitante_rol=usuario.rol,
+                solicitante_email=usuario.email,
+            )
+        )
+    except EstadoNoValido as error:
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
+
+    invalidar_cache_marcas()
+    destinatarios = destinatarios_use_case.ejecutar(existente.codigo, gestor.emails_conectados())
+    await gestor.difundir(
+        {
+            "tipo": "evento_eliminado",
+            "id": evento_id,
+            "codigo": existente.codigo,
+            "tipo_evento": existente.tipo.value,
+            "fecha": existente.fecha.isoformat(),
+            "hora": existente.hora,
+        },
+        destinatarios,
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+def _evento_salida(evento, asignatura) -> EventoSalida:
+    return EventoSalida(
+        id=identidad_evento(evento),
+        fecha=evento.fecha,
+        codigo=evento.codigo,
+        tipo=evento.tipo,
+        hora=evento.hora,
+        lugar=evento.lugar,
+        nombre=asignatura.nombre if asignatura else evento.codigo,
+        nombre_ingles=asignatura.nombre_ingles if asignatura else evento.codigo,
+    )

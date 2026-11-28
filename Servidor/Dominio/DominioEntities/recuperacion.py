@@ -4,6 +4,8 @@ from datetime import datetime
 
 @dataclass(frozen=True)
 class Recuperacion:
+    """El campo token guarda el HASH SHA-256 del token enviado al usuario."""
+
     token: str
     email: str
     expira_en: datetime

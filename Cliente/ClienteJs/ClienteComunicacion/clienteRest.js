@@ -7,8 +7,8 @@ class ClienteRest {
         return this.clienteHttp.peticion("POST", "/auth/registro", { email, nick, contrasena });
     }
 
-    iniciarSesion(email, contrasena) {
-        return this.clienteHttp.peticion("POST", "/auth/inicio-sesion", { email, contrasena });
+    iniciarSesion(email, contrasena, recordar = false) {
+        return this.clienteHttp.peticion("POST", "/auth/inicio-sesion", { email, contrasena, recordar });
     }
 
     cerrarSesion() {
@@ -106,5 +106,23 @@ class ClienteRest {
             cuerpo.lugar = lugar;
         }
         return this.clienteHttp.peticion("POST", "/eventos", cuerpo);
+    }
+
+    actualizarEvento(eventoId, { codigo, tipo, fecha, hora, lugar }) {
+        const cuerpo = { codigo, tipo, fecha, hora };
+        if (lugar) {
+            cuerpo.lugar = lugar;
+        } else {
+            cuerpo.lugar = null;
+        }
+        return this.clienteHttp.peticion(
+            "PUT",
+            `/eventos/${encodeURIComponent(eventoId)}`,
+            cuerpo,
+        );
+    }
+
+    eliminarEvento(eventoId) {
+        return this.clienteHttp.peticion("DELETE", `/eventos/${encodeURIComponent(eventoId)}`);
     }
 }

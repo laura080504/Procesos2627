@@ -1251,6 +1251,44 @@ body.con-agenda .herramientas {
     min-width: 0;
 }
 
+.actividad-acciones {
+    display: inline-flex;
+    gap: 0.35rem;
+    margin-left: auto;
+}
+
+.boton-actividad {
+    border: 1px solid rgba(125, 24, 40, 0.25);
+    background: #fff;
+    color: #7d1828;
+    border-radius: 999px;
+    padding: 0.25rem 0.7rem;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+.boton-actividad-eliminar {
+    color: #9d1830;
+    border-color: rgba(157, 24, 48, 0.35);
+}
+
+.dialogo-editar-evento form {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.dialogo-editar-evento .campo-evento {
+    display: grid;
+    gap: 0.3rem;
+}
+
+.acciones-editar-evento {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.4rem;
+}
+
 .actividad-cabecera {
     display: flex;
     flex-wrap: nowrap;
@@ -1404,6 +1442,12 @@ body.oscuro #botonGuardarMatricula {
 body.oscuro .actividad-dia,
 body.oscuro .aviso-item {
     background: #3a3a40;
+}
+
+body.oscuro .boton-actividad {
+    background: #2c2c32;
+    color: #f0d5da;
+    border-color: rgba(240, 213, 218, 0.25);
 }
 
 body.oscuro .aviso-cuerpo span,

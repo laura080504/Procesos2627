@@ -1,13 +1,14 @@
-from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
-from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Dominio.DominioCommands.registrar_usuario_command import RegistrarUsuarioCommand
 from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
+from Servidor.Dominio.DominioEnums.proveedor_auth import ProveedorAuth
 from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioExceptions.usuario_ya_existe import UsuarioYaExiste
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
 from Servidor.Dominio.DominioServices.matriculas_muestra import asegurar_matricula_de
 from Servidor.Dominio.DominioUseCases.emitir_confirmacion_use_case import EmitirConfirmacionUseCase
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 
 
 class RegistrarUsuarioUseCase:
@@ -28,7 +29,14 @@ class RegistrarUsuarioUseCase:
         nick = command.nick.strip()
         existente = self.repositorio_usuarios.obtener_por_email(email)
         if existente is not None and existente.estado != EstadoUsuario.ELIMINADO:
+            if existente.solo_oauth():
+                raise UsuarioYaExiste(
+                    email,
+                    "Este correo ya está vinculado a Google o UCLM. Entra con ese botón "
+                    "(luego podrás añadir contraseña desde tu cuenta).",
+                )
             raise UsuarioYaExiste(email)
+
         contrasena_hash = self.hasher.hashear(command.contrasena)
         if existente is None:
             self.repositorio_usuarios.insertar(
@@ -37,6 +45,7 @@ class RegistrarUsuarioUseCase:
                     nick=nick,
                     contrasena_hash=contrasena_hash,
                     estado=EstadoUsuario.PENDIENTE,
+                    proveedores=(ProveedorAuth.LOCAL.value,),
                 )
             )
             reactivado = False
@@ -45,6 +54,7 @@ class RegistrarUsuarioUseCase:
             existente.contrasena_hash = contrasena_hash
             existente.rol = Rol.USUARIO
             existente.estado = EstadoUsuario.PENDIENTE
+            existente.proveedores = (ProveedorAuth.LOCAL.value,)
             self.repositorio_usuarios.actualizar(existente)
             reactivado = True
         guardado = self.repositorio_usuarios.obtener_por_email(email)

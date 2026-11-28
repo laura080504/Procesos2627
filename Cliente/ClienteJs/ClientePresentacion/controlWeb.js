@@ -18,7 +18,7 @@ class ControlWeb {
             alCerrarSesion: () => this.cerrarSesion(),
         });
         this.vistaInicioSesion = new VistaInicioSesion({
-            alEnviar: (email, contrasena) => this.iniciarSesion(email, contrasena),
+            alEnviar: (email, contrasena, recordar) => this.iniciarSesion(email, contrasena, recordar),
             alIrARegistro: () => this.mostrarRegistro(),
             alRecuperar: () => this.mostrarRecuperacion(),
             alReenviar: (email) => this.reenviarConfirmacion(email),
@@ -66,6 +66,8 @@ class ControlWeb {
             alCambiarMes: () => this.programarCargaMarcas(),
             alAbrirAsignatura: (asignatura) => this.asegurarFichaAsignatura(asignatura),
             alEditarMatricula: () => this.abrirEdicionMatriculaDesdeAgenda(),
+            alActualizarEvento: (eventoId, datos, alOk) => this.actualizarEventoProfesor(eventoId, datos, alOk),
+            alEliminarEvento: (eventoId, alOk) => this.eliminarEventoProfesor(eventoId, alOk),
         });
         this.vistaEditarDatos = new VistaEditarDatos({
             alGuardar: (datos) => this.guardarEdicion(datos),
@@ -82,9 +84,14 @@ class ControlWeb {
     async iniciar() {
         const params = new URLSearchParams(location.search);
         const confirmar = params.get("confirmar");
+        const recuperar = params.get("recuperar");
         const aviso = params.get("aviso");
-        if (confirmar || aviso) {
+        if (confirmar || recuperar || aviso) {
             history.replaceState({}, "", location.pathname);
+        }
+        if (recuperar) {
+            this.mostrarRecuperacionConToken(recuperar);
+            return;
         }
         const avisoPendiente = await this.avisoInicial(confirmar, aviso);
         try {
@@ -96,6 +103,14 @@ class ControlWeb {
         if (avisoPendiente) {
             this.mostrarMensaje(avisoPendiente.texto, avisoPendiente.error);
         }
+    }
+
+    mostrarRecuperacionConToken(token) {
+        this.ocultarVistas();
+        this.vistaRecuperacion.aplicarTextos(this.textos);
+        this.vistaRecuperacion.mostrar();
+        this.vistaRecuperacion.mostrarNuevaContrasena(token);
+        this.mostrarMensaje(this.textos.introduceNuevaContrasena);
     }
 
     async avisoInicial(confirmar, aviso) {
@@ -110,7 +125,10 @@ class ControlWeb {
         const avisos = {
             "google-no-configurado": this.textos.googleNoConfigurado,
             "google-error": this.textos.googleError,
+            "uclm-no-configurado": this.textos.uclmNoConfigurado,
+            "uclm-error": this.textos.uclmError,
             "cuenta-eliminada": this.textos.usuarioEliminado,
+            "cuenta-pendiente": this.textos.cuentaPendienteOauth || this.textos.cuentaPendienteAyuda,
         };
         if (avisos[aviso]) {
             return { texto: avisos[aviso], error: true };
@@ -242,7 +260,7 @@ class ControlWeb {
         } catch {
             return;
         }
-        if (!mensaje || mensaje.tipo !== "evento_nuevo") {
+        if (!mensaje || !["evento_nuevo", "evento_actualizado", "evento_eliminado"].includes(mensaje.tipo)) {
             return;
         }
         const codigos = (this.matricula && this.matricula.asignaturas)
@@ -252,19 +270,22 @@ class ControlWeb {
             return;
         }
         if (this.esGestion(this.usuarioActual?.rol)) {
+            if (!this.vistaAgenda.seccion.hidden) {
+                await this.refrescarAgendaTrasEvento();
+            }
             return;
         }
-        const ingles = this.textos.codigo === "EN";
-        const nombre = ingles ? mensaje.nombre_ingles : mensaje.nombre;
-        const tipo = mensaje.tipo_evento === "examen" ? this.textos.examen : this.textos.entrega;
-        const fecha = mensaje.fecha || "";
-        this.mostrarMensaje(
-            `${this.textos.avisoNuevoRecibido}: ${tipo} · ${nombre} · ${this.textos.fechaFinalizacion}: ${fecha}`,
-        );
+        if (mensaje.tipo === "evento_nuevo") {
+            const ingles = this.textos.codigo === "EN";
+            const nombre = ingles ? mensaje.nombre_ingles : mensaje.nombre;
+            const tipo = mensaje.tipo_evento === "examen" ? this.textos.examen : this.textos.entrega;
+            const fecha = mensaje.fecha || "";
+            this.mostrarMensaje(
+                `${this.textos.avisoNuevoRecibido}: ${tipo} · ${nombre} · ${this.textos.fechaFinalizacion}: ${fecha}`,
+            );
+        }
         if (!this.vistaAgenda.seccion.hidden) {
-            this.invalidarCacheMarcas();
-            await this.cargarMarcas();
-            this.vistaAgenda.actualizarAvisos();
+            await this.refrescarAgendaTrasEvento();
         }
     }
 
@@ -273,9 +294,46 @@ class ControlWeb {
             await this.rest.crearEvento(datos);
             this.vistaUsuarios.limpiarFormularioEvento();
             this.mostrarMensaje(this.textos.avisoPublicado);
+            await this.refrescarAgendaTrasEvento();
         } catch (error) {
             this.gestionarError(error);
         }
+    }
+
+    async actualizarEventoProfesor(eventoId, datos, alOk) {
+        try {
+            await this.rest.actualizarEvento(eventoId, datos);
+            this.mostrarMensaje(this.textos.eventoActualizado || "Aviso actualizado");
+            if (alOk) {
+                alOk();
+            }
+            await this.refrescarAgendaTrasEvento();
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
+    async eliminarEventoProfesor(eventoId, alOk) {
+        try {
+            await this.rest.eliminarEvento(eventoId);
+            this.mostrarMensaje(this.textos.eventoEliminado || "Aviso eliminado");
+            if (alOk) {
+                alOk();
+            }
+            await this.refrescarAgendaTrasEvento();
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
+    async refrescarAgendaTrasEvento() {
+        if (this.vistaAgenda.seccion.hidden) {
+            this.invalidarCacheMarcas();
+            return;
+        }
+        this.invalidarCacheMarcas();
+        await this.cargarMarcas();
+        this.vistaAgenda.actualizarAvisos();
     }
 
     async mostrarAgenda() {
@@ -653,11 +711,11 @@ class ControlWeb {
 
     async solicitarRecuperacion(email) {
         try {
-            const recuperacion = await this.rest.solicitarRecuperacion(email);
-            this.vistaRecuperacion.mostrarNuevaContrasena(recuperacion.token);
-            this.mostrarMensaje(this.textos.introduceNuevaContrasena);
+            await this.rest.solicitarRecuperacion(email);
+            this.vistaRecuperacion.mostrar();
+            this.mostrarMensaje(this.textos.correoRecuperacionEnviado || "Si la cuenta existe, te hemos enviado un correo");
         } catch (error) {
-            this.mostrarMensaje(this.mensajeCuentaEliminada(error, true) || error.message, true);
+            this.mostrarMensaje(error.message, true);
         }
     }
 
@@ -671,9 +729,9 @@ class ControlWeb {
         }
     }
 
-    async iniciarSesion(email, contrasena) {
+    async iniciarSesion(email, contrasena, recordar = false) {
         try {
-            this.usuarioActual = await this.rest.iniciarSesion(email, contrasena);
+            this.usuarioActual = await this.rest.iniciarSesion(email, contrasena, recordar);
             this.vistaInicioSesion.mostrarReenvio(false);
             this.limpiarMensaje();
             await this.abrirTrasSesion();
