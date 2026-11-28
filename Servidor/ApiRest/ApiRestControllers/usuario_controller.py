@@ -7,10 +7,7 @@ from Servidor.ApiRest.ApiRestDependencies.auth_dependencies import (
 )
 from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_configuracion
 from Servidor.configuracion import Configuracion
-from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import (
-    crear_guardar_matricula_use_case,
-    crear_obtener_matricula_use_case,
-)
+from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import crear_guardar_matricula_use_case
 from Servidor.ApiRest.ApiRestDependencies.usuario_dependencies import (
     crear_asignar_administrador_use_case,
     crear_asignar_delegado_use_case,
@@ -18,6 +15,7 @@ from Servidor.ApiRest.ApiRestDependencies.usuario_dependencies import (
     crear_editar_datos_use_case,
     crear_eliminar_usuario_use_case,
     crear_numero_usuarios_use_case,
+    crear_obtener_horario_alumno_use_case,
     crear_obtener_usuarios_use_case,
     crear_solicitar_asignacion_rol_use_case,
     crear_usuario_activo_use_case,
@@ -53,7 +51,7 @@ from Servidor.Dominio.DominioUseCases.guardar_matricula_use_case import (
     GuardarMatriculaUseCase,
 )
 from Servidor.Dominio.DominioUseCases.numero_usuarios_use_case import NumeroUsuariosUseCase
-from Servidor.Dominio.DominioUseCases.obtener_matricula_use_case import ObtenerMatriculaUseCase
+from Servidor.Dominio.DominioUseCases.obtener_horario_alumno_use_case import ObtenerHorarioAlumnoUseCase
 from Servidor.Dominio.DominioUseCases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
 from Servidor.Dominio.DominioUseCases.solicitar_asignacion_rol_use_case import SolicitarAsignacionRolUseCase
 from Servidor.Dominio.DominioUseCases.usuario_activo_use_case import UsuarioActivoUseCase
@@ -184,10 +182,11 @@ def quitar_delegado(
 @router.get("/{email}/matricula", response_model=MatriculaSalida)
 def matricula_de_alumno(
     email: str,
-    _: Usuario = Depends(obtener_superadministrador),
-    use_case: ObtenerMatriculaUseCase = Depends(crear_obtener_matricula_use_case),
+    solicitante: Usuario = Depends(obtener_usuario_actual),
+    use_case: ObtenerHorarioAlumnoUseCase = Depends(crear_obtener_horario_alumno_use_case),
 ):
-    return use_case.ejecutar(email.strip().lower(), "")
+    # Secretaría sigue pudiendo leer cualquier alumno. Un profesor solo los de su listado.
+    return use_case.ejecutar(solicitante.email, solicitante.rol, email)
 
 
 @router.put("/{email}/matricula", response_model=MatriculaSalida)

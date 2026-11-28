@@ -7,6 +7,7 @@ def prueba_rutas_de_usuarios_rechazan_peticiones_sin_sesion(cliente, usuario_reg
     assert cliente.get("/api/usuarios").status_code == 401
     assert cliente.get("/api/usuarios/numero").status_code == 401
     assert cliente.get(f"/api/usuarios/{usuario_registrado.email}/activo").status_code == 401
+    assert cliente.get(f"/api/usuarios/{usuario_registrado.email}/matricula").status_code == 401
     assert cliente.delete(f"/api/usuarios/{usuario_registrado.email}").status_code == 401
     assert cliente.patch("/api/usuarios/me", json={"email": usuario_registrado.email, "nick": "laura"}).status_code == 401
     assert cliente.post(f"/api/usuarios/{usuario_registrado.email}/profesor").status_code == 401
@@ -16,6 +17,7 @@ def prueba_un_usuario_no_lista_usuarios(cliente_autenticado):
     assert cliente_autenticado.get("/api/usuarios").status_code == 403
     assert cliente_autenticado.get("/api/usuarios/numero").status_code == 403
     assert cliente_autenticado.get("/api/usuarios/laura@ejemplo.com/activo").status_code == 403
+    assert cliente_autenticado.get("/api/usuarios/laura@ejemplo.com/matricula").status_code == 403
 
 
 def prueba_un_profesor_lista_solo_sus_alumnos(
@@ -154,6 +156,55 @@ def prueba_superadministrador_lista_alumnos_con_curso(
     assert respuesta.status_code == 200
     alumno = next(usuario for usuario in respuesta.json() if usuario["email"] == usuario_registrado.email)
     assert "curso" in alumno
+
+
+def prueba_un_profesor_ve_el_horario_de_su_alumno(
+    cliente_administrador, usuario_registrado, administrador, repositorio_docencia, repositorio_matriculas
+):
+    repositorio_docencia.reemplazar(administrador.email, ["42300"])
+    repositorio_matriculas.reemplazar_alumno(usuario_registrado.email, ["42300"], {"42300": "A"})
+    respuesta = cliente_administrador.get(f"/api/usuarios/{usuario_registrado.email}/matricula")
+    assert respuesta.status_code == 200
+    horario = respuesta.json()["horario"]
+    assert horario
+    assert any(
+        franja["codigo"] == "42300"
+        and franja["dia"] == 4
+        and franja["inicio"] == "08:15"
+        and franja["tipo"] == "teoria"
+        for franja in horario
+    )
+
+
+def prueba_un_profesor_no_ve_el_horario_de_un_alumno_ajeno(
+    cliente_administrador,
+    usuario_registrado,
+    administrador,
+    repositorio_usuarios,
+    repositorio_docencia,
+    repositorio_matriculas,
+    hasher,
+):
+    ajeno = repositorio_usuarios.insertar(
+        Usuario(email="ajeno@ejemplo.com", nick="ajeno", contrasena_hash=hasher.hashear(CONTRASENA))
+    )
+    repositorio_docencia.reemplazar(administrador.email, ["42300"])
+    repositorio_matriculas.reemplazar_alumno(usuario_registrado.email, ["42300"], {"42300": "A"})
+    repositorio_matriculas.reemplazar_alumno(ajeno.email, ["42327"])
+    assert cliente_administrador.get(f"/api/usuarios/{ajeno.email}/matricula").status_code == 403
+
+
+def prueba_horario_de_alumno_inexistente_devuelve_404(cliente_administrador):
+    assert cliente_administrador.get("/api/usuarios/nadie@ejemplo.com/matricula").status_code == 404
+
+
+def prueba_secretaria_ve_el_horario_de_un_alumno(
+    cliente_superadministrador, usuario_registrado, repositorio_matriculas
+):
+    repositorio_matriculas.reemplazar_alumno(usuario_registrado.email, ["42300"], {"42300": "A"})
+    respuesta = cliente_superadministrador.get(f"/api/usuarios/{usuario_registrado.email}/matricula")
+    assert respuesta.status_code == 200
+    assert any(franja["codigo"] == "42300" for franja in respuesta.json()["horario"])
 
 
 def prueba_el_superadministrador_elimina_a_un_profesor(

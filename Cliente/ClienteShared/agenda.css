@@ -145,7 +145,8 @@ body.con-agenda .herramientas {
     padding: 0.7rem 0.7rem 0.75rem;
 }
 
-#tituloSemana {
+#tituloSemana,
+.titulo-semana-alumno {
     margin: 0;
     font-size: 0.95rem;
     font-weight: 650;
@@ -964,6 +965,31 @@ body.agenda-secretaria .agenda-calendario {
 
 .dialogo-historial {
     width: min(42rem, calc(100vw - 1.5rem));
+}
+
+.dialogo-horario-alumno {
+    width: min(72rem, calc(100vw - 1.5rem));
+}
+
+.dialogo-horario-alumno .agenda-horario {
+    box-shadow: none;
+    border-radius: 12px;
+    padding: 0.35rem 0 0;
+}
+
+.dialogo-horario-alumno #rejillaHorarioAlumno {
+    max-height: min(62vh, 520px);
+    overflow: auto;
+}
+
+.horario-alumno-vacio {
+    margin: 0.85rem 0 0.2rem;
+    color: var(--rojo-logo);
+}
+
+.horario-alumno-vacio[hidden],
+.dialogo-horario-alumno .agenda-horario[hidden] {
+    display: none;
 }
 
 .dialogo-historial .bloque-historial {

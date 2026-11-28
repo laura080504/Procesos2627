@@ -11,6 +11,7 @@ class VistaUsuarios {
         alAbrirHistorial,
         alGuardarHistorial,
         alGuardarIntensificacion,
+        alVerHorario,
     }) {
         this.seccion = document.getElementById("vistaUsuarios");
         this.vistaAdministrador = document.getElementById("vistaAdministrador");
@@ -33,6 +34,12 @@ class VistaUsuarios {
         this.dialogoMatricula = document.getElementById("dialogoMatricula");
         this.dialogoResumenMatricula = document.getElementById("dialogoResumenMatricula");
         this.dialogoHistorial = document.getElementById("dialogoHistorial");
+        this.dialogoHorarioAlumno = document.getElementById("dialogoHorarioAlumno");
+        this.tituloHorarioAlumno = document.getElementById("tituloHorarioAlumno");
+        this.horarioAlumnoVacio = document.getElementById("horarioAlumnoVacio");
+        this.panelHorarioAlumno = document.getElementById("panelHorarioAlumno");
+        this.rejillaHorarioAlumno = document.getElementById("rejillaHorarioAlumno");
+        this.tituloSemanaAlumno = document.getElementById("tituloSemanaAlumno");
         this.listaMatriculaEditable = document.getElementById("listaMatriculaEditable");
         this.listaResumenMatricula = document.getElementById("listaResumenMatricula");
         this.listaHistorialCalificadas = document.getElementById("listaHistorialCalificadas");
@@ -52,6 +59,7 @@ class VistaUsuarios {
         this.alAbrirHistorial = alAbrirHistorial;
         this.alGuardarHistorial = alGuardarHistorial;
         this.alGuardarIntensificacion = alGuardarIntensificacion;
+        this.alVerHorario = alVerHorario;
         this.textos = TEXTOS.es;
         this.ultimos = [];
         this.emailActual = "";
@@ -59,6 +67,10 @@ class VistaUsuarios {
         this.expediente = null;
         this.catalogoAsignaturas = [];
         this.gruposMatricula = GRUPOS_MATRICULA;
+        this.horarioAlumno = [];
+        this.lunesHorario = null;
+        this.inicioSegundoAlumno = null;
+        this.nickHorario = "";
         document.getElementById("botonRefrescar").addEventListener("click", alRefrescar);
         const eliminarCuenta = () => this.alEliminar(this.emailActual);
         document.getElementById("botonEliminarCuenta").addEventListener("click", eliminarCuenta);
@@ -115,6 +127,21 @@ class VistaUsuarios {
                 this.pintar(this.ultimos, this.emailActual, this.rolVisor, this.matricula);
             });
         }
+        const semanaAnterior = document.getElementById("semanaAnteriorAlumno");
+        const semanaSiguiente = document.getElementById("semanaSiguienteAlumno");
+        if (semanaAnterior) {
+            semanaAnterior.addEventListener("click", () => this.cambiarSemanaHorario(-1));
+        }
+        if (semanaSiguiente) {
+            semanaSiguiente.addEventListener("click", () => this.cambiarSemanaHorario(1));
+        }
+        if (this.dialogoHorarioAlumno) {
+            this.dialogoHorarioAlumno.addEventListener("click", (evento) => {
+                if (evento.target === this.dialogoHorarioAlumno) {
+                    this.cerrarHorarioAlumno();
+                }
+            });
+        }
     }
 
     aplicarTextos(textos) {
@@ -128,6 +155,12 @@ class VistaUsuarios {
         }
         if (this.dialogoHistorial) {
             aplicarTextos(this.dialogoHistorial, textos);
+        }
+        if (this.dialogoHorarioAlumno) {
+            aplicarTextos(this.dialogoHorarioAlumno, textos);
+        }
+        if (this.dialogoHorarioAlumno?.open) {
+            this.pintarHorarioAlumno();
         }
         if (!this.seccion.hidden) {
             this.pintar(this.ultimos, this.emailActual, this.rolVisor, this.matricula);
@@ -248,6 +281,17 @@ class VistaUsuarios {
                 editar.textContent = this.textos.editar;
                 editar.addEventListener("click", () => this.alEditarUsuario(usuario));
                 acciones.append(editar);
+            }
+            if (usuario.estado !== "eliminado" && usuario.rol === "usuario" && this.esGestion(this.rolVisor)) {
+                const verHorario = document.createElement("button");
+                verHorario.type = "button";
+                verHorario.textContent = this.textos.verHorario;
+                verHorario.addEventListener("click", () => {
+                    if (this.alVerHorario) {
+                        this.alVerHorario(usuario.email);
+                    }
+                });
+                acciones.append(verHorario);
             }
             if (usuario.estado !== "eliminado" && puedeEliminarCuenta(this.rolVisor, usuario)) {
                 const boton = document.createElement("button");
@@ -657,6 +701,82 @@ class VistaUsuarios {
         if (this.dialogoHistorial?.open) {
             this.dialogoHistorial.close();
         }
+    }
+
+    abrirHorarioAlumno(nick, matricula) {
+        if (!this.dialogoHorarioAlumno) {
+            return;
+        }
+        this.nickHorario = nick || "";
+        this.horarioAlumno = matricula?.horario || [];
+        this.inicioSegundoAlumno = matricula?.inicio_segundo || null;
+        this.lunesHorario = VistaAgenda.lunesDe(new Date());
+        if (!this.dialogoHorarioAlumno.open) {
+            try {
+                this.dialogoHorarioAlumno.showModal();
+            } catch {
+                this.dialogoHorarioAlumno.setAttribute("open", "");
+            }
+        }
+        this.pintarHorarioAlumno();
+    }
+
+    cerrarHorarioAlumno() {
+        if (this.dialogoHorarioAlumno?.open) {
+            this.dialogoHorarioAlumno.close();
+        }
+    }
+
+    cambiarSemanaHorario(delta) {
+        if (!this.lunesHorario) {
+            return;
+        }
+        this.lunesHorario = new Date(
+            this.lunesHorario.getFullYear(),
+            this.lunesHorario.getMonth(),
+            this.lunesHorario.getDate() + delta * 7,
+        );
+        this.pintarHorarioAlumno();
+    }
+
+    franjasHorarioAlumno() {
+        const horario = this.horarioAlumno || [];
+        if (!this.lunesHorario || typeof VistaAgenda.cuatrimestreDeFecha !== "function") {
+            return horario;
+        }
+        const domingo = new Date(
+            this.lunesHorario.getFullYear(),
+            this.lunesHorario.getMonth(),
+            this.lunesHorario.getDate() + 6,
+        );
+        const cuatrimestre = VistaAgenda.cuatrimestreDeFecha(domingo, this.inicioSegundoAlumno);
+        return horario.filter((franja) => !franja.cuatrimestre || franja.cuatrimestre === cuatrimestre);
+    }
+
+    pintarHorarioAlumno() {
+        const vacio = !this.horarioAlumno?.length;
+        if (this.horarioAlumnoVacio) {
+            this.horarioAlumnoVacio.hidden = !vacio;
+        }
+        if (this.panelHorarioAlumno) {
+            this.panelHorarioAlumno.hidden = vacio;
+        }
+        if (this.tituloHorarioAlumno) {
+            const plantilla = this.textos.tituloHorarioAlumno || "Horario de {nick}";
+            this.tituloHorarioAlumno.textContent = plantilla.replace("{nick}", this.nickHorario || "");
+        }
+        if (vacio || typeof VistaAgenda.pintarRejillaHorario !== "function") {
+            return;
+        }
+        VistaAgenda.pintarRejillaHorario({
+            rejilla: this.rejillaHorarioAlumno,
+            titulo: this.tituloSemanaAlumno,
+            franjas: this.franjasHorarioAlumno(),
+            lunes: this.lunesHorario,
+            hoy: new Date(),
+            textos: this.textos,
+            raizAlto: this.panelHorarioAlumno,
+        });
     }
 
     pintarHistorial(expediente) {

@@ -56,6 +56,7 @@ class ControlWeb {
             alGuardarHistorial: (calificaciones, intensificacion) =>
                 this.guardarHistorialAlumno(calificaciones, intensificacion),
             alGuardarIntensificacion: (intensificacion) => this.guardarIntensificacionAlumno(intensificacion),
+            alVerHorario: (email) => this.verHorarioAlumno(email),
         });
         this.vistaAgenda = new VistaAgenda({
             alBuscar: (nombre) => this.buscarAsignaturas(nombre),
@@ -974,6 +975,16 @@ class ControlWeb {
         try {
             const usuarios = await this.rest.obtenerUsuarios();
             this.vistaUsuarios.pintar(usuarios, this.usuarioActual.email, this.usuarioActual.rol);
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
+    async verHorarioAlumno(email) {
+        try {
+            const matricula = await this.rest.matriculaDeAlumno(email);
+            const usuario = (this.vistaUsuarios.ultimos || []).find((item) => item.email === email);
+            this.vistaUsuarios.abrirHorarioAlumno(usuario?.nick || email, matricula);
         } catch (error) {
             this.gestionarError(error);
         }

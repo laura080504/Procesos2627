@@ -4,6 +4,7 @@ from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obte
 from datetime import timedelta
 
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
+    obtener_cliente_horarios_esiiab,
     obtener_enviador_correo,
     obtener_repositorio_asignaciones_rol,
     obtener_repositorio_asignaturas,
@@ -20,6 +21,8 @@ from Servidor.Dominio.DominioUseCases.confirmar_asignacion_rol_use_case import C
 from Servidor.Dominio.DominioUseCases.editar_datos_use_case import EditarDatosUseCase
 from Servidor.Dominio.DominioUseCases.eliminar_usuario_use_case import EliminarUsuarioUseCase
 from Servidor.Dominio.DominioUseCases.numero_usuarios_use_case import NumeroUsuariosUseCase
+from Servidor.Dominio.DominioUseCases.obtener_horario_alumno_use_case import ObtenerHorarioAlumnoUseCase
+from Servidor.Dominio.DominioUseCases.obtener_matricula_use_case import ObtenerMatriculaUseCase
 from Servidor.Dominio.DominioUseCases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
 from Servidor.Dominio.DominioUseCases.solicitar_asignacion_rol_use_case import SolicitarAsignacionRolUseCase
 from Servidor.Dominio.DominioUseCases.usuario_activo_use_case import UsuarioActivoUseCase
@@ -46,6 +49,29 @@ def crear_obtener_usuarios_use_case(
         repositorio_matriculas,
         repositorio_docencia,
         repositorio_asignaturas,
+    )
+
+
+def crear_obtener_horario_alumno_use_case(
+    repositorio_usuarios: RepositorioUsuarios = Depends(obtener_repositorio_usuarios),
+    repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
+    repositorio_docencia: RepositorioDocencia = Depends(obtener_repositorio_docencia),
+    repositorio_asignaturas: RepositorioAsignaturas = Depends(obtener_repositorio_asignaturas),
+) -> ObtenerHorarioAlumnoUseCase:
+    # Repos inyectados (los de la petición, también en pruebas). El cliente ESIIAB
+    # solo enriquece fichas; las franjas salen del catálogo y de la matrícula.
+    obtener_matricula = ObtenerMatriculaUseCase(
+        repositorio_matriculas,
+        repositorio_asignaturas,
+        obtener_cliente_horarios_esiiab(),
+        repositorio_docencia,
+    )
+    return ObtenerHorarioAlumnoUseCase(
+        repositorio_usuarios,
+        repositorio_matriculas,
+        repositorio_docencia,
+        repositorio_asignaturas,
+        obtener_matricula,
     )
 
 
