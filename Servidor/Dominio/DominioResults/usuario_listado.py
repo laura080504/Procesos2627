@@ -7,3 +7,4 @@ from Servidor.Dominio.DominioEntities.usuario import Usuario
 class UsuarioListado:
     usuario: Usuario
     asignaturas: list[str] = field(default_factory=list)
+    media: float | None = None

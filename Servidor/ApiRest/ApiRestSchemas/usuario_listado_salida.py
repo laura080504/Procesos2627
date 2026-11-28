@@ -5,3 +5,4 @@ from Servidor.ApiRest.ApiRestSchemas.usuario_salida import UsuarioSalida
 
 class UsuarioListadoSalida(UsuarioSalida):
     asignaturas: list[str] = Field(default_factory=list)
+    media: float | None = None

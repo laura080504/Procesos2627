@@ -448,9 +448,13 @@ function pintarDatosAlumnoProfesor(nodo, usuario, textos, catalogo = []) {
         const nombreAsignatura = ficha ? (ingles ? ficha.nombre_ingles : ficha.nombre) : "";
         return nombreAsignatura ? `${codigo} · ${nombreAsignatura}` : codigo;
     });
+    const media = usuario.media === null || usuario.media === undefined
+        ? textos.sinMedia
+        : formatearMedia(usuario.media, textos.codigo);
     meta.textContent = [
         `${textos.etiquetaRol}: ${textos.rolUsuario}`,
         `${textos.etiquetaAsignaturas}: ${asignaturas.length ? asignaturas.join(", ") : textos.sinAsignaturasAlumno}`,
+        `${textos.mediaCarrera}: ${media}`,
     ].join(" · ");
     nodo.append(nombre, meta);
 }

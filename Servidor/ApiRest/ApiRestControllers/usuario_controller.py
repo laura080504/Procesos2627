@@ -48,6 +48,7 @@ def obtener_usuarios(
             rol=resultado.usuario.rol,
             estado=resultado.usuario.estado,
             asignaturas=resultado.asignaturas,
+            media=resultado.media,
         )
         for resultado in use_case.ejecutar(
             ObtenerUsuariosQuery(
