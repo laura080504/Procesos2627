@@ -990,124 +990,14 @@ const VistaAgenda = (() => {
         }
 
         pintarHorario() {
-            const rejilla = document.getElementById("rejillaHorario");
-            const titulo = document.getElementById("tituloSemana");
-            const ingles = this.textos.codigo === "EN";
-            const domingo = new Date(this.lunes.getFullYear(), this.lunes.getMonth(), this.lunes.getDate() + 6);
-            const mismoMes = this.lunes.getMonth() === domingo.getMonth();
-            titulo.textContent = mismoMes
-                ? `${this.lunes.getDate()}–${domingo.getDate()} ${this.textos.meses[this.lunes.getMonth()]} ${this.lunes.getFullYear()}`
-                : `${this.lunes.getDate()} ${this.textos.meses[this.lunes.getMonth()]} – ${domingo.getDate()} ${this.textos.meses[domingo.getMonth()]} ${domingo.getFullYear()}`;
-            rejilla.replaceChildren();
-
-            const marco = document.createElement("div");
-            marco.className = "horario-marco";
-            const horas = this.crearEjeHoras();
-            const dias = document.createElement("div");
-            dias.className = "horario-dias";
-
-            const pxHora = altoHora();
-            const porDia = new Map();
-            this.franjasVisibles().forEach((franja) => {
-                const lista = porDia.get(franja.dia) || [];
-                lista.push(franja);
-                porDia.set(franja.dia, lista);
+            pintarRejillaHorario({
+                rejilla: document.getElementById("rejillaHorario"),
+                titulo: document.getElementById("tituloSemana"),
+                franjas: this.franjasVisibles(),
+                lunes: this.lunes,
+                hoy: this.hoy,
+                textos: this.textos,
             });
-
-            for (let indice = 0; indice < 7; indice += 1) {
-                dias.append(this.crearColumnaDia(indice, porDia.get(indice) || [], ingles, pxHora));
-            }
-
-            marco.append(horas, dias);
-            rejilla.append(marco);
-            this.dibujarLineaAhora(dias, domingo, pxHora);
-        }
-
-        crearEjeHoras() {
-            const horas = document.createElement("div");
-            horas.className = "horario-horas";
-            const hueco = document.createElement("span");
-            hueco.className = "horario-hueco";
-            horas.append(hueco);
-            for (let hora = HORA_INICIO; hora < HORA_FIN; hora += 1) {
-                const etiqueta = document.createElement("span");
-                etiqueta.className = "horario-hora";
-                etiqueta.textContent = String(hora);
-                horas.append(etiqueta);
-            }
-            return horas;
-        }
-
-        crearColumnaDia(indice, franjasDelDia, ingles, pxHora) {
-            const fecha = new Date(this.lunes.getFullYear(), this.lunes.getMonth(), this.lunes.getDate() + indice);
-            const columna = document.createElement("div");
-            columna.className = "horario-dia";
-            const cabecera = document.createElement("header");
-            const letra = document.createElement("span");
-            letra.textContent = this.textos.diasHorario[indice];
-            const numero = document.createElement("span");
-            numero.className = "horario-fecha";
-            numero.textContent = String(fecha.getDate());
-            const esHoy = fecha.getDate() === this.hoy.getDate()
-                && fecha.getMonth() === this.hoy.getMonth()
-                && fecha.getFullYear() === this.hoy.getFullYear();
-            if (esHoy) {
-                numero.classList.add("hoy");
-                columna.classList.add("hoy");
-            }
-            cabecera.append(letra, numero);
-
-            const pista = document.createElement("div");
-            pista.className = "horario-pista";
-            pista.style.height = `${(HORA_FIN - HORA_INICIO) * pxHora}px`;
-            layoutFranjas(franjasDelDia, pxHora).forEach((franja) => {
-                pista.append(this.crearBloqueFranja(franja, ingles));
-            });
-            columna.append(cabecera, pista);
-            return columna;
-        }
-
-        crearBloqueFranja(franja, ingles) {
-            const bloque = document.createElement("div");
-            bloque.className = "franja";
-            bloque.dataset.codigo = franja.codigo;
-            bloque.style.top = `${franja.y0}px`;
-            bloque.style.height = `${franja.alto}px`;
-            bloque.style.maxHeight = `${franja.alto}px`;
-            bloque.style.left = `calc(${(franja.columna * 100) / franja.columnasVisibles}% + 1px)`;
-            bloque.style.width = `calc(${100 / franja.columnasVisibles}% - 2px)`;
-            bloque.style.zIndex = String(2 + Math.floor(minutosFranja(franja.inicio) / 30));
-            bloque.style.background = tonoFranja(franja.codigo);
-            const nombre = ingles ? franja.nombre_ingles : franja.nombre;
-            const tipo = franja.tipo === "tutoria"
-                ? this.textos.tutorias
-                : (franja.tipo === "teoria" ? this.textos.teoria : this.textos.practicas);
-            if (franja.tipo === "tutoria") {
-                bloque.classList.add("franja-tutoria");
-            }
-            const grupo = franja.grupo ? ` · ${franja.grupo}` : "";
-            const aula = franja.aula ? ` · ${franja.aula}` : "";
-            bloque.title = `${nombre} · ${tipo}${grupo}${aula} · ${franja.inicio}–${franja.fin}`;
-            const fuerte = document.createElement("strong");
-            fuerte.textContent = nombre;
-            const detalle = document.createElement("span");
-            detalle.textContent = franja.grupo ? `${tipo} · ${franja.grupo}` : tipo;
-            bloque.append(fuerte, detalle);
-            return bloque;
-        }
-
-        dibujarLineaAhora(dias, domingo, pxHora) {
-            const yAhora = topAhora(this.hoy, pxHora);
-            const finDia = new Date(domingo.getFullYear(), domingo.getMonth(), domingo.getDate() + 1);
-            const contieneHoy = yAhora !== null && this.hoy >= this.lunes && this.hoy < finDia;
-            if (!contieneHoy) {
-                return;
-            }
-            const linea = document.createElement("div");
-            linea.className = "linea-ahora";
-            const altoCabecera = dias.querySelector("header")?.offsetHeight || 0;
-            linea.style.top = `${altoCabecera + yAhora}px`;
-            dias.append(linea);
         }
 
         pintarFicha() {
@@ -1211,11 +1101,134 @@ const VistaAgenda = (() => {
         }
     }
 
-    function altoHora() {
-        const nodo = document.querySelector(".agenda-horario");
+    function altoHora(raiz) {
+        const nodo = raiz || document.querySelector(".agenda-horario");
         const crudo = nodo ? getComputedStyle(nodo).getPropertyValue("--alto-hora") : "";
         const valor = parseFloat(crudo);
         return Number.isFinite(valor) && valor > 0 ? valor : 28;
+    }
+
+    function pintarRejillaHorario({ rejilla, titulo, franjas, lunes, hoy, textos, raizAlto }) {
+        if (!rejilla || !lunes || !textos) {
+            return;
+        }
+        const ingles = textos.codigo === "EN";
+        const domingo = new Date(lunes.getFullYear(), lunes.getMonth(), lunes.getDate() + 6);
+        if (titulo) {
+            const mismoMes = lunes.getMonth() === domingo.getMonth();
+            titulo.textContent = mismoMes
+                ? `${lunes.getDate()}–${domingo.getDate()} ${textos.meses[lunes.getMonth()]} ${lunes.getFullYear()}`
+                : `${lunes.getDate()} ${textos.meses[lunes.getMonth()]} – ${domingo.getDate()} ${textos.meses[domingo.getMonth()]} ${domingo.getFullYear()}`;
+        }
+        rejilla.replaceChildren();
+
+        const marco = document.createElement("div");
+        marco.className = "horario-marco";
+        const horas = crearEjeHoras();
+        const dias = document.createElement("div");
+        dias.className = "horario-dias";
+        const pxHora = altoHora(raizAlto);
+        const porDia = new Map();
+        (franjas || []).forEach((franja) => {
+            const lista = porDia.get(franja.dia) || [];
+            lista.push(franja);
+            porDia.set(franja.dia, lista);
+        });
+        for (let indice = 0; indice < 7; indice += 1) {
+            dias.append(crearColumnaDia(indice, porDia.get(indice) || [], ingles, pxHora, lunes, hoy, textos));
+        }
+        marco.append(horas, dias);
+        rejilla.append(marco);
+        dibujarLineaAhora(dias, domingo, pxHora, lunes, hoy);
+    }
+
+    function crearEjeHoras() {
+        const horas = document.createElement("div");
+        horas.className = "horario-horas";
+        const hueco = document.createElement("span");
+        hueco.className = "horario-hueco";
+        horas.append(hueco);
+        for (let hora = HORA_INICIO; hora < HORA_FIN; hora += 1) {
+            const etiqueta = document.createElement("span");
+            etiqueta.className = "horario-hora";
+            etiqueta.textContent = String(hora);
+            horas.append(etiqueta);
+        }
+        return horas;
+    }
+
+    function crearColumnaDia(indice, franjasDelDia, ingles, pxHora, lunes, hoy, textos) {
+        const fecha = new Date(lunes.getFullYear(), lunes.getMonth(), lunes.getDate() + indice);
+        const columna = document.createElement("div");
+        columna.className = "horario-dia";
+        const cabecera = document.createElement("header");
+        const letra = document.createElement("span");
+        letra.textContent = textos.diasHorario[indice];
+        const numero = document.createElement("span");
+        numero.className = "horario-fecha";
+        numero.textContent = String(fecha.getDate());
+        const referencia = hoy || new Date();
+        const esHoy = fecha.getDate() === referencia.getDate()
+            && fecha.getMonth() === referencia.getMonth()
+            && fecha.getFullYear() === referencia.getFullYear();
+        if (esHoy) {
+            numero.classList.add("hoy");
+            columna.classList.add("hoy");
+        }
+        cabecera.append(letra, numero);
+
+        const pista = document.createElement("div");
+        pista.className = "horario-pista";
+        pista.style.height = `${(HORA_FIN - HORA_INICIO) * pxHora}px`;
+        layoutFranjas(franjasDelDia, pxHora).forEach((franja) => {
+            pista.append(crearBloqueFranja(franja, ingles, textos));
+        });
+        columna.append(cabecera, pista);
+        return columna;
+    }
+
+    function crearBloqueFranja(franja, ingles, textos) {
+        const bloque = document.createElement("div");
+        bloque.className = "franja";
+        bloque.dataset.codigo = franja.codigo;
+        bloque.style.top = `${franja.y0}px`;
+        bloque.style.height = `${franja.alto}px`;
+        bloque.style.maxHeight = `${franja.alto}px`;
+        bloque.style.left = `calc(${(franja.columna * 100) / franja.columnasVisibles}% + 1px)`;
+        bloque.style.width = `calc(${100 / franja.columnasVisibles}% - 2px)`;
+        bloque.style.zIndex = String(2 + Math.floor(minutosFranja(franja.inicio) / 30));
+        bloque.style.background = tonoFranja(franja.codigo);
+        const nombre = ingles ? franja.nombre_ingles : franja.nombre;
+        const tipo = franja.tipo === "tutoria"
+            ? textos.tutorias
+            : (franja.tipo === "teoria" ? textos.teoria : textos.practicas);
+        if (franja.tipo === "tutoria") {
+            bloque.classList.add("franja-tutoria");
+        }
+        const grupo = franja.grupo ? ` · ${franja.grupo}` : "";
+        const aula = franja.aula ? ` · ${franja.aula}` : "";
+        bloque.title = `${nombre} · ${tipo}${grupo}${aula} · ${franja.inicio}–${franja.fin}`;
+        const fuerte = document.createElement("strong");
+        fuerte.textContent = nombre;
+        const detalle = document.createElement("span");
+        detalle.textContent = franja.grupo ? `${tipo} · ${franja.grupo}` : tipo;
+        bloque.append(fuerte, detalle);
+        return bloque;
+    }
+
+    function dibujarLineaAhora(dias, domingo, pxHora, lunes, hoy) {
+        const referencia = hoy || new Date();
+        const yAhora = topAhora(referencia, pxHora);
+        const finDia = new Date(domingo.getFullYear(), domingo.getMonth(), domingo.getDate() + 1);
+        const contieneHoy = yAhora !== null && referencia >= lunes && referencia < finDia;
+        if (!contieneHoy) {
+            return;
+        }
+        const linea = document.createElement("div");
+        linea.className = "linea-ahora";
+        const altoCabecera = dias.querySelector("header")?.offsetHeight || 0;
+        linea.style.top = `${altoCabecera + yAhora}px`;
+        dias.append(linea);
     }
 
     function lunesDe(fecha) {
@@ -1506,6 +1519,10 @@ const VistaAgenda = (() => {
         svg.append(cabeza, cuerpo);
         return svg;
     }
+
+    VistaAgenda.pintarRejillaHorario = pintarRejillaHorario;
+    VistaAgenda.lunesDe = lunesDe;
+    VistaAgenda.cuatrimestreDeFecha = cuatrimestreDeFecha;
 
     return VistaAgenda;
 })();

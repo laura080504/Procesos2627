@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=15">
     <link rel="stylesheet" href="ClienteShared/usuarios.css?v=46">
-    <link rel="stylesheet" href="ClienteShared/agenda.css?v=48">
+    <link rel="stylesheet" href="ClienteShared/agenda.css?v=49">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -699,12 +699,30 @@
                 </div>
             </form>
         </dialog>
+
+        <dialog id="dialogoHorarioAlumno" class="dialogo-matricula dialogo-horario-alumno" aria-labelledby="tituloHorarioAlumno">
+            <form method="dialog">
+                <header>
+                    <h2 id="tituloHorarioAlumno">Horario</h2>
+                    <button type="submit" class="cerrar-dialogo" data-etiqueta="cerrarDialogo" value="cancelar" aria-label="Cerrar">&times;</button>
+                </header>
+                <p id="horarioAlumnoVacio" class="horario-alumno-vacio" data-texto="horarioAlumnoVacio" hidden>Este alumno aún no tiene horario</p>
+                <div id="panelHorarioAlumno" class="agenda-horario horario-alumno">
+                    <div class="calendario-nav">
+                        <button id="semanaAnteriorAlumno" type="button" data-etiqueta="semanaAnterior" aria-label="Semana anterior">&lsaquo;</button>
+                        <p id="tituloSemanaAlumno" class="titulo-semana-alumno"></p>
+                        <button id="semanaSiguienteAlumno" type="button" data-etiqueta="semanaSiguiente" aria-label="Semana siguiente">&rsaquo;</button>
+                    </div>
+                    <div id="rejillaHorarioAlumno"></div>
+                </div>
+            </form>
+        </dialog>
     </div>
 
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=31"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=52"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=53"></script>
     <script src="ClienteJs/ClientePresentacion/preferenciasNotificaciones.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/preferenciasLeyenda.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
@@ -713,10 +731,10 @@
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=14"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=37"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=44"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=38"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=45"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=17"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=47"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=48"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>
