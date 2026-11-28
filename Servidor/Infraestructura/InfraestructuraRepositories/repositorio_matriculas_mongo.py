@@ -7,6 +7,13 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas
 class RepositorioMatriculasMongo(RepositorioMatriculas):
     def __init__(self, base_datos: BaseDatosMongo):
         self.base_datos = base_datos
+        try:
+            self.base_datos.coleccion("matricula").create_index(
+                [("email", 1), ("activa", 1), ("meta", 1)],
+                name="email_activa_meta",
+            )
+        except Exception:
+            pass
 
     def obtener_codigos(self, email: str) -> list[str]:
         documentos = (
@@ -15,6 +22,22 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
             .sort("codigo", 1)
         )
         return [documento["codigo"] for documento in documentos if documento.get("codigo")]
+
+    def obtener_codigos_por_email(self) -> dict[str, list[str]]:
+        documentos = self.base_datos.coleccion("matricula").find(
+            {"activa": {"$ne": False}, "meta": {"$ne": True}},
+            {"email": 1, "codigo": 1},
+        )
+        por_email: dict[str, list[str]] = {}
+        for documento in documentos:
+            email = documento.get("email")
+            codigo = documento.get("codigo")
+            if not email or not codigo:
+                continue
+            por_email.setdefault(email, []).append(codigo)
+        for email, codigos in por_email.items():
+            por_email[email] = sorted(set(codigos))
+        return por_email
 
     def obtener_notas(self, email: str) -> dict[str, float | None]:
         documentos = self.base_datos.coleccion("matricula").find(

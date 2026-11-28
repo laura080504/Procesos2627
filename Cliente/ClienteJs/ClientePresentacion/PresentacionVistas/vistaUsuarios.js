@@ -20,12 +20,16 @@ class VistaUsuarios {
         this.lista = document.getElementById("listaUsuarios");
         this.numeroUsuarios = document.getElementById("numeroUsuarios");
         this.tituloListadoAlumnos = document.getElementById("tituloListadoAlumnos");
+        this.textoTituloListadoAlumnos = document.getElementById("textoTituloListadoAlumnos");
         this.numeroAlumnosProfesor = document.getElementById("numeroAlumnosProfesor");
+        this.filtroCursoSecretaria = document.getElementById("filtroCursoSecretaria");
+        this.selectFiltroCurso = document.getElementById("selectFiltroCurso");
         this.botonRefrescar = document.getElementById("botonRefrescar");
         this.preferenciasAvisos = document.getElementById("preferenciasAvisos");
         this.formularioEvento = document.getElementById("formularioEventoProfesor");
         this.formCrearEvento = document.getElementById("formCrearEvento");
         this.selectCodigoEvento = document.getElementById("codigoEvento");
+        this.filtroCurso = "";
         this.dialogoMatricula = document.getElementById("dialogoMatricula");
         this.dialogoResumenMatricula = document.getElementById("dialogoResumenMatricula");
         this.dialogoHistorial = document.getElementById("dialogoHistorial");
@@ -105,6 +109,12 @@ class VistaUsuarios {
             evento.preventDefault();
             this.enviarEventoProfesor();
         });
+        if (this.selectFiltroCurso) {
+            this.selectFiltroCurso.addEventListener("change", () => {
+                this.filtroCurso = this.selectFiltroCurso.value || "";
+                this.pintar(this.ultimos, this.emailActual, this.rolVisor, this.matricula);
+            });
+        }
     }
 
     aplicarTextos(textos) {
@@ -128,18 +138,40 @@ class VistaUsuarios {
         return rol === "profesor" || rol === "superadministrador";
     }
 
+    esSecretaria(rol) {
+        // Secretaría = superadministrador de base (cuenta de arranque / personal administrativo).
+        return rol === "superadministrador";
+    }
+
+    puedePublicarAvisos(rol) {
+        return rol === "profesor";
+    }
+
     preparar(rolVisor = "usuario") {
         this.rolVisor = rolVisor;
         const gestion = this.esGestion(rolVisor);
+        const esProfesor = rolVisor === "profesor";
+        const esSecretaria = this.esSecretaria(rolVisor);
         this.vistaAdministrador.hidden = !gestion;
         this.vistaCuenta.hidden = gestion;
-        this.formularioEvento.hidden = !gestion;
+        this.formularioEvento.hidden = !this.puedePublicarAvisos(rolVisor);
         this.botonRefrescar.hidden = !gestion;
         this.preferenciasAvisos.hidden = gestion;
-        const esProfesor = rolVisor === "profesor";
-        this.contadorUsuarios.hidden = !gestion || esProfesor;
+        this.contadorUsuarios.hidden = !gestion || esProfesor || esSecretaria;
         if (this.tituloListadoAlumnos) {
-            this.tituloListadoAlumnos.hidden = !esProfesor;
+            this.tituloListadoAlumnos.hidden = !(esProfesor || esSecretaria);
+        }
+        if (this.textoTituloListadoAlumnos) {
+            this.textoTituloListadoAlumnos.textContent = esSecretaria
+                ? this.textos.listadoAlumnosEscuela
+                : this.textos.listadoAlumnos;
+            this.textoTituloListadoAlumnos.setAttribute(
+                "data-texto",
+                esSecretaria ? "listadoAlumnosEscuela" : "listadoAlumnos",
+            );
+        }
+        if (this.filtroCursoSecretaria) {
+            this.filtroCursoSecretaria.hidden = !esSecretaria;
         }
         this.botonEditarMatricula.hidden = gestion;
         this.botonVerMatricula.hidden = gestion;
@@ -149,9 +181,15 @@ class VistaUsuarios {
             bloqueRama.hidden = gestion;
         }
         document.getElementById("botonEliminarSesion").hidden = gestion;
-        document.getElementById("tituloVistaUsuarios").textContent = gestion
-            ? (esProfesor ? this.textos.alumnosProfesor : this.textos.gestionUsuarios)
-            : this.textos.perfilEstudiante;
+        let titulo = this.textos.perfilEstudiante;
+        if (esProfesor) {
+            titulo = this.textos.alumnosProfesor;
+        } else if (esSecretaria) {
+            titulo = this.textos.panelSecretaria;
+        } else if (gestion) {
+            titulo = this.textos.gestionUsuarios;
+        }
+        document.getElementById("tituloVistaUsuarios").textContent = titulo;
         if (!gestion) {
             this.lista.innerHTML = "";
         }
@@ -191,11 +229,12 @@ class VistaUsuarios {
         if (!this.formularioEvento.hidden) {
             this.pintarSelectAsignaturas();
         }
-        usuarios.forEach((usuario) => {
+        const visibles = this.filtrarPorCurso(usuarios);
+        visibles.forEach((usuario) => {
             const elemento = document.createElement("li");
             const texto = document.createElement("span");
             texto.className = "usuario-ficha";
-            if (this.rolVisor === "profesor") {
+            if (this.rolVisor === "profesor" || (this.esSecretaria(this.rolVisor) && usuario.rol === "usuario")) {
                 pintarDatosAlumnoProfesor(texto, usuario, this.textos, this.catalogoAsignaturas);
             } else {
                 pintarDatosUsuario(texto, usuario, this.textos);
@@ -203,7 +242,7 @@ class VistaUsuarios {
             elemento.append(texto);
             const acciones = document.createElement("span");
             acciones.className = "acciones-usuario";
-            if (usuario.estado !== "eliminado" && usuario.rol === "usuario" && this.rolVisor === "superadministrador") {
+            if (usuario.estado !== "eliminado" && usuario.rol === "usuario" && this.esSecretaria(this.rolVisor)) {
                 const editar = document.createElement("button");
                 editar.type = "button";
                 editar.textContent = this.textos.editar;
@@ -222,14 +261,24 @@ class VistaUsuarios {
             }
             this.lista.appendChild(elemento);
         });
-        this.numeroUsuarios.textContent = usuarios.length;
+        this.numeroUsuarios.textContent = visibles.length;
         if (this.numeroAlumnosProfesor) {
-            this.numeroAlumnosProfesor.textContent = usuarios.length;
+            this.numeroAlumnosProfesor.textContent = visibles.length;
         }
     }
 
+    filtrarPorCurso(usuarios) {
+        if (!this.esSecretaria(this.rolVisor) || !this.filtroCurso) {
+            return usuarios;
+        }
+        if (this.filtroCurso === "sin_curso") {
+            return usuarios.filter((usuario) => usuario.rol === "usuario" && !usuario.curso);
+        }
+        return usuarios.filter((usuario) => usuario.rol === "usuario" && usuario.curso === this.filtroCurso);
+    }
+
     pintarIdentidadEstudiante(usuario) {
-        pintarIdentidadUsuario(this.cuentaActual, usuario);
+        pintarIdentidadUsuario(this.cuentaActual, usuario, this.textos);
     }
 
     pintarCurso(matricula) {

@@ -15,6 +15,8 @@ const VistaAgenda = (() => {
             alEditarMatricula,
             alActualizarEvento,
             alEliminarEvento,
+            alCrearAvisoSecretaria,
+            alEliminarAvisoSecretaria,
         }) {
             this.seccion = document.getElementById("vistaAgenda");
             this.lista = document.getElementById("listaAsignaturas");
@@ -71,6 +73,11 @@ const VistaAgenda = (() => {
             this.alEditarMatricula = alEditarMatricula;
             this.alActualizarEvento = alActualizarEvento;
             this.alEliminarEvento = alEliminarEvento;
+            this.alCrearAvisoSecretaria = alCrearAvisoSecretaria;
+            this.alEliminarAvisoSecretaria = alEliminarAvisoSecretaria;
+            this.preferenciasLeyenda = PreferenciasLeyenda.leer();
+            this.panelAvisoSecretaria = document.getElementById("panelAvisoSecretaria");
+            this.formAvisoSecretaria = document.getElementById("formAvisoSecretaria");
             this.temporizador = null;
             document.getElementById("botonPerfil").addEventListener("click", alAbrirPerfil);
             this.botonMatriculaVacia.addEventListener("click", () => {
@@ -129,6 +136,12 @@ const VistaAgenda = (() => {
             }
             this.prepararLeyenda();
             this.aplicarPreferenciasAvisos(this.preferenciasAvisos);
+            if (this.formAvisoSecretaria) {
+                this.formAvisoSecretaria.addEventListener("submit", (evento) => {
+                    evento.preventDefault();
+                    this.enviarAvisoSecretaria();
+                });
+            }
             window.addEventListener("resize", () => {
                 if (this.seccion.hidden) {
                     return;
@@ -156,12 +169,45 @@ const VistaAgenda = (() => {
                 ".cambio-cuatri": this.textos.abrevCambioCuatri || "C",
                 ".festivo": this.textos.abrevFestivo || "F",
                 ".semana-examenes": this.textos.abrevPeriodo || "P",
+                ".secretaria": this.textos.abrevSecretaria || "S",
             };
             Object.entries(letras).forEach(([selector, texto]) => {
                 const icono = leyenda.querySelector(`.leyenda-letra${selector}`);
                 if (icono) {
                     icono.textContent = texto;
                 }
+            });
+            leyenda.querySelectorAll("[data-filtro]").forEach((item) => {
+                if (item.dataset.leyendaListo) {
+                    return;
+                }
+                item.dataset.leyendaListo = "1";
+                const activar = () => {
+                    this.preferenciasLeyenda = PreferenciasLeyenda.alternar(item.dataset.filtro);
+                    this.aplicarEstadoLeyenda();
+                    this.pintarCalendario();
+                };
+                item.addEventListener("click", activar);
+                item.addEventListener("keydown", (evento) => {
+                    if (evento.key === "Enter" || evento.key === " ") {
+                        evento.preventDefault();
+                        activar();
+                    }
+                });
+            });
+            this.aplicarEstadoLeyenda();
+        }
+
+        aplicarEstadoLeyenda() {
+            const leyenda = document.getElementById("leyendaCalendario");
+            if (!leyenda) {
+                return;
+            }
+            leyenda.querySelectorAll("[data-filtro]").forEach((item) => {
+                const activo = PreferenciasLeyenda.visible(item.dataset.filtro, this.preferenciasLeyenda);
+                item.classList.toggle("leyenda-activa", activo);
+                item.classList.toggle("leyenda-apagada", !activo);
+                item.setAttribute("aria-pressed", activo ? "true" : "false");
             });
         }
 
@@ -178,9 +224,39 @@ const VistaAgenda = (() => {
             this.buscador.closest(".buscador").hidden = false;
             this.lista.hidden = false;
             this.preferenciasAvisos = PreferenciasNotificaciones.leer();
+            this.preferenciasLeyenda = PreferenciasLeyenda.leer();
             this.aplicarPreferenciasAvisos(this.preferenciasAvisos);
+            this.aplicarEstadoLeyenda();
+            this.mostrarPanelSecretaria(usuario?.rol === "superadministrador");
             this.rellenarSelectores();
             this.iniciarReloj();
+        }
+
+        mostrarPanelSecretaria(visible) {
+            if (this.panelAvisoSecretaria) {
+                this.panelAvisoSecretaria.hidden = !visible;
+            }
+        }
+
+        enviarAvisoSecretaria() {
+            if (!this.alCrearAvisoSecretaria || !this.formAvisoSecretaria) {
+                return;
+            }
+            const datos = new FormData(this.formAvisoSecretaria);
+            this.alCrearAvisoSecretaria({
+                titulo: String(datos.get("titulo") || "").trim(),
+                tipo: String(datos.get("tipo") || "aviso"),
+                fecha: String(datos.get("fecha") || ""),
+                hora: String(datos.get("hora") || "").slice(0, 5),
+                lugar: String(datos.get("lugar") || "").trim(),
+                url: String(datos.get("url") || "").trim(),
+            }, () => {
+                this.formAvisoSecretaria.reset();
+                const hora = document.getElementById("horaAvisoSecretaria");
+                if (hora) {
+                    hora.value = "12:00";
+                }
+            });
         }
 
         ocultar() {
@@ -385,10 +461,13 @@ const VistaAgenda = (() => {
                 this.textoVacio.textContent = buscando
                     ? this.textos.sinAsignaturas
                     : this.textos.sinMatriculaAsignaturas;
-                const esGestion = this.usuario
-                    && (this.usuario.rol === "profesor" || this.usuario.rol === "superadministrador");
+                const rol = this.usuario && this.usuario.rol;
+                const esGestion = rol === "profesor" || rol === "superadministrador";
                 this.botonMatriculaVacia.hidden = buscando || esGestion;
                 this.botonMatriculaVacia.textContent = this.textos.irEditarMatricula || this.textos.editarMatricula;
+                if (!buscando && rol === "profesor") {
+                    this.textoVacio.textContent = this.textos.sinAsignaturasProfesor;
+                }
             }
             this.asignaturas.forEach((asignatura) => {
                 const nombre = ingles ? asignatura.nombre_ingles : asignatura.nombre;
@@ -530,6 +609,9 @@ const VistaAgenda = (() => {
             if (simbolos.some((simbolo) => simbolo.tipo === "vacaciones")) {
                 celda.classList.add("dia-vacaciones");
             }
+            if (simbolos.some((simbolo) => simbolo.tipo === "secretaria")) {
+                celda.classList.add("dia-secretaria");
+            }
             if (simbolos.some((simbolo) => simbolo.tipo === "semana_examenes" || simbolo.tipo === "periodo")) {
                 celda.classList.add("dia-periodo");
             }
@@ -550,7 +632,9 @@ const VistaAgenda = (() => {
                 pastilla.dataset.tipo = simbolo.tipo;
                 pastilla.dataset.nombre = nombre;
                 pastilla.setAttribute("title", nombre);
-                if (simbolo.tipo === "cambio_cuatrimestre") {
+                if (simbolo.tipo === "secretaria") {
+                    pastilla.textContent = this.textos.abrevSecretaria || "S";
+                } else if (simbolo.tipo === "cambio_cuatrimestre") {
                     pastilla.textContent = this.textos.abrevCambioCuatri || "C";
                 } else if (simbolo.tipo === "festivo" || simbolo.tipo === "vacaciones") {
                     pastilla.textContent = this.textos.abrevFestivo || "F";
@@ -620,6 +704,9 @@ const VistaAgenda = (() => {
                                 : simbolo.hora;
                         } else if (simbolo.tipo === "punto") {
                             detalleTexto = `${this.textos.hastaLas} ${simbolo.hora}`;
+                        } else if (simbolo.tipo === "secretaria") {
+                            const partes = [simbolo.hora, simbolo.lugar, simbolo.detalle].filter(Boolean);
+                            detalleTexto = partes.join(" · ");
                         }
                         if (detalleTexto && detalleTexto !== textoNombre) {
                             const detalle = document.createElement("p");
@@ -627,7 +714,30 @@ const VistaAgenda = (() => {
                             detalle.textContent = detalleTexto;
                             item.append(detalle);
                         }
-                        if (this.puedeGestionarEvento(simbolo)) {
+                        if (simbolo.tipo === "secretaria" && simbolo.url) {
+                            const enlace = document.createElement("a");
+                            enlace.href = simbolo.url;
+                            enlace.target = "_blank";
+                            enlace.rel = "noopener";
+                            enlace.className = "actividad-enlace";
+                            enlace.textContent = this.textos.verEnEsiiab || "Ver en ESIIAB";
+                            item.append(enlace);
+                        }
+                        if (this.puedeGestionarAvisoSecretaria(simbolo)) {
+                            const acciones = document.createElement("div");
+                            acciones.className = "actividad-acciones";
+                            const eliminar = document.createElement("button");
+                            eliminar.type = "button";
+                            eliminar.className = "boton-actividad boton-actividad-eliminar";
+                            eliminar.textContent = this.textos.eliminarEvento || "Eliminar";
+                            eliminar.addEventListener("click", (evento) => {
+                                evento.preventDefault();
+                                evento.stopPropagation();
+                                this.confirmarEliminarAvisoSecretaria(simbolo);
+                            });
+                            acciones.append(eliminar);
+                            item.append(acciones);
+                        } else if (this.puedeGestionarEvento(simbolo)) {
                             const acciones = document.createElement("div");
                             acciones.className = "actividad-acciones";
                             const editar = document.createElement("button");
@@ -657,15 +767,39 @@ const VistaAgenda = (() => {
             this.dialogo.showModal();
         }
 
+        puedeGestionarAvisoSecretaria(simbolo) {
+            return Boolean(
+                simbolo
+                && simbolo.tipo === "secretaria"
+                && simbolo.evento_id
+                && this.usuario?.rol === "superadministrador"
+                && this.alEliminarAvisoSecretaria,
+            );
+        }
+
+        confirmarEliminarAvisoSecretaria(simbolo) {
+            if (!this.alEliminarAvisoSecretaria || !simbolo.evento_id) {
+                return;
+            }
+            const nombre = this.textos.codigo === "EN" ? simbolo.nombre_ingles : simbolo.nombre;
+            const mensaje = (this.textos.confirmarEliminarAvisoSecretaria || "¿Eliminar el aviso «{nombre}»?")
+                .replace("{nombre}", nombre);
+            if (!window.confirm(mensaje)) {
+                return;
+            }
+            this.alEliminarAvisoSecretaria(simbolo.evento_id, () => {
+                this.dialogo.close();
+            });
+        }
+
         puedeGestionarEvento(simbolo) {
             if (!simbolo || !simbolo.editable || !simbolo.evento_id || !this.usuario) {
                 return false;
             }
-            const rol = this.usuario.rol;
-            if (rol === "superadministrador") {
-                return true;
+            if (simbolo.tipo === "secretaria") {
+                return false;
             }
-            if (rol !== "profesor") {
+            if (this.usuario.rol !== "profesor") {
                 return false;
             }
             return this.asignaturas.some((asignatura) => asignatura.codigo === simbolo.codigo);
@@ -752,11 +886,21 @@ const VistaAgenda = (() => {
                 "semana_examenes",
                 "cambio_cuatrimestre",
             ]);
+            const esSecretaria = this.usuario?.rol === "superadministrador";
             return (marcas || [])
                 .map((marca) => ({
                     dia: marca.dia,
                     simbolos: (marca.simbolos || []).filter((simbolo) => {
+                        if (!PreferenciasLeyenda.visible(simbolo.tipo, this.preferenciasLeyenda)) {
+                            return false;
+                        }
+                        if (simbolo.tipo === "secretaria" || simbolo.codigo === "secretaria") {
+                            return !this.abierta;
+                        }
                         if (academicos.has(simbolo.tipo) || simbolo.codigo === "calendario") {
+                            return !this.abierta;
+                        }
+                        if (esSecretaria) {
                             return !this.abierta;
                         }
                         if (this.abierta) {
@@ -774,6 +918,9 @@ const VistaAgenda = (() => {
             }
             if (tipo === "punto") {
                 return this.textos.entrega;
+            }
+            if (tipo === "secretaria") {
+                return this.textos.leyendaAvisosSecretaria || "Aviso secretaría";
             }
             if (tipo === "cambio_cuatrimestre") {
                 return this.textos.leyendaCambioCuatri || "Cambio de cuatrimestre";

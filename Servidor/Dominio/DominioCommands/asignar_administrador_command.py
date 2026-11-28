@@ -8,3 +8,4 @@ class AsignarAdministradorCommand:
     email: str
     solicitante_email: str
     solicitante_rol: Rol
+    rol_destino: Rol = Rol.PROFESOR  # Solo profesor; secretaría es el propio superadministrador.

@@ -68,11 +68,14 @@ class ControlWeb {
             alEditarMatricula: () => this.abrirEdicionMatriculaDesdeAgenda(),
             alActualizarEvento: (eventoId, datos, alOk) => this.actualizarEventoProfesor(eventoId, datos, alOk),
             alEliminarEvento: (eventoId, alOk) => this.eliminarEventoProfesor(eventoId, alOk),
+            alCrearAvisoSecretaria: (datos, alOk) => this.crearAvisoSecretaria(datos, alOk),
+            alEliminarAvisoSecretaria: (avisoId, alOk) => this.eliminarAvisoSecretaria(avisoId, alOk),
         });
         this.vistaEditarDatos = new VistaEditarDatos({
             alGuardar: (datos) => this.guardarEdicion(datos),
             alVolver: () => this.mostrarPanel(),
             alNoCoinciden: () => this.mostrarMensaje(this.textos.contrasenasNoCoinciden, true),
+            alAsignarRol: (email) => this.solicitarAsignacionRol(email),
         });
         this.aplicarIdioma();
     }
@@ -85,12 +88,17 @@ class ControlWeb {
         const params = new URLSearchParams(location.search);
         const confirmar = params.get("confirmar");
         const recuperar = params.get("recuperar");
+        const asignarRol = params.get("asignar-rol");
         const aviso = params.get("aviso");
-        if (confirmar || recuperar || aviso) {
+        if (confirmar || recuperar || aviso || asignarRol) {
             history.replaceState({}, "", location.pathname);
         }
         if (recuperar) {
             this.mostrarRecuperacionConToken(recuperar);
+            return;
+        }
+        if (asignarRol) {
+            await this.confirmarAsignacionRol(asignarRol);
             return;
         }
         const avisoPendiente = await this.avisoInicial(confirmar, aviso);
@@ -211,6 +219,7 @@ class ControlWeb {
         this.vistaAgenda.ocultar();
         document.body.classList.remove("con-agenda");
         document.body.classList.remove("en-perfil");
+        document.body.classList.remove("agenda-secretaria");
     }
 
     mostrarInicioSesion() {
@@ -326,6 +335,32 @@ class ControlWeb {
         }
     }
 
+    async crearAvisoSecretaria(datos, alOk) {
+        try {
+            await this.rest.crearAvisoSecretaria(datos);
+            this.mostrarMensaje(this.textos.avisoSecretariaPublicado);
+            if (alOk) {
+                alOk();
+            }
+            await this.refrescarAgendaTrasEvento();
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
+    async eliminarAvisoSecretaria(avisoId, alOk) {
+        try {
+            await this.rest.eliminarAvisoSecretaria(avisoId);
+            this.mostrarMensaje(this.textos.avisoSecretariaEliminado);
+            if (alOk) {
+                alOk();
+            }
+            await this.refrescarAgendaTrasEvento();
+        } catch (error) {
+            this.gestionarError(error);
+        }
+    }
+
     async refrescarAgendaTrasEvento() {
         if (this.vistaAgenda.seccion.hidden) {
             this.invalidarCacheMarcas();
@@ -339,8 +374,32 @@ class ControlWeb {
     async mostrarAgenda() {
         this.ocultarVistas();
         document.body.classList.add("con-agenda");
+        document.body.classList.toggle(
+            "agenda-secretaria",
+            this.usuarioActual?.rol === "superadministrador",
+        );
         this.vistaAgenda.mostrar(this.usuarioActual, this.textos);
         await this.cargarAgenda();
+    }
+
+    async confirmarAsignacionRol(token) {
+        try {
+            await this.rest.confirmarAsignacionRol(token);
+            this.mostrarInicioSesion();
+            this.mostrarMensaje(this.textos.rolProfesorConfirmado);
+        } catch (error) {
+            this.mostrarInicioSesion();
+            this.mostrarMensaje(error.message, true);
+        }
+    }
+
+    async solicitarAsignacionRol(email) {
+        try {
+            await this.rest.solicitarAsignacionRol(email);
+            this.mostrarMensaje(this.textos.correoAsignacionRolEnviado);
+        } catch (error) {
+            this.gestionarError(error);
+        }
     }
 
     periodosAntelacion() {
@@ -616,7 +675,7 @@ class ControlWeb {
         document.body.classList.add("en-perfil");
         // Primero se fija la vista según el rol para no enseñar gestión al alumno ni un instante.
         this.vistaUsuarios.mostrar(this.usuarioActual.rol);
-        if (this.esGestion(this.usuarioActual.rol)) {
+        if (this.usuarioActual.rol === "profesor") {
             this.cabecera.mostrar(this.usuarioActual, this.textos);
             try {
                 const asignaturas = await this.asignaturasParaAvisos();
@@ -624,6 +683,8 @@ class ControlWeb {
             } catch (error) {
                 this.gestionarError(error);
             }
+        } else if (this.usuarioActual.rol === "superadministrador") {
+            this.cabecera.mostrar(this.usuarioActual, this.textos);
         } else {
             this.vistaUsuarios.pintarIdentidadEstudiante(this.usuarioActual);
         }
@@ -631,10 +692,7 @@ class ControlWeb {
     }
 
     async asignaturasParaAvisos() {
-        // El superadministrador puede publicar en cualquier asignatura; el profesor solo en las suyas.
-        if (this.usuarioActual.rol === "superadministrador") {
-            return this.rest.listarAsignaturas("");
-        }
+        // Solo el profesor publica avisos de las asignaturas que imparte.
         const matricula = await this.obtenerMatriculaCacheada("");
         return matricula.asignaturas || [];
     }
@@ -650,16 +708,49 @@ class ControlWeb {
         return rol === "profesor" || rol === "superadministrador";
     }
 
-    mostrarEditarDatos(usuario) {
+    async mostrarEditarDatos(usuario) {
         const propio = usuario.email === this.usuarioActual.email;
         this.ocultarVistas();
+        document.body.classList.add("en-perfil");
+        if (!propio && this.usuarioActual.rol === "superadministrador" && usuario.rol === "usuario") {
+            try {
+                if (!this.vistaEditarDatos.catalogoAsignaturas?.length) {
+                    this.vistaEditarDatos.cargarCatalogo(await this.rest.listarAsignaturas(""));
+                }
+                const matricula = await this.rest.matriculaDeAlumno(usuario.email);
+                const curso = usuario.curso || matricula?.curso || null;
+                const alumno = { ...usuario, curso };
+                const delegadoCursoOcupado = Boolean(
+                    curso
+                    && (this.vistaUsuarios.ultimos || []).some(
+                        (otro) =>
+                            otro.email !== alumno.email
+                            && otro.delegado_curso
+                            && otro.delegado_curso === curso,
+                    ),
+                );
+                this.vistaEditarDatos.mostrar(
+                    alumno,
+                    { propio: false, modoSecretaria: true, delegadoCursoOcupado },
+                    matricula,
+                );
+            } catch (error) {
+                this.gestionarError(error);
+                await this.mostrarPanel();
+            }
+            return;
+        }
         this.vistaEditarDatos.mostrar(usuario, {
             propio,
-            puedeAsignarProfesor: !propio && this.usuarioActual.rol === "superadministrador" && usuario.rol === "usuario",
+            puedeAsignarProfesor: false,
         });
     }
 
     async guardarEdicion(datos) {
+        if (datos.modoSecretaria) {
+            await this.guardarEdicionSecretaria(datos);
+            return;
+        }
         if (!datos.propio) {
             if (!datos.hacerAdmin) {
                 await this.mostrarPanel();
@@ -669,6 +760,31 @@ class ControlWeb {
             return;
         }
         await this.editarDatos(datos.email, datos.nick, datos.contrasena);
+    }
+
+    async guardarEdicionSecretaria(datos) {
+        try {
+            await this.rest.editarAlumno(datos.email, datos.nick, datos.emailNuevo);
+            const email = datos.emailNuevo || datos.email;
+            if (datos.asignaturas?.length) {
+                await this.rest.guardarMatriculaAlumno(email, datos.asignaturas);
+            }
+            if (datos.tocarDelegado) {
+                if (datos.delegado) {
+                    await this.rest.asignarDelegado(email);
+                } else {
+                    await this.rest.quitarDelegado(email);
+                }
+            }
+            await this.mostrarPanel();
+            this.mostrarMensaje(this.textos.datosActualizados);
+        } catch (error) {
+            if (error.estado === 409) {
+                this.mostrarMensaje(this.textos.emailYaRegistrado, true);
+                return;
+            }
+            this.gestionarError(error);
+        }
     }
 
     async editarDatos(email, nick, contrasena) {

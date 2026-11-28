@@ -3,6 +3,7 @@ from __future__ import annotations
 from pymongo.errors import DuplicateKeyError
 
 from Servidor.Dominio.DominioEntities.usuario import Usuario
+from Servidor.Dominio.DominioEnums.curso_asignatura import CursoAsignatura
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
 from Servidor.Dominio.DominioEnums.proveedor_auth import ProveedorAuth
 from Servidor.Dominio.DominioEnums.rol import rol_desde_almacen
@@ -51,6 +52,7 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
                     "rol": usuario.rol.value,
                     "estado": usuario.estado.value,
                     "proveedores": list(usuario.proveedores),
+                    "delegado_curso": usuario.delegado_curso.value if usuario.delegado_curso else None,
                     "email_norm": usuario.email,
                 }
             },
@@ -79,6 +81,7 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
             "rol": usuario.rol.value,
             "estado": usuario.estado.value,
             "proveedores": list(usuario.proveedores),
+            "delegado_curso": usuario.delegado_curso.value if usuario.delegado_curso else None,
         }
 
     def _a_usuario(self, documento: dict) -> Usuario:
@@ -89,6 +92,7 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
                 proveedores = [ProveedorAuth.LOCAL.value]
             else:
                 proveedores = [ProveedorAuth.GOOGLE.value]
+        delegado = documento.get("delegado_curso")
         return Usuario(
             email=documento["_id"],
             nick=documento["nick"],
@@ -96,4 +100,5 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
             rol=rol_desde_almacen(documento["rol"]),
             estado=EstadoUsuario(documento.get("estado", EstadoUsuario.ACTIVO)),
             proveedores=tuple(proveedores),
+            delegado_curso=CursoAsignatura(delegado) if delegado else None,
         )

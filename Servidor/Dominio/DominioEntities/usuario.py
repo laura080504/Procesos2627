@@ -1,5 +1,6 @@
 ﻿from dataclasses import dataclass, field
 
+from Servidor.Dominio.DominioEnums.curso_asignatura import CursoAsignatura
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
 from Servidor.Dominio.DominioEnums.proveedor_auth import ProveedorAuth
 from Servidor.Dominio.DominioEnums.rol import Rol
@@ -13,6 +14,8 @@ class Usuario:
     rol: Rol = Rol.USUARIO
     estado: EstadoUsuario = EstadoUsuario.ACTIVO
     proveedores: tuple[str, ...] = field(default_factory=lambda: (ProveedorAuth.LOCAL.value,))
+    # Curso del que es delegado (solo alumnado); None = no es delegado.
+    delegado_curso: CursoAsignatura | None = None
 
     def tiene_contrasena_local(self) -> bool:
         return bool(self.contrasena_hash) and ProveedorAuth.LOCAL.value in self.proveedores
@@ -32,4 +35,5 @@ class Usuario:
             rol=self.rol,
             estado=self.estado,
             proveedores=tuple([*self.proveedores, proveedor]),
+            delegado_curso=self.delegado_curso,
         )

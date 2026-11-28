@@ -13,6 +13,8 @@ class SimboloCalendarioSalida(BaseModel):
     lugar: str | None = None
     evento_id: str | None = None
     editable: bool = False
+    url: str | None = None
+    detalle: str | None = None
 
 
 class MarcaCalendarioSalida(BaseModel):

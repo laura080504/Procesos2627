@@ -13,6 +13,7 @@ def prueba_registro_devuelve_el_usuario_sin_contrasena(cliente):
         "nick": "nuevo",
         "rol": "usuario",
         "estado": "pendiente",
+        "delegado_curso": None,
     }
 
 
