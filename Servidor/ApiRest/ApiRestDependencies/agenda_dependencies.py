@@ -11,12 +11,16 @@ from Servidor.Dominio.DominioUseCases.crear_evento_use_case import CrearEventoUs
 from Servidor.Dominio.DominioUseCases.guardar_expediente_use_case import GuardarExpedienteUseCase
 from Servidor.Dominio.DominioUseCases.guardar_matricula_use_case import GuardarMatriculaUseCase
 from Servidor.Dominio.DominioUseCases.listar_asignaturas_use_case import ListarAsignaturasUseCase
+from Servidor.Dominio.DominioUseCases.obtener_destinatarios_aviso_use_case import (
+    ObtenerDestinatariosAvisoUseCase,
+)
 from Servidor.Dominio.DominioUseCases.obtener_expediente_use_case import ObtenerExpedienteUseCase
 from Servidor.Dominio.DominioUseCases.obtener_marcas_calendario_use_case import ObtenerMarcasCalendarioUseCase
 from Servidor.Dominio.DominioUseCases.obtener_matricula_use_case import ObtenerMatriculaUseCase
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas import RepositorioAsignaturas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia import RepositorioDocencia
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos import RepositorioEventos
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 
 # Singletons: las cachés en proceso solo sirven si sobreviven entre peticiones.
 _listar_asignaturas = ListarAsignaturasUseCase(obtener_repositorio_asignaturas())
@@ -82,6 +86,12 @@ def crear_crear_evento_use_case(
         repositorio_asignaturas,
         repositorio_docencia,
     )
+
+
+def crear_obtener_destinatarios_aviso_use_case(
+    repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
+) -> ObtenerDestinatariosAvisoUseCase:
+    return ObtenerDestinatariosAvisoUseCase(repositorio_matriculas)
 
 
 def invalidar_cache_marcas() -> None:

@@ -214,7 +214,7 @@ El despliegue deja `DATOS_MOTOR=mongo` y `URL_PUBLICA` con la URL de arriba. `CO
 
 Si `ADMIN_EMAIL` y `ADMIN_PASSWORD` están definidos y todavía no hay un administrador, el arranque crea esa cuenta en estado `activo` o, si el email ya existe, solo le asigna el rol. Esa cuenta no pasa por la confirmación por correo. La contraseña no se sube al repositorio.
 
-El superadministrador lista todos los usuarios, edita los de los demás y puede hacer profesor a otro desde esa edición. Un profesor solo ve a los alumnos matriculados en las asignaturas que imparte, y solo puede publicar avisos en esas asignaturas. Un usuario normal solo ve su cuenta, edita la suya y solo puede eliminar la suya. `activo` significa que el correo está confirmado o que entró con Google, y que la cuenta no está eliminada. `pendiente` no puede iniciar sesión. `eliminado` tampoco, y no se puede volver a registrar ese correo.
+El superadministrador lista todos los usuarios, edita los de los demás y puede hacer profesor a otro desde esa edición. Un profesor solo ve a los alumnos matriculados en las asignaturas que imparte, con el rol y las asignaturas compartidas, y solo puede publicar avisos en esas asignaturas. El aviso se envía a los alumnos matriculados en esa asignatura que estén conectados; el resto lo verá en su panel de avisos. Un usuario normal solo ve su cuenta, edita la suya y solo puede eliminar la suya. `activo` significa que el correo está confirmado o que entró con Google, y que la cuenta no está eliminada. `pendiente` no puede iniciar sesión. `eliminado` tampoco, y no se puede volver a registrar ese correo.
 
 ## API REST
 

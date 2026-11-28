@@ -29,6 +29,16 @@
     display: none;
 }
 
+.titulo-listado-alumnos {
+    margin: 1.1rem 0 0;
+    font-size: 1.05rem;
+    font-weight: 650;
+}
+
+.titulo-listado-alumnos[hidden] {
+    display: none;
+}
+
 #botonRefrescar:focus-visible,
 #listaUsuarios button:focus-visible {
     outline: 2px solid var(--rojo-logo);
@@ -58,11 +68,13 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.2rem;
+    min-width: 0;
 }
 
 .usuario-meta {
     font-size: 0.85rem;
     opacity: 0.85;
+    overflow-wrap: anywhere;
 }
 
 .campo-admin {

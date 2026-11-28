@@ -105,3 +105,39 @@ def prueba_profesor_no_publica_evento_en_asignatura_ajena(cliente_administrador,
         },
     )
     assert respuesta.status_code == 403
+
+
+def prueba_el_aviso_llega_al_alumno_matriculado(
+    cliente, usuario_registrado, administrador, repositorio_docencia, repositorio_matriculas
+):
+    from Pruebas.conftest import CONTRASENA
+
+    repositorio_docencia.reemplazar(administrador.email, ["42330"])
+    repositorio_matriculas.reemplazar_alumno(usuario_registrado.email, ["42330"])
+    assert cliente.post(
+        "/api/auth/inicio-sesion",
+        json={"email": usuario_registrado.email, "contrasena": CONTRASENA},
+    ).status_code == 200
+    cookies_alumno = dict(cliente.cookies)
+
+    with cliente.websocket_connect("/ws", cookies=cookies_alumno) as socket:
+        assert cliente.post(
+            "/api/auth/inicio-sesion",
+            json={"email": administrador.email, "contrasena": CONTRASENA},
+        ).status_code == 200
+        creado = cliente.post(
+            "/api/eventos",
+            json={
+                "codigo": "42330",
+                "tipo": "entrega",
+                "fecha": "2026-12-20",
+                "hora": "23:59",
+                "lugar": None,
+            },
+        )
+        assert creado.status_code == 201
+        mensaje = socket.receive_json()
+
+    assert mensaje["tipo"] == "evento_nuevo"
+    assert mensaje["codigo"] == "42330"
+    assert mensaje["fecha"] == "2026-12-20"

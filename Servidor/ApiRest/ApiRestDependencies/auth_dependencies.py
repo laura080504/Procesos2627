@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from fastapi import Depends, Request
+from fastapi import Depends, Request, WebSocket
 
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
     obtener_enviador_correo,
@@ -153,6 +153,20 @@ def obtener_usuario_actual(
     if not token:
         raise SesionNoValida()
     return use_case.ejecutar(ObtenerUsuarioSesionQuery(token=token))
+
+
+def obtener_email_websocket(
+    websocket: WebSocket,
+    configuracion: Configuracion = Depends(obtener_configuracion),
+    use_case: ObtenerUsuarioSesionUseCase = Depends(crear_obtener_usuario_sesion_use_case),
+) -> str | None:
+    token = websocket.cookies.get(configuracion.nombre_cookie_sesion)
+    if not token:
+        return None
+    try:
+        return use_case.ejecutar(ObtenerUsuarioSesionQuery(token=token)).email
+    except SesionNoValida:
+        return None
 
 
 def obtener_gestor(usuario: Usuario = Depends(obtener_usuario_actual)) -> Usuario:

@@ -2,6 +2,7 @@ from fastapi import Depends
 
 from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_hasher_contrasenas
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
+    obtener_repositorio_asignaturas,
     obtener_repositorio_docencia,
     obtener_repositorio_matriculas,
     obtener_repositorio_recuperaciones,
@@ -15,6 +16,7 @@ from Servidor.Dominio.DominioUseCases.eliminar_usuario_use_case import EliminarU
 from Servidor.Dominio.DominioUseCases.numero_usuarios_use_case import NumeroUsuariosUseCase
 from Servidor.Dominio.DominioUseCases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
 from Servidor.Dominio.DominioUseCases.usuario_activo_use_case import UsuarioActivoUseCase
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas import RepositorioAsignaturas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia import RepositorioDocencia
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
@@ -26,11 +28,13 @@ def crear_obtener_usuarios_use_case(
     repositorio_usuarios: RepositorioUsuarios = Depends(obtener_repositorio_usuarios),
     repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
     repositorio_docencia: RepositorioDocencia = Depends(obtener_repositorio_docencia),
+    repositorio_asignaturas: RepositorioAsignaturas = Depends(obtener_repositorio_asignaturas),
 ) -> ObtenerUsuariosUseCase:
     return ObtenerUsuariosUseCase(
         repositorio_usuarios,
         repositorio_matriculas,
         repositorio_docencia,
+        repositorio_asignaturas,
     )
 
 

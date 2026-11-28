@@ -13,7 +13,8 @@ def prueba_inicialmente_no_hay_usuarios(repositorio_usuarios):
 
 def prueba_devuelve_los_usuarios_guardados(repositorio_usuarios, usuario_registrado):
     usuarios = ObtenerUsuariosUseCase(repositorio_usuarios).ejecutar(ObtenerUsuariosQuery())
-    assert usuarios == [usuario_registrado]
+    assert [resultado.usuario for resultado in usuarios] == [usuario_registrado]
+    assert usuarios[0].asignaturas == []
 
 
 def _escenario(repositorio_usuarios):
@@ -37,7 +38,7 @@ def _escenario(repositorio_usuarios):
     docencia = RepositorioDocenciaMemoria()
     matriculas = RepositorioMatriculasMemoria()
     docencia.reemplazar(profesor.email, ["42330"])
-    matriculas.reemplazar_alumno(de_su_asignatura.email, ["42330"])
+    matriculas.reemplazar_alumno(de_su_asignatura.email, ["42330", "42327"])
     matriculas.reemplazar_alumno(de_otra_asignatura.email, ["42327"])
     return profesor, de_su_asignatura, de_otra_asignatura, superadministrador, docencia, matriculas
 
@@ -47,7 +48,8 @@ def prueba_un_profesor_solo_ve_alumnos_matriculados_en_sus_asignaturas(repositor
     usuarios = ObtenerUsuariosUseCase(repositorio_usuarios, matriculas, docencia).ejecutar(
         ObtenerUsuariosQuery(solicitante_rol=Rol.PROFESOR, solicitante_email=profesor.email)
     )
-    assert {usuario.email for usuario in usuarios} == {propio.email}
+    assert [resultado.usuario.email for resultado in usuarios] == [propio.email]
+    assert usuarios[0].asignaturas == ["42330"]
 
 
 def prueba_un_profesor_sin_docencia_no_ve_alumnos(repositorio_usuarios):
