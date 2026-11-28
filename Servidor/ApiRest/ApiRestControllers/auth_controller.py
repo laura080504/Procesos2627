@@ -109,11 +109,10 @@ def _poner_oauth(respuesta: Response, estado: str, verifier: str, configuracion:
 
 
 def _email_verificado(perfil: dict) -> bool:
-    if "email_verified" in perfil:
-        valor = perfil.get("email_verified")
-        return valor is True or valor == "true" or valor == 1
-    # Algunos IdP institucionales no envían el flag; si hay email confiable asumimos verificado.
-    return bool(perfil.get("email") or perfil.get("mail") or perfil.get("upn"))
+    if "email_verified" not in perfil:
+        return False
+    valor = perfil.get("email_verified")
+    return valor is True or valor == "true" or valor == 1
 
 
 @router.post("/registro", response_model=UsuarioSalida, status_code=status.HTTP_201_CREATED)

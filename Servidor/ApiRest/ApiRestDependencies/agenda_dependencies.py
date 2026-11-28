@@ -19,6 +19,7 @@ from Servidor.Dominio.DominioUseCases.eliminar_evento_use_case import EliminarEv
 from Servidor.Dominio.DominioUseCases.guardar_expediente_use_case import GuardarExpedienteUseCase
 from Servidor.Dominio.DominioUseCases.guardar_matricula_use_case import GuardarMatriculaUseCase
 from Servidor.Dominio.DominioUseCases.listar_asignaturas_use_case import ListarAsignaturasUseCase
+from Servidor.Dominio.DominioUseCases.listar_avisos_secretaria_use_case import ListarAvisosSecretariaUseCase
 from Servidor.Dominio.DominioUseCases.obtener_destinatarios_aviso_use_case import (
     ObtenerDestinatariosAvisoUseCase,
 )
@@ -120,6 +121,12 @@ def crear_obtener_destinatarios_aviso_use_case(
     repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
 ) -> ObtenerDestinatariosAvisoUseCase:
     return ObtenerDestinatariosAvisoUseCase(repositorio_matriculas)
+
+
+def crear_listar_avisos_secretaria_use_case(
+    repositorio: RepositorioAvisosSecretaria = Depends(obtener_repositorio_avisos_secretaria),
+) -> ListarAvisosSecretariaUseCase:
+    return ListarAvisosSecretariaUseCase(repositorio)
 
 
 def crear_crear_aviso_secretaria_use_case(

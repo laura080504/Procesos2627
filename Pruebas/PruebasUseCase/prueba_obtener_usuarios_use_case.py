@@ -50,6 +50,7 @@ def prueba_un_profesor_solo_ve_alumnos_matriculados_en_sus_asignaturas(repositor
     )
     assert [resultado.usuario.email for resultado in usuarios] == [propio.email]
     assert usuarios[0].asignaturas == ["42330"]
+    assert usuarios[0].media is None
 
 
 def prueba_un_profesor_sin_docencia_no_ve_alumnos(repositorio_usuarios):

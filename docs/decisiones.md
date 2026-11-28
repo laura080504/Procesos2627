@@ -107,11 +107,11 @@ Si el mensaje del commit o el README no dan el motivo, queda un `TODO(alumno)`.
 
 ## D-13 Recuperación de contraseña
 
-**Qué se decidió.** Un flujo de recuperación que no está en la especificación del sprint 1. Pull request #4. `POST /api/auth/recuperacion` devuelve el identificador en la respuesta; no se ve un envío de correo en ese caso de uso.
+**Qué se decidió.** Un flujo de recuperación que no está en la especificación del sprint 1. Pull request #4. `POST /api/auth/recuperacion` responde siempre con un mensaje genérico. El token viaja solo por correo y en base de datos se guarda su hash.
 
-**Por qué.** TODO(alumno): ¿por qué añadiste la recuperación en el sprint 1, y por qué el identificador sale en la respuesta de la API?
+**Por qué.** Así quien pide el correo de otra persona no se entera de si la cuenta existe, y una respuesta de la API no sirve para cambiar la contraseña.
 
-**Estado.** Vigente.
+**Estado.** Vigente. La nota antigua, que decía que el identificador salía en la respuesta, ya no describe el código.
 
 ## D-14 Cloud Run después de las pruebas
 
@@ -135,7 +135,7 @@ Si el mensaje del commit o el README no dan el motivo, queda un `TODO(alumno)`.
 
 **Por qué.** TODO(alumno): ¿por qué matrículas de muestra en lugar de dejar la agenda vacía hasta que el alumno configure la suya?
 
-**Estado.** Vigente. En el sprint 3 se amplió a matrícula editable por el alumno; esa decisión corresponde al sprint 3.
+**Estado.** Sustituida. El arranque ya no crea cuentas ni reescribe matrículas. El catálogo del grado sí se asegura.
 
 ## D-17 Brevo API con SMTP de reserva
 

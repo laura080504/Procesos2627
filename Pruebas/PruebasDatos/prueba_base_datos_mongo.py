@@ -71,6 +71,8 @@ def prueba_usuarios_sesiones_y_recuperaciones_se_guardan_en_mongo():
 
     sesiones.guardar(Sesion(token="token-sesion", email=laura.email, expira_en=expira))
     assert sesiones.obtener("token-sesion").email == laura.email
+    assert sesiones.base_datos.coleccion("sesiones").find_one({"_id": "token-sesion"}) is None
+    assert sesiones.base_datos.coleccion("sesiones").find_one({"_id": hash_token("token-sesion")}) is not None
     sesiones.eliminar_por_email(laura.email)
     assert sesiones.obtener("token-sesion") is None
 

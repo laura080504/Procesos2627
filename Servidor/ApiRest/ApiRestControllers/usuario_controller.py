@@ -15,6 +15,7 @@ from Servidor.ApiRest.ApiRestDependencies.usuario_dependencies import (
     crear_asignar_administrador_use_case,
     crear_asignar_delegado_use_case,
     crear_confirmar_asignacion_rol_use_case,
+    crear_editar_alumno_secretaria_use_case,
     crear_editar_datos_use_case,
     crear_eliminar_usuario_use_case,
     crear_numero_usuarios_use_case,
@@ -35,17 +36,15 @@ from Servidor.Dominio.DominioCommands.asignar_administrador_command import Asign
 from Servidor.Dominio.DominioCommands.editar_datos_command import EditarDatosCommand
 from Servidor.Dominio.DominioCommands.eliminar_usuario_command import EliminarUsuarioCommand
 from Servidor.Dominio.DominioEntities.usuario import Usuario
-from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
 from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioExceptions.estado_no_valido import EstadoNoValido
-from Servidor.Dominio.DominioExceptions.permiso_insuficiente import PermisoInsuficiente
-from Servidor.Dominio.DominioExceptions.usuario_no_encontrado import UsuarioNoEncontrado
 from Servidor.Dominio.DominioQueries.numero_usuarios_query import NumeroUsuariosQuery
 from Servidor.Dominio.DominioQueries.obtener_usuarios_query import ObtenerUsuariosQuery
 from Servidor.Dominio.DominioQueries.usuario_activo_query import UsuarioActivoQuery
 from Servidor.Dominio.DominioUseCases.asignar_administrador_use_case import AsignarAdministradorUseCase
 from Servidor.Dominio.DominioUseCases.asignar_delegado_use_case import AsignarDelegadoUseCase
 from Servidor.Dominio.DominioUseCases.confirmar_asignacion_rol_use_case import ConfirmarAsignacionRolUseCase
+from Servidor.Dominio.DominioUseCases.editar_alumno_secretaria_use_case import EditarAlumnoSecretariaUseCase
 from Servidor.Dominio.DominioUseCases.editar_datos_use_case import EditarDatosUseCase
 from Servidor.Dominio.DominioUseCases.eliminar_usuario_use_case import EliminarUsuarioUseCase
 from Servidor.Dominio.DominioUseCases.guardar_matricula_use_case import (
@@ -57,8 +56,6 @@ from Servidor.Dominio.DominioUseCases.obtener_matricula_use_case import ObtenerM
 from Servidor.Dominio.DominioUseCases.obtener_usuarios_use_case import ObtenerUsuariosUseCase
 from Servidor.Dominio.DominioUseCases.solicitar_asignacion_rol_use_case import SolicitarAsignacionRolUseCase
 from Servidor.Dominio.DominioUseCases.usuario_activo_use_case import UsuarioActivoUseCase
-from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import obtener_repositorio_usuarios
-from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/api/usuarios", tags=["usuarios"])
@@ -214,29 +211,11 @@ def editar_alumno_por_secretaria(
     email: str,
     datos: EditarDatosEntrada,
     solicitante: Usuario = Depends(obtener_superadministrador),
-    repositorio_usuarios: RepositorioUsuarios = Depends(obtener_repositorio_usuarios),
+    use_case: EditarAlumnoSecretariaUseCase = Depends(crear_editar_alumno_secretaria_use_case),
 ):
-    """Secretaría actualiza nick (y email) de un alumno."""
-    from Servidor.Dominio.DominioExceptions.usuario_ya_existe import UsuarioYaExiste
-
-    objetivo = repositorio_usuarios.obtener_por_email(email.strip().lower())
-    if objetivo is None or objetivo.estado == EstadoUsuario.ELIMINADO:
-        raise UsuarioNoEncontrado(email)
-    if objetivo.rol != Rol.USUARIO:
-        raise PermisoInsuficiente()
-    objetivo.nick = datos.nick.strip()
-    email_nuevo = datos.email.strip().lower()
-    if email_nuevo != objetivo.email:
-        if repositorio_usuarios.obtener_por_email(email_nuevo) is not None:
-            raise UsuarioYaExiste(email_nuevo)
-        email_actual = objetivo.email
-        objetivo.email = email_nuevo
-        repositorio_usuarios.cambiar_email(email_actual, objetivo)
-    else:
-        repositorio_usuarios.actualizar(objetivo)
-    guardado = repositorio_usuarios.obtener_por_email(email_nuevo)
-    registro_actividad.edicion(solicitante.email, guardado.email)
-    return _usuario_salida(guardado)
+    usuario = use_case.ejecutar(email, datos.email, datos.nick, solicitante.rol)
+    registro_actividad.edicion(solicitante.email, usuario.email)
+    return _usuario_salida(usuario)
 
 
 @router.post("/{email}/profesor", response_model=UsuarioSalida)

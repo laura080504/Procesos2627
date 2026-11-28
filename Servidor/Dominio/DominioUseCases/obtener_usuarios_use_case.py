@@ -3,7 +3,6 @@ from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioQueries.obtener_usuarios_query import ObtenerUsuariosQuery
 from Servidor.Dominio.DominioResults.usuario_listado import UsuarioListado
 from Servidor.Dominio.DominioServices.curso_alumno import curso_del_alumno
-from Servidor.Dominio.DominioServices.expediente_alumno import expediente_de
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas import RepositorioAsignaturas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia import RepositorioDocencia
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
@@ -51,14 +50,14 @@ class ObtenerUsuariosUseCase:
                 UsuarioListado(
                     usuario,
                     sorted(asignaturas),
-                    self._media(usuario.email, catalogo),
+                    None,
                     curso_del_alumno([por_codigo[c] for c in asignaturas if c in por_codigo]),
                 )
             )
         return listado
 
     def _listado_secretaria(self, usuarios) -> list[UsuarioListado]:
-        """Listado ligero: sin códigos de asignatura ni media (van al editar)."""
+        """Listado ligero: sin códigos de asignatura ni notas."""
         catalogo = self._catalogo()
         por_codigo = {asignatura.codigo: asignatura for asignatura in catalogo}
         matriculas = (
@@ -83,10 +82,3 @@ class ObtenerUsuariosUseCase:
         if self.repositorio_asignaturas is None:
             return []
         return self.repositorio_asignaturas.obtener_todas()
-
-    def _media(self, email: str, catalogo) -> float | None:
-        if self.repositorio_matriculas is None:
-            return None
-        notas = self.repositorio_matriculas.obtener_notas(email)
-        convalidadas = self.repositorio_matriculas.obtener_convalidadas(email)
-        return expediente_de(catalogo, notas, convalidadas).media

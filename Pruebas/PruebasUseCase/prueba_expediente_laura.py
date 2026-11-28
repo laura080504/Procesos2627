@@ -49,8 +49,8 @@ def prueba_laura_intensificacion_software_excluye_otras_ramas():
     assert matricula.intensificacion == Intensificacion.SOFTWARE.value
 
 
-def prueba_asegurar_no_crea_notas_en_codigo():
+def prueba_asegurar_no_siembra_la_matricula_de_un_alumno():
     matriculas, _asignaturas = _repos()
     asegurar_matricula_de(matriculas, EMAIL_LAURA)
-    assert matriculas.obtener_intensificacion(EMAIL_LAURA) == Intensificacion.SOFTWARE.value
-    assert all(nota is None for nota in matriculas.obtener_notas(EMAIL_LAURA).values())
+    assert matriculas.obtener_codigos(EMAIL_LAURA) == []
+    assert matriculas.obtener_intensificacion(EMAIL_LAURA) is None

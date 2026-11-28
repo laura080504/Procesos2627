@@ -5,7 +5,6 @@ from Servidor.Dominio.DominioServices.conteo_cursos import contar_por_curso
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 
 EMAIL_LAURA = "lgonzarico@gmail.com"
-CONTRASENA_PRUEBA = "prueba1234"
 INTENSIFICACION_LAURA = "software"
 
 # Matrícula real de Laura (campus UCLM).
@@ -37,13 +36,6 @@ GRUPOS_LAURA = {
     "42366": "17",
 }
 
-ALUMNOS_PRUEBA = (
-    {"email": "alba@ejemplo.com", "nick": "Alba"},
-    {"email": "bruno@ejemplo.com", "nick": "Bruno"},
-    {"email": "celia@ejemplo.com", "nick": "Celia"},
-)
-
-
 @dataclass(frozen=True)
 class TramoCurso:
     curso: CursoAsignatura
@@ -56,21 +48,14 @@ def asegurar_matricula_de(
     email: str,
     codigos: tuple[str, ...] | None = None,
 ) -> list[str]:
-    """Solo siembra la matrícula oficial de Laura. El resto queda vacío hasta que la editen."""
+    """No rellena matrículas por sí sola. Solo aplica `codigos` si el alumno aún no tiene ninguna."""
     email = email.strip().lower()
     actuales = repositorio_matriculas.obtener_codigos(email)
-    if not actuales:
-        if email == EMAIL_LAURA:
-            elegidos = list(codigos if codigos is not None else CODIGOS_LAURA)
-            repositorio_matriculas.reemplazar_alumno(email, elegidos, dict(GRUPOS_LAURA))
-            actuales = elegidos
-        elif codigos:
-            elegidos = list(codigos)
-            repositorio_matriculas.reemplazar_alumno(email, elegidos, {codigo: "A" for codigo in elegidos})
-            actuales = elegidos
-    if email == EMAIL_LAURA:
-        asegurar_expediente_laura(repositorio_matriculas)
-    return actuales
+    if actuales or not codigos:
+        return actuales
+    elegidos = list(codigos)
+    repositorio_matriculas.reemplazar_alumno(email, elegidos, {codigo: "A" for codigo in elegidos})
+    return elegidos
 
 
 def asegurar_expediente_laura(repositorio_matriculas: RepositorioMatriculas) -> None:

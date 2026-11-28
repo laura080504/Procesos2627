@@ -28,3 +28,12 @@ class RepositorioDocenciaMemoria(RepositorioDocencia):
                 self._nombres[clave] = nombre
             else:
                 self._nombres.pop(clave, None)
+
+    def cambiar_email(self, email_actual: str, email_nuevo: str) -> None:
+        actual = email_actual.strip().lower()
+        nuevo = email_nuevo.strip().lower()
+        if actual == nuevo or actual not in self._codigos:
+            return
+        self._codigos[nuevo] = self._codigos.pop(actual)
+        if actual in self._nombres:
+            self._nombres[nuevo] = self._nombres.pop(actual)
