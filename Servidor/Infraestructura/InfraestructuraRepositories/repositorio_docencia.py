@@ -19,3 +19,7 @@ class RepositorioDocencia(ABC):
         codigos: list[str],
         nombre_docente: str | None = None,
     ) -> None: ...
+
+    @abstractmethod
+    def cambiar_email(self, email_actual: str, email_nuevo: str) -> None:
+        """Pasa las asignaturas que imparte al correo nuevo."""

@@ -15,6 +15,18 @@ Entregar la **agenda del estudiante** sobre la base del sprint 1: listado de asi
 
 Tablero Donetonic: Por verificar: URL no está en el repositorio.
 
+## Requisitos del sprint 2
+
+| ID | Requisito | Estado |
+|----|-----------|--------|
+| RF-S2-01 | Ver el horario del cuatrimestre y las fichas de asignatura | hecho |
+| RF-S2-02 | Ver y editar la matrícula propia; el servidor rechaza un código que no está en el catálogo | hecho |
+| RF-S2-03 | Marcas de calendario (exámenes, entregas, festivos, avisos de secretaría) | hecho |
+| RF-S2-04 | El profesor publica, edita y borra avisos solo en las asignaturas que imparte | hecho |
+| RF-S2-05 | El aviso llega por WebSocket a los alumnos matriculados que tienen sesión | hecho |
+| RF-S2-06 | Secretaría lista alumnado, cambia rol con confirmación por correo y edita la ficha de un alumno | hecho |
+| RF-S2-07 | Historial de notas del propio alumno; la media no sale en el listado de otros | hecho |
+
 ## Entregas (por pull request)
 
 ### Agenda, horario y roles — PR [#11](https://github.com/laura080504/Procesos2627/pull/11)
@@ -63,7 +75,7 @@ Actualizados en [requisitos.md](requisitos.md) al cerrar el sprint 2:
 
 - Pull requests integrados en el tramo de agenda/matrícula: #10, #11, #12, #13, #14, #15, #16, #17 (comprobado en `git log` / historial de merges a `main`).
 - CI y despliegue Cloud Run siguen en `.github/workflows/ci.yml` tras las pruebas en verde.
-- El 2026-11-19, en el árbol actual de `main`, `pytest -q` dio **164 passed, 1 failed** (`prueba_google_sin_configurar_avisa`). Por verificar: si al cierre exacto de #17 el recuento era distinto.
+- El 2026-11-19, `pytest -q` dio **164 passed, 1 failed** (`prueba_google_sin_configurar_avisa`). El 2026-11-28 la suite pasa entera: **218 passed**.
 - La documentación OKF de los sprints 1 y 2 está en `docs/` del repositorio (PR #12; reintegrada tras el #17).
 
 ### Qué funcionó

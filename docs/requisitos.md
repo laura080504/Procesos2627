@@ -10,7 +10,7 @@ timestamp: 2026-11-19
 La especificación es la del sprint 1 (apartados 3 a 7). El estado refleja el código tras el cierre del sprint 2 ([PR #17](https://github.com/laura080504/Procesos2627/pull/17), `5b63fc0`).
 
 Cifras históricas (2026-10-28, árbol `77202eb`): `pytest -q` → 132 passed; UseCase → 76 passed.  
-Cifra de comprobación (2026-11-19, `main` actual): `pytest -q` → **164 passed, 1 failed** (`prueba_google_sin_configurar_avisa`).
+Cifra de comprobación (2026-11-28): `pytest -q` → **218 passed**.
 
 | ID | Requisito | Estado | Evidencia |
 |----|-----------|--------|-----------|
@@ -30,7 +30,7 @@ Cifra de comprobación (2026-11-19, `main` actual): `pytest -q` → **164 passed
 | RNF-01 | Persistencia en una base de datos real | hecho | Con `DATOS_MOTOR=mongo` se usan los repositorios mongo. El commit `abc03ff` (pull request #7) sustituye SQLite y no toca `DominioUseCases`. El workflow de despliegue fija `DATOS_MOTOR=mongo`. Las pruebas usan memoria. |
 | RNF-02 | Secretos fuera del código y .env.example | hecho | `configuracion.py` lee el entorno. `.env` está en `.gitignore` y no está en el índice. `.env.example` trae los nombres, sin valores. La lista de nombres está en el [README](../README.md). |
 | RNF-03 | Hash seguro de contraseñas | hecho | `HasherContrasenas` usa bcrypt, 12 rondas. `prueba_la_contrasena_se_guarda_con_hash`. |
-| RNF-04 | Rutas protegidas por sesión y rol | hecho | Sin cookie, `obtener_usuario_actual` lanza `SesionNoValida` (401). Sin rol de gestor, `PermisoInsuficiente` (403). Prueba: `prueba_rutas_de_usuarios_rechazan_peticiones_sin_sesion`. `POST /api/prueba/estado` y `WS /ws` no piden sesión; la especificación obliga a proteger las rutas que requieren usuario, no todas. |
+| RNF-04 | Rutas protegidas por sesión y rol | hecho | Sin cookie, `obtener_usuario_actual` lanza `SesionNoValida` (401). Sin rol de gestor, `PermisoInsuficiente` (403). Prueba: `prueba_rutas_de_usuarios_rechazan_peticiones_sin_sesion`. `POST /api/prueba/estado` no pide sesión: es la prueba técnica del sprint 1 y no lee datos de usuarios. `WS /ws` sí exige sesión. |
 | RNF-05 | Despliegue en cloud con URL pública | hecho | `.github/workflows/ci.yml`, job `desplegar`, solo en push a `main` y después de `pruebas`. Commit `b0e7946`. La URL está en el README. El 2026-10-28 una petición HEAD a esa URL respondió 200. |
 | RNF-06 | Pruebas unitarias de la lógica (5 o más) | hecho | 76 passed en `Pruebas/PruebasUseCase`, dentro de las 132 de `pytest -q`. Hay casos de error: email duplicado, cuenta pendiente, un usuario que intenta borrar a otro. Comando documentado en el README: `pytest`. |
 | RNF-07 | Manejo de errores con feedback al usuario | hecho | Los handlers devuelven `detail`. `clienteHttp.js` lo convierte en `ErrorApi` y `controlWeb.js` lo muestra con `mostrarMensaje`. Un 422 sin detalle dice que hay que revisar los datos. |

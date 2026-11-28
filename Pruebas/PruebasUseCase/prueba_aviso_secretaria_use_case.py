@@ -5,6 +5,7 @@ import pytest
 from Servidor.Dominio.DominioCommands.crear_aviso_secretaria_command import CrearAvisoSecretariaCommand
 from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioEnums.tipo_aviso_secretaria import TipoAvisoSecretaria
+from Servidor.Dominio.DominioExceptions.estado_no_valido import EstadoNoValido
 from Servidor.Dominio.DominioExceptions.permiso_insuficiente import PermisoInsuficiente
 from Servidor.Dominio.DominioServices.marcas_calendario import marcas_del_mes
 from Servidor.Dominio.DominioUseCases.asegurar_avisos_secretaria_muestra_use_case import (
@@ -46,6 +47,23 @@ def prueba_secretaria_crea_y_elimina_aviso():
     assert repositorio.obtener_por_id(creado.id) is not None
     EliminarAvisoSecretariaUseCase(repositorio).ejecutar(creado.id, Rol.SUPERADMINISTRADOR)
     assert repositorio.obtener_por_id(creado.id) is None
+
+
+def prueba_rechaza_un_enlace_que_no_es_http():
+    repositorio = RepositorioAvisosSecretariaMemoria()
+    with pytest.raises(EstadoNoValido):
+        CrearAvisoSecretariaUseCase(repositorio).ejecutar(
+            CrearAvisoSecretariaCommand(
+                titulo="Enlace inválido",
+                tipo=TipoAvisoSecretaria.AVISO,
+                fecha=date(2026, 12, 1),
+                hora="10:00",
+                lugar=None,
+                url="javascript:alert(1)",
+                descripcion=None,
+                solicitante_rol=Rol.SUPERADMINISTRADOR,
+            )
+        )
 
 
 def prueba_profesor_no_crea_aviso_secretaria():

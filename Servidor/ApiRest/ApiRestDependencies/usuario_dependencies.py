@@ -17,6 +17,7 @@ from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasena
 from Servidor.Dominio.DominioUseCases.asignar_administrador_use_case import AsignarAdministradorUseCase
 from Servidor.Dominio.DominioUseCases.asignar_delegado_use_case import AsignarDelegadoUseCase
 from Servidor.Dominio.DominioUseCases.confirmar_asignacion_rol_use_case import ConfirmarAsignacionRolUseCase
+from Servidor.Dominio.DominioUseCases.editar_alumno_secretaria_use_case import EditarAlumnoSecretariaUseCase
 from Servidor.Dominio.DominioUseCases.editar_datos_use_case import EditarDatosUseCase
 from Servidor.Dominio.DominioUseCases.eliminar_usuario_use_case import EliminarUsuarioUseCase
 from Servidor.Dominio.DominioUseCases.numero_usuarios_use_case import NumeroUsuariosUseCase
@@ -66,9 +67,30 @@ def crear_editar_datos_use_case(
     repositorio_sesiones: RepositorioSesiones = Depends(obtener_repositorio_sesiones),
     repositorio_recuperaciones: RepositorioRecuperaciones = Depends(obtener_repositorio_recuperaciones),
     hasher: HasherContrasenas = Depends(obtener_hasher_contrasenas),
+    repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
+    repositorio_docencia: RepositorioDocencia = Depends(obtener_repositorio_docencia),
 ) -> EditarDatosUseCase:
     return EditarDatosUseCase(
-        repositorio_usuarios, repositorio_sesiones, repositorio_recuperaciones, hasher
+        repositorio_usuarios,
+        repositorio_sesiones,
+        repositorio_recuperaciones,
+        hasher,
+        repositorio_matriculas,
+        repositorio_docencia,
+    )
+
+
+def crear_editar_alumno_secretaria_use_case(
+    repositorio_usuarios: RepositorioUsuarios = Depends(obtener_repositorio_usuarios),
+    repositorio_sesiones: RepositorioSesiones = Depends(obtener_repositorio_sesiones),
+    repositorio_recuperaciones: RepositorioRecuperaciones = Depends(obtener_repositorio_recuperaciones),
+    repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
+) -> EditarAlumnoSecretariaUseCase:
+    return EditarAlumnoSecretariaUseCase(
+        repositorio_usuarios,
+        repositorio_sesiones,
+        repositorio_recuperaciones,
+        repositorio_matriculas,
     )
 
 

@@ -56,10 +56,6 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_esiiab_mon
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_memoria import RepositorioUsuariosMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios_mongo import RepositorioUsuariosMongo
-from Servidor.Dominio.DominioServices.docencia_muestra import (
-    asegurar_docencia_muestra,
-    asegurar_rol_profesor_gallud,
-)
 from Servidor.Dominio.DominioServices.horario_esiiab import configurar_proveedor_sesiones
 from Servidor.Dominio.DominioUseCases.asegurar_administrador_use_case import AsegurarAdministradorUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_catalogo_asignaturas_use_case import AsegurarCatalogoAsignaturasUseCase
@@ -67,7 +63,6 @@ from Servidor.Dominio.DominioUseCases.asegurar_avisos_secretaria_muestra_use_cas
     AsegurarAvisosSecretariaMuestraUseCase,
 )
 from Servidor.Dominio.DominioUseCases.asegurar_eventos_muestra_use_case import AsegurarEventosMuestraUseCase
-from Servidor.Dominio.DominioUseCases.asegurar_matriculas_muestra_use_case import AsegurarMatriculasMuestraUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_secretaria_use_case import AsegurarSecretariaUseCase
 from Servidor.Infraestructura.cliente_horarios_esiiab import ClienteHorariosEsiiab
 from Servidor.Infraestructura.sincronizador_esiiab import SincronizadorEsiiab
@@ -180,14 +175,6 @@ if _configuracion.secretaria_email and _configuracion.secretaria_contrasena:
 AsegurarCatalogoAsignaturasUseCase(_repositorio_cursos, _repositorio_asignaturas).ejecutar()
 AsegurarEventosMuestraUseCase(_repositorio_eventos, _repositorio_asignaturas).ejecutar()
 AsegurarAvisosSecretariaMuestraUseCase(_repositorio_avisos_secretaria).ejecutar()
-AsegurarMatriculasMuestraUseCase(
-    _repositorio_usuarios, _repositorio_matriculas, obtener_hasher_contrasenas()
-).ejecutar()
-asegurar_docencia_muestra(_repositorio_docencia)
-asegurar_rol_profesor_gallud(_repositorio_usuarios)
-_base = getattr(_repositorio_asignaturas, "base_datos", None)
-if _base is not None and "asignaturas" in _base.base.list_collection_names():
-    _base.base.drop_collection("asignaturas")
 
 
 def obtener_repositorio_usuarios() -> RepositorioUsuarios:

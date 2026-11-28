@@ -45,9 +45,11 @@ class LimiteAuthMiddleware(BaseHTTPMiddleware):
 
 
 def _ip(request: Request) -> str:
+    # El cliente puede anteponer valores. El proxy (Cloud Run) añade la IP real al final.
     reenviada = request.headers.get("x-forwarded-for", "")
-    if reenviada:
-        return reenviada.split(",")[0].strip() or "desconocida"
+    partes = [parte.strip() for parte in reenviada.split(",") if parte.strip()]
+    if partes:
+        return partes[-1]
     if request.client and request.client.host:
         return request.client.host
     return "desconocida"

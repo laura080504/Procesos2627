@@ -55,3 +55,7 @@ class RepositorioMatriculas(ABC):
 
     @abstractmethod
     def vaciar_todos_excepto(self, email: str) -> None: ...
+
+    @abstractmethod
+    def cambiar_email(self, email_actual: str, email_nuevo: str) -> None:
+        """Pasa matrícula, notas e intensificación al correo nuevo."""
