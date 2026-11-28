@@ -7,7 +7,9 @@ from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
     obtener_repositorio_eventos,
     obtener_repositorio_matriculas,
 )
+from Servidor.Dominio.DominioUseCases.actualizar_evento_use_case import ActualizarEventoUseCase
 from Servidor.Dominio.DominioUseCases.crear_evento_use_case import CrearEventoUseCase
+from Servidor.Dominio.DominioUseCases.eliminar_evento_use_case import EliminarEventoUseCase
 from Servidor.Dominio.DominioUseCases.guardar_expediente_use_case import GuardarExpedienteUseCase
 from Servidor.Dominio.DominioUseCases.guardar_matricula_use_case import GuardarMatriculaUseCase
 from Servidor.Dominio.DominioUseCases.listar_asignaturas_use_case import ListarAsignaturasUseCase
@@ -86,6 +88,25 @@ def crear_crear_evento_use_case(
         repositorio_asignaturas,
         repositorio_docencia,
     )
+
+
+def crear_actualizar_evento_use_case(
+    repositorio_eventos: RepositorioEventos = Depends(obtener_repositorio_eventos),
+    repositorio_asignaturas: RepositorioAsignaturas = Depends(obtener_repositorio_asignaturas),
+    repositorio_docencia: RepositorioDocencia = Depends(obtener_repositorio_docencia),
+) -> ActualizarEventoUseCase:
+    return ActualizarEventoUseCase(
+        repositorio_eventos,
+        repositorio_asignaturas,
+        repositorio_docencia,
+    )
+
+
+def crear_eliminar_evento_use_case(
+    repositorio_eventos: RepositorioEventos = Depends(obtener_repositorio_eventos),
+    repositorio_docencia: RepositorioDocencia = Depends(obtener_repositorio_docencia),
+) -> EliminarEventoUseCase:
+    return EliminarEventoUseCase(repositorio_eventos, repositorio_docencia)
 
 
 def crear_obtener_destinatarios_aviso_use_case(

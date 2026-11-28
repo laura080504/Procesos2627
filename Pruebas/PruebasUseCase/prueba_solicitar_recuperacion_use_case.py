@@ -1,39 +1,61 @@
 from datetime import timedelta
 
-import pytest
-
 from Servidor.Dominio.DominioCommands.solicitar_recuperacion_command import SolicitarRecuperacionCommand
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
-from Servidor.Dominio.DominioExceptions.cuenta_eliminada import CuentaEliminada
-from Servidor.Dominio.DominioExceptions.usuario_no_encontrado import UsuarioNoEncontrado
+from Servidor.Dominio.DominioEnums.proveedor_auth import ProveedorAuth
+from Servidor.Dominio.DominioServices.token_seguro import hash_token
 from Servidor.Dominio.DominioUseCases.solicitar_recuperacion_use_case import SolicitarRecuperacionUseCase
+from Servidor.Infraestructura.enviador_correo_memoria import EnviadorCorreoMemoria
 
 
-@pytest.fixture
-def use_case(repositorio_usuarios, repositorio_recuperaciones):
-    return SolicitarRecuperacionUseCase(repositorio_usuarios, repositorio_recuperaciones, timedelta(minutes=15))
+def _use_case(repositorio_usuarios, repositorio_recuperaciones, enviador=None):
+    return SolicitarRecuperacionUseCase(
+        repositorio_usuarios,
+        repositorio_recuperaciones,
+        enviador or EnviadorCorreoMemoria(),
+        timedelta(minutes=15),
+    )
 
 
-def prueba_email_conocido_crea_un_token(use_case, usuario_registrado, repositorio_recuperaciones):
-    recuperacion = use_case.ejecutar(SolicitarRecuperacionCommand(usuario_registrado.email))
-    assert recuperacion.email == usuario_registrado.email
-    assert repositorio_recuperaciones.obtener(recuperacion.token) == recuperacion
+def prueba_email_conocido_guarda_hash_y_envia_enlace(
+    repositorio_usuarios, usuario_registrado, repositorio_recuperaciones
+):
+    enviador = EnviadorCorreoMemoria()
+    use_case = _use_case(repositorio_usuarios, repositorio_recuperaciones, enviador)
+    assert use_case.ejecutar(SolicitarRecuperacionCommand(usuario_registrado.email), "http://127.0.0.1:8000") is None
+    assert "?recuperar=" in enviador.mensajes[-1][2]
+    token_plano = enviador.mensajes[-1][2].split("?recuperar=")[1].split()[0]
+    assert repositorio_recuperaciones.obtener(token_plano) is None
+    assert repositorio_recuperaciones.obtener(hash_token(token_plano)) is not None
 
 
-def prueba_una_nueva_solicitud_invalida_la_anterior(use_case, usuario_registrado, repositorio_recuperaciones):
-    primera = use_case.ejecutar(SolicitarRecuperacionCommand(usuario_registrado.email))
-    segunda = use_case.ejecutar(SolicitarRecuperacionCommand(usuario_registrado.email))
-    assert repositorio_recuperaciones.obtener(primera.token) is None
-    assert repositorio_recuperaciones.obtener(segunda.token) == segunda
-
-
-def prueba_email_desconocido_lanza_error(use_case):
-    with pytest.raises(UsuarioNoEncontrado):
-        use_case.ejecutar(SolicitarRecuperacionCommand("nadie@ejemplo.com"))
-
-
-def prueba_usuario_eliminado_no_puede_recuperar(use_case, usuario_registrado, repositorio_recuperaciones):
-    usuario_registrado.estado = EstadoUsuario.ELIMINADO
-    with pytest.raises(CuentaEliminada, match="no puedes recuperar la contraseña"):
-        use_case.ejecutar(SolicitarRecuperacionCommand(usuario_registrado.email))
+def prueba_email_desconocido_no_revela_nada(repositorio_usuarios, repositorio_recuperaciones):
+    enviador = EnviadorCorreoMemoria()
+    use_case = _use_case(repositorio_usuarios, repositorio_recuperaciones, enviador)
+    assert use_case.ejecutar(SolicitarRecuperacionCommand("nadie@ejemplo.com"), "http://local") is None
     assert repositorio_recuperaciones._recuperaciones == {}
+    assert enviador.mensajes == []
+
+
+def prueba_cuenta_solo_oauth_recibe_aviso_sin_token(
+    repositorio_usuarios, usuario_registrado, repositorio_recuperaciones
+):
+    enviador = EnviadorCorreoMemoria()
+    usuario_registrado.contrasena_hash = None
+    usuario_registrado.proveedores = (ProveedorAuth.GOOGLE.value,)
+    repositorio_usuarios.actualizar(usuario_registrado)
+    use_case = _use_case(repositorio_usuarios, repositorio_recuperaciones, enviador)
+    use_case.ejecutar(SolicitarRecuperacionCommand(usuario_registrado.email), "http://local")
+    assert repositorio_recuperaciones._recuperaciones == {}
+    assert "Google o UCLM" in enviador.mensajes[-1][2]
+
+
+def prueba_usuario_eliminado_no_recibe_correo(
+    repositorio_usuarios, usuario_registrado, repositorio_recuperaciones
+):
+    enviador = EnviadorCorreoMemoria()
+    use_case = _use_case(repositorio_usuarios, repositorio_recuperaciones, enviador)
+    usuario_registrado.estado = EstadoUsuario.ELIMINADO
+    use_case.ejecutar(SolicitarRecuperacionCommand(usuario_registrado.email), "http://local")
+    assert repositorio_recuperaciones._recuperaciones == {}
+    assert enviador.mensajes == []

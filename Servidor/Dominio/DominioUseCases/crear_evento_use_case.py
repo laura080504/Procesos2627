@@ -1,5 +1,5 @@
 from Servidor.Dominio.DominioCommands.crear_evento_command import CrearEventoCommand
-from Servidor.Dominio.DominioEntities.evento import Evento
+from Servidor.Dominio.DominioEntities.evento import Evento, nuevo_id_evento
 from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioExceptions.estado_no_valido import EstadoNoValido
 from Servidor.Dominio.DominioExceptions.permiso_insuficiente import PermisoInsuficiente
@@ -49,6 +49,7 @@ class CrearEventoUseCase:
             tipo=command.tipo,
             hora=command.hora.strip(),
             lugar=lugar,
+            id=nuevo_id_evento(),
         )
         self.repositorio_eventos.guardar(evento)
         return evento

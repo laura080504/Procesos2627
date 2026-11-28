@@ -116,19 +116,20 @@
 
 .acciones-login {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: stretch;
-    gap: 0.6rem;
+    gap: 0.45rem;
     position: relative;
     width: 100%;
     margin: 1.4rem auto 0;
     padding-inline: 1.75rem;
+    padding-right: 2.1rem;
     box-sizing: border-box;
 }
 
 .acciones-login .micro {
     position: absolute;
-    right: 0;
+    right: 0.15rem;
     top: 50%;
     transform: translateY(-50%);
 }
@@ -137,18 +138,24 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.3rem;
+    gap: 0.2rem;
     width: 100%;
     min-width: 0;
     margin: 0;
-    padding: 0.7rem 0.4rem;
-    font-size: 0.95rem;
+    padding: 0.55rem 0.25rem;
+    font-size: 0.78rem;
     white-space: nowrap;
     box-sizing: border-box;
 }
 
 .marca-google {
     font-weight: 700;
+}
+
+.marca-uclm {
+    font-weight: 750;
+    letter-spacing: 0.04em;
+    color: #7a1f2b;
 }
 
 .tarjeta a.boton-entrar {

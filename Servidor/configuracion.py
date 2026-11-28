@@ -32,6 +32,11 @@ class Configuracion:
     brevo_api_clave: str | None = field(default=None, repr=False)
     google_client_id: str | None = None
     google_client_secret: str | None = field(default=None, repr=False)
+    uclm_client_id: str | None = None
+    uclm_client_secret: str | None = field(default=None, repr=False)
+    uclm_url_autorizacion: str = "https://adas.uclm.es/OAUTH2/authserver.php"
+    uclm_url_token: str = "https://adas.uclm.es/OAUTH2/token.php"
+    uclm_url_perfil: str = "https://adas.uclm.es/OAUTH2/userinfo.php"
     url_publica: str | None = None
     horarios_esiiab_vivo: bool = True
     horarios_esiiab_url: str = "https://esiiab.uclm.es/horarios/"
@@ -75,6 +80,10 @@ def cargar_configuracion() -> Configuracion:
     google_client_secret = os.getenv("GOOGLE_CLIENT_SECRET", "") or None
     if bool(google_client_id) != bool(google_client_secret):
         raise ValueError("GOOGLE_CLIENT_ID y GOOGLE_CLIENT_SECRET deben indicarse juntos.")
+    uclm_client_id = os.getenv("UCLM_CLIENT_ID", "").strip() or None
+    uclm_client_secret = os.getenv("UCLM_CLIENT_SECRET", "") or None
+    if bool(uclm_client_id) != bool(uclm_client_secret):
+        raise ValueError("UCLM_CLIENT_ID y UCLM_CLIENT_SECRET deben indicarse juntos.")
     url_publica = os.getenv("URL_PUBLICA", "").strip().rstrip("/") or None
     horarios_vivo = os.getenv("HORARIOS_ESIIAB_VIVO", "true").lower() != "false"
     horarios_url = os.getenv("HORARIOS_ESIIAB_URL", "https://esiiab.uclm.es/horarios/").strip()
@@ -101,6 +110,20 @@ def cargar_configuracion() -> Configuracion:
         brevo_api_clave=os.getenv("BREVO_API_CLAVE", "") or None,
         google_client_id=google_client_id,
         google_client_secret=google_client_secret or None,
+        uclm_client_id=uclm_client_id,
+        uclm_client_secret=uclm_client_secret or None,
+        uclm_url_autorizacion=(
+            os.getenv("UCLM_URL_AUTORIZACION", "https://adas.uclm.es/OAUTH2/authserver.php").strip()
+            or "https://adas.uclm.es/OAUTH2/authserver.php"
+        ),
+        uclm_url_token=(
+            os.getenv("UCLM_URL_TOKEN", "https://adas.uclm.es/OAUTH2/token.php").strip()
+            or "https://adas.uclm.es/OAUTH2/token.php"
+        ),
+        uclm_url_perfil=(
+            os.getenv("UCLM_URL_PERFIL", "https://adas.uclm.es/OAUTH2/userinfo.php").strip()
+            or "https://adas.uclm.es/OAUTH2/userinfo.php"
+        ),
         url_publica=url_publica,
         horarios_esiiab_vivo=horarios_vivo,
         horarios_esiiab_url=horarios_url or "https://esiiab.uclm.es/horarios/",

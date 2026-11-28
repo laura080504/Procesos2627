@@ -13,7 +13,7 @@ class VistaInicioSesion {
             } else {
                 localStorage.removeItem("emailRecordado");
             }
-            alEnviar(email, datos.get("contrasena"));
+            alEnviar(email, datos.get("contrasena"), this.formulario.recordarme.checked);
         });
         document.getElementById("enlaceRegistro").addEventListener("click", (evento) => {
             evento.preventDefault();

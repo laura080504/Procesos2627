@@ -16,6 +16,7 @@ from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import (
 )
 from Servidor.configuracion import Configuracion
 from Servidor.Infraestructura.cliente_google import ClienteGoogle
+from Servidor.Infraestructura.cliente_uclm import ClienteUclm
 from Servidor.Infraestructura.enviador_correo import EnviadorCorreo
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_confirmaciones import RepositorioConfirmaciones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
@@ -68,18 +69,38 @@ def crear_confirmar_cuenta_use_case(
 def crear_iniciar_sesion_google_use_case(
     repositorio_usuarios: RepositorioUsuarios = Depends(obtener_repositorio_usuarios),
     repositorio_sesiones: RepositorioSesiones = Depends(obtener_repositorio_sesiones),
-    hasher: HasherContrasenas = Depends(obtener_hasher_contrasenas),
     configuracion: Configuracion = Depends(obtener_configuracion),
     repositorio_confirmaciones: RepositorioConfirmaciones = Depends(obtener_repositorio_confirmaciones),
     repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
 ) -> IniciarSesionGoogleUseCase:
+    from Servidor.Dominio.DominioEnums.proveedor_auth import ProveedorAuth
+
     return IniciarSesionGoogleUseCase(
         repositorio_usuarios,
         repositorio_sesiones,
-        hasher,
         configuracion.duracion_sesion,
         repositorio_confirmaciones,
         repositorio_matriculas,
+        ProveedorAuth.GOOGLE.value,
+    )
+
+
+def crear_iniciar_sesion_uclm_use_case(
+    repositorio_usuarios: RepositorioUsuarios = Depends(obtener_repositorio_usuarios),
+    repositorio_sesiones: RepositorioSesiones = Depends(obtener_repositorio_sesiones),
+    configuracion: Configuracion = Depends(obtener_configuracion),
+    repositorio_confirmaciones: RepositorioConfirmaciones = Depends(obtener_repositorio_confirmaciones),
+    repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
+) -> IniciarSesionGoogleUseCase:
+    from Servidor.Dominio.DominioEnums.proveedor_auth import ProveedorAuth
+
+    return IniciarSesionGoogleUseCase(
+        repositorio_usuarios,
+        repositorio_sesiones,
+        configuracion.duracion_sesion,
+        repositorio_confirmaciones,
+        repositorio_matriculas,
+        ProveedorAuth.UCLM.value,
     )
 
 
@@ -88,6 +109,14 @@ _cliente_google = ClienteGoogle()
 
 def obtener_cliente_google() -> ClienteGoogle:
     return _cliente_google
+
+
+def obtener_cliente_uclm(configuracion: Configuracion = Depends(obtener_configuracion)) -> ClienteUclm:
+    return ClienteUclm(
+        configuracion.uclm_url_autorizacion,
+        configuracion.uclm_url_token,
+        configuracion.uclm_url_perfil,
+    )
 
 
 def crear_iniciar_sesion_use_case(
@@ -103,6 +132,8 @@ def crear_iniciar_sesion_use_case(
         hasher,
         configuracion.duracion_sesion,
         repositorio_matriculas,
+        timedelta(hours=2),
+        timedelta(days=30),
     )
 
 
@@ -122,9 +153,13 @@ def crear_obtener_usuario_sesion_use_case(
 def crear_solicitar_recuperacion_use_case(
     repositorio_usuarios: RepositorioUsuarios = Depends(obtener_repositorio_usuarios),
     repositorio_recuperaciones: RepositorioRecuperaciones = Depends(obtener_repositorio_recuperaciones),
+    enviador: EnviadorCorreo = Depends(obtener_enviador_correo),
 ) -> SolicitarRecuperacionUseCase:
     return SolicitarRecuperacionUseCase(
-        repositorio_usuarios, repositorio_recuperaciones, timedelta(minutes=15)
+        repositorio_usuarios,
+        repositorio_recuperaciones,
+        enviador,
+        timedelta(minutes=15),
     )
 
 

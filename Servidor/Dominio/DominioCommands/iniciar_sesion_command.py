@@ -5,3 +5,4 @@ from dataclasses import dataclass
 class IniciarSesionCommand:
     email: str
     contrasena: str
+    recordar: bool = False

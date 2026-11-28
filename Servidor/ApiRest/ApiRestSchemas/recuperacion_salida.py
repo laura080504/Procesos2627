@@ -2,4 +2,4 @@ from pydantic import BaseModel
 
 
 class RecuperacionSalida(BaseModel):
-    token: str
+    mensaje: str = "Si el correo está registrado, recibirás instrucciones"

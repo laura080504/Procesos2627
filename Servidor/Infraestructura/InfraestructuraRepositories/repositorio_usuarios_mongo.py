@@ -2,17 +2,25 @@ from __future__ import annotations
 
 from pymongo.errors import DuplicateKeyError
 
-from Servidor.Infraestructura.base_datos_mongo import BaseDatosMongo
-from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
+from Servidor.Dominio.DominioEnums.proveedor_auth import ProveedorAuth
 from Servidor.Dominio.DominioEnums.rol import rol_desde_almacen
 from Servidor.Dominio.DominioExceptions.usuario_ya_existe import UsuarioYaExiste
+from Servidor.Infraestructura.base_datos_mongo import BaseDatosMongo
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
 
 
 class RepositorioUsuariosMongo(RepositorioUsuarios):
     def __init__(self, base_datos: BaseDatosMongo):
         self.base_datos = base_datos
+        self._asegurar_indice_email()
+
+    def _asegurar_indice_email(self) -> None:
+        try:
+            self.base_datos.coleccion("usuarios").create_index("email_norm", unique=True, sparse=True)
+        except Exception:
+            pass
 
     def insertar(self, usuario: Usuario) -> Usuario:
         coleccion = self.base_datos.coleccion("usuarios")
@@ -26,7 +34,7 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
         return self._a_usuario(documento)
 
     def obtener_por_email(self, email: str) -> Usuario | None:
-        documento = self.base_datos.coleccion("usuarios").find_one({"_id": email})
+        documento = self.base_datos.coleccion("usuarios").find_one({"_id": email.strip().lower()})
         return self._a_usuario(documento) if documento else None
 
     def obtener_todos(self) -> list[Usuario]:
@@ -42,6 +50,8 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
                     "contrasena_hash": usuario.contrasena_hash,
                     "rol": usuario.rol.value,
                     "estado": usuario.estado.value,
+                    "proveedores": list(usuario.proveedores),
+                    "email_norm": usuario.email,
                 }
             },
         )
@@ -63,17 +73,27 @@ class RepositorioUsuariosMongo(RepositorioUsuarios):
     def _a_documento(self, usuario: Usuario) -> dict:
         return {
             "_id": usuario.email,
+            "email_norm": usuario.email,
             "nick": usuario.nick,
             "contrasena_hash": usuario.contrasena_hash,
             "rol": usuario.rol.value,
             "estado": usuario.estado.value,
+            "proveedores": list(usuario.proveedores),
         }
 
     def _a_usuario(self, documento: dict) -> Usuario:
+        proveedores = documento.get("proveedores")
+        if not proveedores:
+            # Migración: cuentas antiguas con hash → local; sin hash → google legacy.
+            if documento.get("contrasena_hash"):
+                proveedores = [ProveedorAuth.LOCAL.value]
+            else:
+                proveedores = [ProveedorAuth.GOOGLE.value]
         return Usuario(
             email=documento["_id"],
             nick=documento["nick"],
-            contrasena_hash=documento["contrasena_hash"],
+            contrasena_hash=documento.get("contrasena_hash"),
             rol=rol_desde_almacen(documento["rol"]),
             estado=EstadoUsuario(documento.get("estado", EstadoUsuario.ACTIVO)),
+            proveedores=tuple(proveedores),
         )
