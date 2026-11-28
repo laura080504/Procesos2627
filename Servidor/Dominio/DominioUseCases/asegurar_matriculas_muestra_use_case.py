@@ -3,7 +3,6 @@ from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasena
 from Servidor.Dominio.DominioServices.matriculas_muestra import (
     ALUMNOS_PRUEBA,
     CONTRASENA_PRUEBA,
-    EMAIL_LAURA,
     forzar_matricula_laura,
 )
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
@@ -23,7 +22,6 @@ class AsegurarMatriculasMuestraUseCase:
 
     def ejecutar(self) -> None:
         forzar_matricula_laura(self.repositorio_matriculas)
-        self.repositorio_matriculas.vaciar_todos_excepto(EMAIL_LAURA)
         for alumno in ALUMNOS_PRUEBA:
             email = alumno["email"]
             if self.repositorio_usuarios.obtener_por_email(email) is None:
