@@ -38,3 +38,17 @@ class RepositorioDocenciaMongo(RepositorioDocencia):
             {"$set": campos},
             upsert=True,
         )
+
+    def cambiar_email(self, email_actual: str, email_nuevo: str) -> None:
+        actual = email_actual.strip().lower()
+        nuevo = email_nuevo.strip().lower()
+        if actual == nuevo:
+            return
+        coleccion = self.base_datos.coleccion("docencia")
+        documento = coleccion.find_one({"_id": actual})
+        if not documento:
+            return
+        documento["_id"] = nuevo
+        documento["email"] = nuevo
+        coleccion.delete_one({"_id": actual})
+        coleccion.replace_one({"_id": nuevo}, documento, upsert=True)

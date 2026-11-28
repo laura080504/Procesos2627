@@ -714,9 +714,10 @@ const VistaAgenda = (() => {
                             detalle.textContent = detalleTexto;
                             item.append(detalle);
                         }
-                        if (simbolo.tipo === "secretaria" && simbolo.url) {
+                        const enlaceAviso = urlHttp(simbolo.url);
+                        if (simbolo.tipo === "secretaria" && enlaceAviso) {
                             const enlace = document.createElement("a");
-                            enlace.href = simbolo.url;
+                            enlace.href = enlaceAviso;
                             enlace.target = "_blank";
                             enlace.rel = "noopener";
                             enlace.className = "actividad-enlace";
@@ -1475,6 +1476,21 @@ const VistaAgenda = (() => {
             bloque.append(fila);
         });
         return bloque;
+    }
+
+    function urlHttp(url) {
+        if (!url) {
+            return "";
+        }
+        try {
+            const destino = new URL(url, location.origin);
+            if (destino.protocol !== "http:" && destino.protocol !== "https:") {
+                return "";
+            }
+            return destino.href;
+        } catch {
+            return "";
+        }
     }
 
     function enlaceFicha(texto, href) {

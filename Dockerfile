@@ -9,6 +9,10 @@ COPY main.py .
 COPY Servidor ./Servidor
 COPY Cliente ./Cliente
 
+RUN useradd --create-home --uid 10001 --shell /usr/sbin/nologin appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
 ENV HOST=0.0.0.0
 ENV PORT=8080
 ENV COOKIE_SEGURA=true

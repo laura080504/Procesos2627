@@ -193,14 +193,15 @@ Procesos2627/
 
 ### Seguridad del login (resumen)
 
-- Framework: **FastAPI** + MongoDB. Contraseñas con **bcrypt** (coste 12); política NIST (8–128, sin listas comunes).
+- Framework: **FastAPI** + MongoDB. Contraseñas con **bcrypt** (coste 12); longitud 8–64 y una lista breve de contraseñas habituales. No se recortan espacios.
 - Email normalizado (`strip().lower()`); índice único por email. `contrasena_hash` puede ser `null` (solo Google/UCLM). Campo `proveedores` (`local` / `google` / `uclm`).
-- Cookie de sesión `HttpOnly` + `SameSite=Lax` (+ `Secure` en producción). **Recuérdame**: 2 h (sesión corta) o 30 días (persistente); al cambiar contraseña se invalidan todas las sesiones.
-- OAuth Google/UCLM con `state` (anti-CSRF, `compare_digest`) y **PKCE** (`code_challenge` / `code_verifier` en cookie `oauth_pkce`). Solo se confía en el email si el IdP indica `email_verified`.
+- Cookie de sesión `HttpOnly` + `SameSite=Lax` (+ `Secure` en producción). En base de datos solo se guarda el **hash SHA-256** del token; la cookie lleva el valor en claro. **Recuérdame**: 2 h (sesión corta) o 30 días (persistente); al cambiar contraseña se invalidan todas las sesiones. Un cambio de este almacenamiento cierra las sesiones ya abiertas.
+- OAuth Google/UCLM con `state` (anti-CSRF, `compare_digest`) y **PKCE** (`code_challenge` / `code_verifier` en cookie `oauth_pkce`). Solo se confía en el email si el perfil trae `email_verified` verdadero. Si el campo no viene, no se crea ni se vincula la cuenta.
 - Identidad única: registro local sobre cuenta OAuth → aviso de entrar por Google/UCLM; OAuth sobre cuenta local **activa** → vincula proveedor; OAuth sobre cuenta **pendiente** → no vincula (anti takeover).
 - Recuperación: respuesta siempre `200` con mensaje genérico; en BD solo el **hash SHA-256** del token (15 min, un solo uso). Cuentas solo OAuth reciben aviso por correo sin token de cambio.
-- Límite de intentos por IP y email en login/registro/recuperación/OAuth. Login: mensaje único «Credenciales incorrectas».
-- Cabeceras básicas: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
+- Límite de intentos por IP en login, registro, recuperación y el inicio de OAuth. La IP es el último valor de `X-Forwarded-For` (el que añade el proxy). El contador vive en el proceso: no se comparte entre instancias de Cloud Run. Login: mensaje único «Credenciales incorrectas».
+- Cabeceras: `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` y, con `COOKIE_SEGURA`, `Strict-Transport-Security`. Con la cookie segura, `/docs` y el OpenAPI quedan cerrados.
+- WebSocket `/ws`: exige sesión del mismo origen. El servidor empuja los avisos; no reenvía lo que escriba el cliente. El listado de alumnos no incluye notas ni media.
 
 ### Confirmación por correo
 
@@ -274,7 +275,9 @@ Si `ADMIN_EMAIL` y `ADMIN_PASSWORD` están definidos y todavía no hay un admini
 | GET | `/api/usuarios` | Lista usuarios. Profesor: alumnos de sus asignaturas; secretaría/superadmin: alumnado (+ curso) y resto de cuentas |
 | PATCH | `/api/usuarios/me` | Edita el email, el nombre y, si se envía, la contraseña propios |
 | GET | `/api/usuarios/numero` | Número de usuarios |
-| POST | `/api/usuarios/{email}/administrador` | Un administrador convierte esa cuenta en administrador |
+| POST | `/api/usuarios/{email}/profesor` | Secretaría convierte esa cuenta en profesor (compatibilidad) |
+| POST | `/api/usuarios/{email}/asignar-rol` | Secretaría pide el cambio a profesor; el correo lo confirma |
+| PATCH | `/api/usuarios/{email}` | Secretaría edita nick y correo de un alumno |
 | GET | `/api/usuarios/{email}/activo` | Indica si esa cuenta está activa |
 | DELETE | `/api/usuarios/{email}` | Marca la cuenta como eliminada y cierra sus sesiones |
 | GET | `/api/asignaturas` | Catálogo del grado (plan 406 Albacete) |

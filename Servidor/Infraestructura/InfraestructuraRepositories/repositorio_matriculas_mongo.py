@@ -227,5 +227,24 @@ class RepositorioMatriculasMongo(RepositorioMatriculas):
                 upsert=True,
             )
 
+    def cambiar_email(self, email_actual: str, email_nuevo: str) -> None:
+        actual = email_actual.strip().lower()
+        nuevo = email_nuevo.strip().lower()
+        if actual == nuevo:
+            return
+        coleccion = self.base_datos.coleccion("matricula")
+        documentos = list(coleccion.find({"email": actual}))
+        if not documentos:
+            return
+        coleccion.delete_many({"email": actual})
+        for documento in documentos:
+            identificador = documento.get("_id")
+            sufijo = ""
+            if isinstance(identificador, str) and "|" in identificador:
+                sufijo = identificador.split("|", 1)[1]
+            documento["email"] = nuevo
+            documento["_id"] = f"{nuevo}|{sufijo}" if sufijo else f"{nuevo}|{identificador}"
+            coleccion.replace_one({"_id": documento["_id"]}, documento, upsert=True)
+
     def vaciar_todos_excepto(self, email: str) -> None:
         self.base_datos.coleccion("matricula").delete_many({"email": {"$ne": email.strip().lower()}})

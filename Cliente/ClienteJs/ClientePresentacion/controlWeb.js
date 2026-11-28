@@ -36,7 +36,7 @@ class ControlWeb {
             alVolver: () => this.mostrarInicioSesion(),
             alNoCoinciden: () => this.mostrarMensaje(this.textos.contrasenasNoCoinciden, true),
         });
-        this.socketAvisos = null;
+        this.avisos = new ClienteAvisos();
         this.cacheMarcas = new Map();
         this.cacheMatricula = null;
         this.peticionMatricula = null;
@@ -249,17 +249,11 @@ class ControlWeb {
     }
 
     conectarAvisos() {
-        this.desconectarAvisos();
-        const protocolo = location.protocol === "https:" ? "wss" : "ws";
-        this.socketAvisos = new WebSocket(`${protocolo}://${location.host}/ws`);
-        this.socketAvisos.addEventListener("message", (evento) => this.recibirAvisoProfesor(evento));
+        this.avisos.conectar((evento) => this.recibirAvisoProfesor(evento));
     }
 
     desconectarAvisos() {
-        if (this.socketAvisos) {
-            this.socketAvisos.close();
-            this.socketAvisos = null;
-        }
+        this.avisos.desconectar();
     }
 
     async recibirAvisoProfesor(evento) {

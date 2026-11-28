@@ -43,7 +43,7 @@ Los casos de uso no importan FastAPI. Reciben repositorios y el enviador por el 
 
 `crear_repositorios` elige memoria o mongo según `DATOS_MOTOR`. Las pruebas fijan `memoria` en `Pruebas/conftest.py`.
 
-Al arrancar, si hay `ADMIN_EMAIL` y `ADMIN_PASSWORD`, `AsegurarAdministradorUseCase` crea o promociona un superadministrador. También se aseguran catálogo, eventos de muestra y matrículas de muestra. Si el motor es mongo y existe la colección `asignaturas`, el arranque la borra (`repositorio_dependencies.py`).
+Al arrancar, `ADMIN_EMAIL` crea o promociona un profesor (`AsegurarAdministradorUseCase`) y `SECRETARIA_EMAIL` crea la secretaría. También se asegura el catálogo y, si el almacén está vacío, los avisos públicos de la ESIIAB. No se crean cuentas de demostración ni se borra ninguna colección.
 
 ## Frontend
 
@@ -97,6 +97,6 @@ Los casos de uso importan las interfaces desde `Infraestructura`, no desde un pa
 | GET | `/api/matricula` | Sesión válida |
 | GET | `/api/agenda/marcas` | Sesión válida |
 | POST | `/api/prueba/estado` | Sin sesión |
-| WS | `/ws` | Sin sesión |
+| WS | `/ws` | Sesión válida y mismo origen. No reenvía mensajes del cliente |
 
-El [README](../README.md) todavía nombra `POST /api/usuarios/{email}/administrador`. El controller expone `POST /api/usuarios/{email}/profesor`.
+El controller expone `POST /api/usuarios/{email}/profesor` y `POST /api/usuarios/{email}/asignar-rol`. La edición de un alumno por secretaría está en `EditarAlumnoSecretariaUseCase`.

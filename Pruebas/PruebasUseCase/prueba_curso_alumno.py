@@ -50,7 +50,7 @@ def prueba_laura_tiene_su_matricula_real_y_curso_tercero():
     # Sin notas en código: créditos/media vacíos hasta Historial. Tarta = matrícula de este año.
     assert resultado.creditos_aprobados == 0
     assert resultado.media is None
-    assert resultado.intensificacion == "software"
+    assert resultado.intensificacion is None
 
 
 def prueba_una_cuenta_nueva_empieza_sin_matricula():

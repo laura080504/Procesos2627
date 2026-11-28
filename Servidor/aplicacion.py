@@ -16,11 +16,29 @@ from Servidor.ApiRest.limite_auth import LimiteAuthMiddleware
 from Servidor.ApiWs.ApiWsControllers.websocket_controller import router as websocket_router
 from Servidor.Infraestructura.registro_actividad import configurar_registro_actividad
 
-configurar_registro_actividad(obtener_configuracion().nivel_registro)
+_configuracion = obtener_configuracion()
+configurar_registro_actividad(_configuracion.nivel_registro)
 
 RUTA_CLIENTE = Path(__file__).resolve().parent.parent / "Cliente"
+_DOCS = None if _configuracion.cookie_segura else "/docs"
+_POLITICA_SEGURIDAD = (
+    "default-src 'self'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'none'; "
+    "object-src 'none'; "
+    "script-src 'self'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data:; "
+    "connect-src 'self'"
+)
 
-aplicacion = FastAPI(title="Procesos 26-27")
+aplicacion = FastAPI(
+    title="Procesos 26-27",
+    docs_url=_DOCS,
+    redoc_url=None if _configuracion.cookie_segura else "/redoc",
+    openapi_url=None if _configuracion.cookie_segura else "/openapi.json",
+)
 
 
 class CabecerasSeguridadMiddleware(BaseHTTPMiddleware):
@@ -30,6 +48,12 @@ class CabecerasSeguridadMiddleware(BaseHTTPMiddleware):
         respuesta.headers.setdefault("X-Frame-Options", "DENY")
         respuesta.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         respuesta.headers.setdefault("Permissions-Policy", "camera=(), microphone=(self), geolocation=()")
+        respuesta.headers.setdefault("Content-Security-Policy", _POLITICA_SEGURIDAD)
+        if _configuracion.cookie_segura:
+            respuesta.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains",
+            )
         return respuesta
 
 

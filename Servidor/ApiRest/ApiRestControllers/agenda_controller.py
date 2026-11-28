@@ -12,6 +12,7 @@ from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import (
     crear_guardar_expediente_use_case,
     crear_guardar_matricula_use_case,
     crear_listar_asignaturas_use_case,
+    crear_listar_avisos_secretaria_use_case,
     crear_obtener_destinatarios_aviso_use_case,
     crear_obtener_expediente_use_case,
     crear_obtener_marcas_calendario_use_case,
@@ -24,7 +25,6 @@ from Servidor.ApiRest.ApiRestDependencies.auth_dependencies import (
 )
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
     obtener_repositorio_asignaturas,
-    obtener_repositorio_avisos_secretaria,
 )
 from Servidor.ApiRest.ApiRestSchemas.asignatura_salida import AsignaturaSalida
 from Servidor.ApiRest.ApiRestSchemas.aviso_secretaria_entrada import AvisoSecretariaEntrada
@@ -39,9 +39,7 @@ from Servidor.ApiRest.ApiRestSchemas.matricula_salida import MatriculaSalida
 from Servidor.Dominio.DominioCommands.crear_aviso_secretaria_command import CrearAvisoSecretariaCommand
 from Servidor.Dominio.DominioUseCases.crear_aviso_secretaria_use_case import CrearAvisoSecretariaUseCase
 from Servidor.Dominio.DominioUseCases.eliminar_aviso_secretaria_use_case import EliminarAvisoSecretariaUseCase
-from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_avisos_secretaria import (
-    RepositorioAvisosSecretaria,
-)
+from Servidor.Dominio.DominioUseCases.listar_avisos_secretaria_use_case import ListarAvisosSecretariaUseCase
 from Servidor.ApiWs.gestor_conexiones import gestor
 from Servidor.Dominio.DominioCommands.actualizar_evento_command import ActualizarEventoCommand
 from Servidor.Dominio.DominioCommands.crear_evento_command import CrearEventoCommand
@@ -307,7 +305,7 @@ async def eliminar_evento(
 @router.get("/api/avisos-secretaria", response_model=list[AvisoSecretariaSalida])
 def listar_avisos_secretaria(
     _: Usuario = Depends(obtener_usuario_actual),
-    repositorio: RepositorioAvisosSecretaria = Depends(obtener_repositorio_avisos_secretaria),
+    use_case: ListarAvisosSecretariaUseCase = Depends(crear_listar_avisos_secretaria_use_case),
 ):
     return [
         AvisoSecretariaSalida(
@@ -320,8 +318,7 @@ def listar_avisos_secretaria(
             url=aviso.url,
             descripcion=aviso.descripcion,
         )
-        for aviso in repositorio.obtener_todos()
-        if aviso.id
+        for aviso in use_case.ejecutar()
     ]
 
 

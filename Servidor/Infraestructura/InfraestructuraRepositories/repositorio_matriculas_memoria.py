@@ -144,6 +144,19 @@ class RepositorioMatriculasMemoria(RepositorioMatriculas):
                 "activa": bool(anterior.get("activa", True)) if anterior else True,
             }
 
+    def cambiar_email(self, email_actual: str, email_nuevo: str) -> None:
+        actual = email_actual.strip().lower()
+        nuevo = email_nuevo.strip().lower()
+        if actual == nuevo:
+            return
+        filas = self._filas.pop(actual, None)
+        if filas is not None:
+            destino = self._filas.setdefault(nuevo, {})
+            destino.update(filas)
+        intensificacion = self._intensificacion.pop(actual, None)
+        if intensificacion is not None and nuevo not in self._intensificacion:
+            self._intensificacion[nuevo] = intensificacion
+
     def vaciar_todos_excepto(self, email: str) -> None:
         conservar = email.strip().lower()
         for alumno in list(self._filas):

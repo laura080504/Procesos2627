@@ -1,3 +1,5 @@
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_docencia import RepositorioDocencia
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_matriculas import RepositorioMatriculas
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_sesiones import RepositorioSesiones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_usuarios import RepositorioUsuarios
@@ -16,11 +18,15 @@ class EditarDatosUseCase:
         repositorio_sesiones: RepositorioSesiones,
         repositorio_recuperaciones: RepositorioRecuperaciones,
         hasher: HasherContrasenas,
+        repositorio_matriculas: RepositorioMatriculas | None = None,
+        repositorio_docencia: RepositorioDocencia | None = None,
     ):
         self.repositorio_usuarios = repositorio_usuarios
         self.repositorio_sesiones = repositorio_sesiones
         self.repositorio_recuperaciones = repositorio_recuperaciones
         self.hasher = hasher
+        self.repositorio_matriculas = repositorio_matriculas
+        self.repositorio_docencia = repositorio_docencia
 
     def ejecutar(self, command: EditarDatosCommand) -> Usuario:
         email_actual = command.solicitante_email.strip().lower()
@@ -41,6 +47,10 @@ class EditarDatosUseCase:
             self.repositorio_usuarios.cambiar_email(email_actual, usuario)
             self.repositorio_sesiones.actualizar_email(email_actual, email_nuevo)
             self.repositorio_recuperaciones.actualizar_email(email_actual, email_nuevo)
+            if self.repositorio_matriculas is not None:
+                self.repositorio_matriculas.cambiar_email(email_actual, email_nuevo)
+            if self.repositorio_docencia is not None:
+                self.repositorio_docencia.cambiar_email(email_actual, email_nuevo)
         else:
             self.repositorio_usuarios.actualizar(usuario)
         guardado = self.repositorio_usuarios.obtener_por_email(email_nuevo)

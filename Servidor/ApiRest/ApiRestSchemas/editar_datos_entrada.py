@@ -1,5 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from Servidor.Dominio.DominioServices.politica_contrasena import validar_contrasena
+
 
 class EditarDatosEntrada(BaseModel):
     email: EmailStr
@@ -17,11 +19,6 @@ class EditarDatosEntrada(BaseModel):
     @field_validator("contrasena")
     @classmethod
     def contrasena_opcional(cls, valor: str | None) -> str | None:
-        if valor is None:
+        if valor is None or valor == "":
             return None
-        limpio = valor.strip()
-        if not limpio:
-            return None
-        if not 8 <= len(limpio) <= 64:
-            raise ValueError("La contraseña debe tener entre 8 y 64 caracteres")
-        return limpio
+        return validar_contrasena(valor)
