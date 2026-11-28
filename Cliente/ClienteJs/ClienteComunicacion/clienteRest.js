@@ -47,6 +47,37 @@ class ClienteRest {
         return this.clienteHttp.peticion("POST", `/usuarios/${encodeURIComponent(email)}/profesor`);
     }
 
+    solicitarAsignacionRol(email) {
+        return this.clienteHttp.peticion("POST", `/usuarios/${encodeURIComponent(email)}/asignar-rol`);
+    }
+
+    confirmarAsignacionRol(token) {
+        return this.clienteHttp.peticion("POST", "/usuarios/confirmar-rol", { token });
+    }
+
+    asignarDelegado(email) {
+        return this.clienteHttp.peticion("POST", `/usuarios/${encodeURIComponent(email)}/delegado`);
+    }
+
+    quitarDelegado(email) {
+        return this.clienteHttp.peticion("DELETE", `/usuarios/${encodeURIComponent(email)}/delegado`);
+    }
+
+    matriculaDeAlumno(email) {
+        return this.clienteHttp.peticion("GET", `/usuarios/${encodeURIComponent(email)}/matricula`);
+    }
+
+    guardarMatriculaAlumno(email, asignaturas) {
+        return this.clienteHttp.peticion("PUT", `/usuarios/${encodeURIComponent(email)}/matricula`, { asignaturas });
+    }
+
+    editarAlumno(email, nick, emailNuevo) {
+        return this.clienteHttp.peticion("PATCH", `/usuarios/${encodeURIComponent(email)}`, {
+            email: emailNuevo || email,
+            nick,
+        });
+    }
+
     solicitarRecuperacion(email) {
         return this.clienteHttp.peticion("POST", "/auth/recuperacion", { email });
     }
@@ -124,5 +155,23 @@ class ClienteRest {
 
     eliminarEvento(eventoId) {
         return this.clienteHttp.peticion("DELETE", `/eventos/${encodeURIComponent(eventoId)}`);
+    }
+
+    crearAvisoSecretaria({ titulo, tipo, fecha, hora, lugar, url, descripcion }) {
+        const cuerpo = { titulo, tipo, fecha, hora };
+        if (lugar) {
+            cuerpo.lugar = lugar;
+        }
+        if (url) {
+            cuerpo.url = url;
+        }
+        if (descripcion) {
+            cuerpo.descripcion = descripcion;
+        }
+        return this.clienteHttp.peticion("POST", "/avisos-secretaria", cuerpo);
+    }
+
+    eliminarAvisoSecretaria(avisoId) {
+        return this.clienteHttp.peticion("DELETE", `/avisos-secretaria/${encodeURIComponent(avisoId)}`);
     }
 }

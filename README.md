@@ -39,7 +39,7 @@ No hace falta saber programar para usarla: abre la URL, crea una cuenta (o entra
 |-----|-------------------|
 | **Alumno** | Su agenda, matrícula, historial e intensificación |
 | **Profesor** | Avisos solo en las asignaturas que imparte y listado de sus alumnos matriculados |
-| **Superadministrador** | Gestión de todos los usuarios y del rol de profesor |
+| **Secretaría** (= `superadministrador`) | Listado completo del alumnado (filtro por curso), bajas, hacer profesor; sin avisos de docencia |
 
 #### Funciones del alumno (resumen)
 
@@ -250,7 +250,7 @@ Cliente HTTP: `Servidor/Infraestructura/cliente_uclm.py`.
 
 Si `ADMIN_EMAIL` y `ADMIN_PASSWORD` están definidos y todavía no hay un administrador, el arranque crea esa cuenta en estado `activo` o, si el email ya existe, solo le asigna el rol. Esa cuenta no pasa por la confirmación por correo. La contraseña no se sube al repositorio.
 
-El superadministrador lista todos los usuarios, edita los de los demás y puede hacer profesor a otro desde esa edición. Un profesor solo ve a los alumnos matriculados en las asignaturas que imparte, con el rol y las asignaturas compartidas, y solo puede publicar avisos en esas asignaturas. El aviso se envía a los alumnos matriculados en esa asignatura que estén conectados; el resto lo verá en su panel de avisos. Un usuario normal solo ve su cuenta, edita la suya y solo puede eliminar la suya. `activo` significa que el correo está confirmado o que entró con Google/UCLM, y que la cuenta no está eliminada. `pendiente` no puede iniciar sesión. `eliminado` tampoco, y no se puede volver a registrar ese correo.
+**Secretaría es el superadministrador**: se crea al arrancar con `SECRETARIA_EMAIL` / `SECRETARIA_PASSWORD` (o `ADMIN_EMAIL` / `ADMIN_PASSWORD`). Ve el alumnado completo (curso estimado por matrícula y filtro por año), puede eliminar cuentas de alumnos y hacer profesor a otro. No publica avisos de asignatura. Un profesor solo ve a los alumnos de las asignaturas que imparte y solo publica avisos en esas. El aviso se envía a los alumnos matriculados conectados; el resto lo verá en su panel. Un usuario normal solo ve/edita/elimina su cuenta. `activo` = correo confirmado o login Google/UCLM y no eliminada. `pendiente` / `eliminado` no inician sesión; el correo eliminado no se puede volver a registrar.
 
 ### API REST
 
@@ -268,10 +268,10 @@ El superadministrador lista todos los usuarios, edita los de los demás y puede 
 | GET | `/api/auth/google/callback` | Recibe el código de Google y crea la sesión |
 | GET | `/api/auth/uclm` | Redirige al SSO UCLM (adAS) |
 | GET | `/api/auth/uclm/callback` | Recibe el código UCLM y crea la sesión |
-| POST | `/api/eventos` | Publica un examen/entrega (profesor o secretaría) |
+| POST | `/api/eventos` | Publica un examen/entrega (profesor o superadministrador) |
 | PUT | `/api/eventos/{id}` | Edita un examen/entrega propio |
 | DELETE | `/api/eventos/{id}` | Elimina un examen/entrega propio |
-| GET | `/api/usuarios` | Lista usuarios. El profesor, solo los alumnos de sus asignaturas; el superadministrador, todos |
+| GET | `/api/usuarios` | Lista usuarios. Profesor: alumnos de sus asignaturas; secretaría/superadmin: alumnado (+ curso) y resto de cuentas |
 | PATCH | `/api/usuarios/me` | Edita el email, el nombre y, si se envía, la contraseña propios |
 | GET | `/api/usuarios/numero` | Número de usuarios |
 | POST | `/api/usuarios/{email}/administrador` | Un administrador convierte esa cuenta en administrador |

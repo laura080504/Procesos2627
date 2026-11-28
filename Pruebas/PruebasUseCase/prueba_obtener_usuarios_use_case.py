@@ -81,3 +81,35 @@ def prueba_el_superadministrador_ve_todos_los_usuarios(repositorio_usuarios):
         )
     )
     assert len(usuarios) == 4
+
+
+def prueba_superadministrador_ve_todos_los_alumnos_con_curso(repositorio_usuarios):
+    profesor, propio, ajeno, superadministrador, docencia, matriculas = _escenario(repositorio_usuarios)
+    usuarios = ObtenerUsuariosUseCase(repositorio_usuarios, matriculas, docencia).ejecutar(
+        ObtenerUsuariosQuery(
+            solicitante_rol=Rol.SUPERADMINISTRADOR,
+            solicitante_email=superadministrador.email,
+        )
+    )
+    emails = {resultado.usuario.email for resultado in usuarios}
+    assert propio.email in emails
+    assert ajeno.email in emails
+    assert profesor.email in emails
+    assert superadministrador.email in emails
+    alumnos = [resultado for resultado in usuarios if resultado.usuario.rol == Rol.USUARIO]
+    assert all(resultado.usuario.estado != EstadoUsuario.ELIMINADO for resultado in alumnos)
+
+
+def prueba_superadministrador_no_incluye_alumnos_eliminados(repositorio_usuarios):
+    _, propio, ajeno, superadministrador, docencia, matriculas = _escenario(repositorio_usuarios)
+    propio.estado = EstadoUsuario.ELIMINADO
+    repositorio_usuarios.actualizar(propio)
+    usuarios = ObtenerUsuariosUseCase(repositorio_usuarios, matriculas, docencia).ejecutar(
+        ObtenerUsuariosQuery(
+            solicitante_rol=Rol.SUPERADMINISTRADOR,
+            solicitante_email=superadministrador.email,
+        )
+    )
+    emails = [resultado.usuario.email for resultado in usuarios]
+    assert propio.email not in emails
+    assert ajeno.email in emails

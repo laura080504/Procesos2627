@@ -41,7 +41,7 @@ def _puede_eliminar(rol_solicitante: Rol, email_solicitante: str, objetivo) -> b
     if email_solicitante == objetivo.email:
         return objetivo.rol == Rol.USUARIO
     # Sobre otra cuenta:
-    # - superadministrador → usuario o profesor
+    # - superadministrador (secretaría) → usuario o profesor
     # - profesor → solo usuario
     # - usuario → nadie
     if rol_solicitante == Rol.SUPERADMINISTRADOR:

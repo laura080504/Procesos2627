@@ -19,6 +19,23 @@ const TEXTOS = {
         usuarios: "Usuarios",
         gestionUsuarios: "Gestión de usuarios",
         alumnosProfesor: "Perfil del profesorado",
+        panelSecretaria: "Secretaría",
+        listadoAlumnosEscuela: "Alumnado de la escuela",
+        filtrarPorCurso: "Curso",
+        todosLosCursos: "Todos los cursos",
+        sinCursoAsignado: "Sin curso asignado",
+        rolSecretaria: "secretaría",
+        asignarRol: "Asignar rol",
+        asignarDelegado: "Asignar delegado",
+        quitarDelegado: "Quitar delegado",
+        verMatriculaAlumno: "Ver matrícula",
+        correoAsignacionRolEnviado: "Se ha enviado un correo a secretaría para confirmar el cambio de rol.",
+        rolProfesorConfirmado: "Rol de profesor confirmado",
+        delegadoAsignado: "Delegado asignado",
+        delegadoQuitado: "Delegado retirado",
+        etiquetaDelegado: "Delegado",
+        deCurso: "de",
+
         listadoAlumnos: "Listado de tus alumnos",
         etiquetaRol: "Rol",
         etiquetaEstado: "Estado",
@@ -90,6 +107,7 @@ const TEXTOS = {
         entrega: "Entrega",
         leyendaExamen: "Examen",
         leyendaEntrega: "Entrega",
+        leyendaAvisosSecretaria: "Avisos secretaría",
         leyendaFestivo: "F · Festivo / vacaciones",
         leyendaSemanaExamenes: "P · Semana de exámenes",
         leyendaPeriodo: "Calendario académico",
@@ -97,8 +115,7 @@ const TEXTOS = {
         abrevFestivo: "F",
         abrevPeriodo: "P",
         abrevCambioCuatri: "C",
-        abrevPeriodo: "P",
-        abrevCambioCuatri: "C",
+        abrevSecretaria: "S",
         dialogoDia: "Actividades del día",
         hastaLas: "Entrega hasta las",
         cerrarDialogo: "Cerrar",
@@ -106,8 +123,22 @@ const TEXTOS = {
         eliminarEvento: "Eliminar",
         guardarEvento: "Guardar cambios",
         confirmarEliminarEvento: "¿Eliminar {tipo} de {nombre}?",
+        confirmarEliminarAvisoSecretaria: "¿Eliminar el aviso «{nombre}»?",
         eventoActualizado: "Aviso actualizado",
         eventoEliminado: "Aviso eliminado",
+        nuevoAvisoSecretaria: "Nuevo aviso oficial",
+        ayudaAvisoSecretaria: "Publica charlas, talleres o propuestas oficiales en el calendario.",
+        tituloAvisoSecretaria: "Título",
+        tipoAvisoSecretaria: "Tipo",
+        tipoCharla: "Charla",
+        tipoTaller: "Taller",
+        tipoPropuesta: "Propuesta",
+        tipoAvisoOficial: "Aviso",
+        urlAvisoSecretaria: "Enlace",
+        publicarAvisoSecretaria: "Publicar en calendario",
+        avisoSecretariaPublicado: "Aviso de secretaría publicado en el calendario",
+        avisoSecretariaEliminado: "Aviso de secretaría eliminado",
+        verEnEsiiab: "Ver en ESIIAB",
         sinActividades: "No hay actividades este día",
         leerPantalla: "Leer lo que hay en pantalla",
         lecturaNoDisponible: "La lectura en voz alta no está disponible en este navegador",
@@ -224,6 +255,23 @@ const TEXTOS = {
         usuarios: "Users",
         gestionUsuarios: "User management",
         alumnosProfesor: "Professor profile",
+        panelSecretaria: "Registry office",
+        listadoAlumnosEscuela: "School enrolment list",
+        filtrarPorCurso: "Year",
+        todosLosCursos: "All years",
+        sinCursoAsignado: "No year assigned",
+        rolSecretaria: "registry",
+        asignarRol: "Assign role",
+        asignarDelegado: "Assign delegate",
+        quitarDelegado: "Remove delegate",
+        verMatriculaAlumno: "View enrolment",
+        correoAsignacionRolEnviado: "An email was sent to the office to confirm the role change.",
+        rolProfesorConfirmado: "Lecturer role confirmed",
+        delegadoAsignado: "Delegate assigned",
+        delegadoQuitado: "Delegate removed",
+        etiquetaDelegado: "Delegate",
+        deCurso: "of",
+
         listadoAlumnos: "Your students",
         etiquetaRol: "Role",
         etiquetaEstado: "Status",
@@ -295,15 +343,15 @@ const TEXTOS = {
         entrega: "Deadline",
         leyendaExamen: "Exam",
         leyendaEntrega: "Deadline",
+        leyendaAvisosSecretaria: "School office alerts",
         leyendaFestivo: "H · Holiday / break",
         leyendaSemanaExamenes: "P · Exam week",
         leyendaPeriodo: "Academic calendar",
-        leyendaCambioCuatri: "C · Term change",
+        leyendaCambioCuatri: "T · Term change",
         abrevFestivo: "H",
         abrevPeriodo: "P",
-        abrevCambioCuatri: "C",
-        abrevPeriodo: "P",
         abrevCambioCuatri: "T",
+        abrevSecretaria: "S",
         dialogoDia: "Activities for the day",
         hastaLas: "Due by",
         cerrarDialogo: "Close",
@@ -311,8 +359,22 @@ const TEXTOS = {
         eliminarEvento: "Delete",
         guardarEvento: "Save changes",
         confirmarEliminarEvento: "Delete {tipo} for {nombre}?",
+        confirmarEliminarAvisoSecretaria: "Delete the alert “{nombre}”?",
         eventoActualizado: "Alert updated",
         eventoEliminado: "Alert deleted",
+        nuevoAvisoSecretaria: "New official alert",
+        ayudaAvisoSecretaria: "Publish official talks, workshops or proposals on the calendar.",
+        tituloAvisoSecretaria: "Title",
+        tipoAvisoSecretaria: "Type",
+        tipoCharla: "Talk",
+        tipoTaller: "Workshop",
+        tipoPropuesta: "Proposal",
+        tipoAvisoOficial: "Notice",
+        urlAvisoSecretaria: "Link",
+        publicarAvisoSecretaria: "Publish on calendar",
+        avisoSecretariaPublicado: "School office alert published on the calendar",
+        avisoSecretariaEliminado: "School office alert deleted",
+        verEnEsiiab: "View on ESIIAB",
         sinActividades: "No activities this day",
         leerPantalla: "Read what is on screen",
         lecturaNoDisponible: "Reading aloud is not available in this browser",
@@ -411,14 +473,28 @@ const TEXTOS = {
     },
 };
 
+function etiquetaCursoCorto(curso, textos) {
+    const nombres = {
+        primero: textos.cursoPrimero,
+        segundo: textos.cursoSegundo,
+        tercero: textos.cursoTercero,
+        cuarto: textos.cursoCuarto,
+    };
+    return nombres[curso] || curso || textos.sinCursoAsignado;
+}
+
 function datosUsuario(usuario, textos) {
     const roles = {
         usuario: textos.rolUsuario,
         profesor: textos.rolProfesor,
         administrador: textos.rolProfesor,
-        superadministrador: textos.rolSuperadministrador,
+        secretaria: textos.rolSecretaria,
+        superadministrador: textos.rolSecretaria,
     };
-    const rol = roles[usuario.rol] || textos.rolUsuario;
+    let rol = roles[usuario.rol] || textos.rolUsuario;
+    if (usuario.delegado_curso) {
+        rol = `${rol} · ${textos.etiquetaDelegado} ${textos.deCurso} ${etiquetaCursoCorto(usuario.delegado_curso, textos)}`;
+    }
     const estados = {
         activo: textos.estadoActivo,
         pendiente: textos.estadoPendiente,
@@ -431,7 +507,7 @@ function datosUsuario(usuario, textos) {
     };
 }
 
-function pintarIdentidadUsuario(nodo, usuario) {
+function pintarIdentidadUsuario(nodo, usuario, textos = null) {
     nodo.replaceChildren();
     const nick = document.createElement("span");
     nick.className = "perfil-nick";
@@ -441,6 +517,18 @@ function pintarIdentidadUsuario(nodo, usuario) {
     email.href = `mailto:${usuario.email}`;
     email.textContent = usuario.email;
     nodo.append(nick, email);
+    if (textos) {
+        const meta = document.createElement("span");
+        meta.className = "usuario-meta perfil-rol";
+        meta.textContent = datosUsuario(usuario, textos).meta;
+        nodo.append(meta);
+        if (usuario.delegado_curso) {
+            const insignia = document.createElement("span");
+            insignia.className = "insignia-delegado";
+            insignia.textContent = `${textos.etiquetaDelegado} ${textos.deCurso} ${etiquetaCursoCorto(usuario.delegado_curso, textos)}`;
+            nodo.append(insignia);
+        }
+    }
 }
 
 function pintarDatosUsuario(nodo, usuario, textos) {
@@ -456,26 +544,24 @@ function pintarDatosUsuario(nodo, usuario, textos) {
 }
 
 function pintarDatosAlumnoProfesor(nodo, usuario, textos, catalogo = []) {
-    const ingles = textos.codigo === "EN";
     nodo.replaceChildren();
     const nombre = document.createElement("span");
     nombre.className = "usuario-nombre";
     nombre.textContent = `${usuario.nick} (${usuario.email})`;
     const meta = document.createElement("span");
     meta.className = "usuario-meta";
-    const asignaturas = (usuario.asignaturas || []).map((codigo) => {
-        const ficha = (catalogo || []).find((item) => item.codigo === codigo);
-        const nombreAsignatura = ficha ? (ingles ? ficha.nombre_ingles : ficha.nombre) : "";
-        return nombreAsignatura ? `${codigo} · ${nombreAsignatura}` : codigo;
-    });
-    const media = usuario.media === null || usuario.media === undefined
-        ? textos.sinMedia
-        : formatearMedia(usuario.media, textos.codigo);
-    meta.textContent = [
-        `${textos.etiquetaRol}: ${textos.rolUsuario}`,
-        `${textos.etiquetaAsignaturas}: ${asignaturas.length ? asignaturas.join(", ") : textos.sinAsignaturasAlumno}`,
-        `${textos.mediaCarrera}: ${media}`,
-    ].join(" · ");
+    let rol = textos.rolUsuario;
+    if (usuario.delegado_curso) {
+        rol = `${rol} · ${textos.etiquetaDelegado} ${textos.deCurso} ${etiquetaCursoCorto(usuario.delegado_curso, textos)}`;
+    }
+    const partes = [`${textos.etiquetaRol}: ${rol}`];
+    if (usuario.curso) {
+        partes.push(`${textos.filtrarPorCurso}: ${etiquetaCursoCorto(usuario.curso, textos)}`);
+    }
+    if (usuario.media !== null && usuario.media !== undefined) {
+        partes.push(`${textos.mediaCarrera}: ${formatearMedia(usuario.media, textos.codigo)}`);
+    }
+    meta.textContent = partes.join(" · ");
     nodo.append(nombre, meta);
 }
 

@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 
 from Servidor.Dominio.DominioEntities.asignatura import Asignatura
+from Servidor.Dominio.DominioEntities.aviso_secretaria import AvisoSecretaria
 from Servidor.Dominio.DominioEntities.evento import Evento, identidad_evento
 from Servidor.Dominio.DominioEnums.tipo_evento import TipoEvento
 from Servidor.Dominio.DominioServices.normalizar_texto import normalizar_texto
@@ -28,6 +29,8 @@ class SimboloCalendario:
     lugar: str | None = None
     evento_id: str | None = None
     editable: bool = False
+    url: str | None = None
+    detalle: str | None = None
 
 
 @dataclass(frozen=True)
@@ -43,6 +46,7 @@ def marcas_del_mes(
     mes: int,
     examenes: ExamenesEsiiab | None = None,
     calendario: CalendarioAcademicoEsiiab | None = None,
+    avisos_secretaria: list[AvisoSecretaria] | None = None,
 ) -> list[MarcaCalendario]:
     oficiales = _examenes_como_eventos(examenes, asignaturas_por_codigo) if examenes else []
     oficiales_clave = {(evento.codigo, evento.fecha) for evento in oficiales}
@@ -65,6 +69,10 @@ def marcas_del_mes(
         por_dia.setdefault(evento.fecha.day, []).append(
             _simbolo_de(evento, asignaturas_por_codigo.get(evento.codigo), editable=False)
         )
+    for aviso in avisos_secretaria or []:
+        if aviso.fecha.year != anio or aviso.fecha.month != mes:
+            continue
+        por_dia.setdefault(aviso.fecha.day, []).append(_simbolo_secretaria(aviso))
 
     for dia, fechas in _fechas_academicas_del_mes(calendario, anio, mes).items():
         for fecha in fechas:
@@ -179,13 +187,33 @@ def _prioridad_simbolo(simbolo: SimboloCalendario) -> tuple[int, str, str]:
     orden = {
         "estrella": 0,
         "punto": 1,
-        "cambio_cuatrimestre": 2,
-        "festivo": 3,
-        "vacaciones": 4,
-        "semana_examenes": 5,
-        "periodo": 6,
+        "secretaria": 2,
+        "cambio_cuatrimestre": 3,
+        "festivo": 4,
+        "vacaciones": 5,
+        "semana_examenes": 6,
+        "periodo": 7,
     }
     return (orden.get(simbolo.tipo, 9), simbolo.hora or "", simbolo.nombre)
+
+
+def _simbolo_secretaria(aviso: AvisoSecretaria) -> SimboloCalendario:
+    detalle = aviso.tipo.value
+    if aviso.descripcion:
+        detalle = f"{detalle} · {aviso.descripcion}"
+    return SimboloCalendario(
+        tipo="secretaria",
+        codigo="secretaria",
+        nombre=aviso.titulo,
+        nombre_ingles=aviso.titulo,
+        hora=aviso.hora,
+        fecha=aviso.fecha.isoformat(),
+        lugar=aviso.lugar,
+        evento_id=aviso.id,
+        editable=True,
+        url=aviso.url,
+        detalle=detalle,
+    )
 
 
 def _simbolo_de(

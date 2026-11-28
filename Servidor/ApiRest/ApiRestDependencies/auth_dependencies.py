@@ -205,7 +205,9 @@ def obtener_email_websocket(
 
 
 def obtener_gestor(usuario: Usuario = Depends(obtener_usuario_actual)) -> Usuario:
-    if usuario.rol not in (Rol.PROFESOR, Rol.SUPERADMINISTRADOR):
+    from Servidor.Dominio.DominioEnums.rol import ROLES_GESTION
+
+    if usuario.rol not in ROLES_GESTION:
         raise PermisoInsuficiente()
     return usuario
 

@@ -9,6 +9,10 @@ class RepositorioMatriculas(ABC):
         """Códigos de la matrícula activa (curso actual / agenda)."""
 
     @abstractmethod
+    def obtener_codigos_por_email(self) -> dict[str, list[str]]:
+        """email -> códigos activos. Una sola pasada para listados."""
+
+    @abstractmethod
     def obtener_notas(self, email: str) -> dict[str, float | None]:
         """Notas de matrícula activa + historial académico."""
 

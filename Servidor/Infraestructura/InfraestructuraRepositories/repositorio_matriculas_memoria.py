@@ -15,6 +15,16 @@ class RepositorioMatriculasMemoria(RepositorioMatriculas):
     def obtener_codigos(self, email: str) -> list[str]:
         return [codigo for codigo, fila in self._filas_de(email).items() if fila.get("activa", True)]
 
+    def obtener_codigos_por_email(self) -> dict[str, list[str]]:
+        return {
+            email: [
+                codigo
+                for codigo, fila in filas.items()
+                if fila.get("activa", True)
+            ]
+            for email, filas in self._filas.items()
+        }
+
     def obtener_notas(self, email: str) -> dict[str, float | None]:
         return {codigo: fila.get("nota") for codigo, fila in self._filas_de(email).items()}
 

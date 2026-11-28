@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 from Servidor.ApiRest.ApiRestDependencies.configuracion_dependencies import obtener_hasher_contrasenas
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
     obtener_enviador_correo,
+    obtener_repositorio_asignaciones_rol,
     obtener_repositorio_confirmaciones,
     obtener_repositorio_docencia,
     obtener_repositorio_matriculas,
@@ -23,6 +24,9 @@ from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
 from Servidor.Infraestructura.enviador_correo_memoria import EnviadorCorreoMemoria
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaciones_rol_memoria import (
+    RepositorioAsignacionesRolMemoria,
+)
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_confirmaciones_memoria import (
     RepositorioConfirmacionesMemoria,
 )
@@ -53,6 +57,11 @@ def repositorio_recuperaciones():
 @pytest.fixture
 def repositorio_confirmaciones():
     return RepositorioConfirmacionesMemoria()
+
+
+@pytest.fixture
+def repositorio_asignaciones_rol():
+    return RepositorioAsignacionesRolMemoria()
 
 
 @pytest.fixture
@@ -95,11 +104,22 @@ def administrador(repositorio_usuarios, hasher):
 
 
 @pytest.fixture
-def cliente(repositorio_usuarios, repositorio_sesiones, repositorio_recuperaciones, repositorio_confirmaciones, repositorio_matriculas, repositorio_docencia, enviador_correo, hasher):
+def cliente(
+    repositorio_usuarios,
+    repositorio_sesiones,
+    repositorio_recuperaciones,
+    repositorio_confirmaciones,
+    repositorio_asignaciones_rol,
+    repositorio_matriculas,
+    repositorio_docencia,
+    enviador_correo,
+    hasher,
+):
     aplicacion.dependency_overrides[obtener_repositorio_usuarios] = lambda: repositorio_usuarios
     aplicacion.dependency_overrides[obtener_repositorio_sesiones] = lambda: repositorio_sesiones
     aplicacion.dependency_overrides[obtener_repositorio_recuperaciones] = lambda: repositorio_recuperaciones
     aplicacion.dependency_overrides[obtener_repositorio_confirmaciones] = lambda: repositorio_confirmaciones
+    aplicacion.dependency_overrides[obtener_repositorio_asignaciones_rol] = lambda: repositorio_asignaciones_rol
     aplicacion.dependency_overrides[obtener_repositorio_matriculas] = lambda: repositorio_matriculas
     aplicacion.dependency_overrides[obtener_repositorio_docencia] = lambda: repositorio_docencia
     aplicacion.dependency_overrides[obtener_enviador_correo] = lambda: enviador_correo
@@ -149,3 +169,4 @@ def cliente_superadministrador(cliente, superadministrador):
     )
     assert respuesta.status_code == 200
     return cliente
+

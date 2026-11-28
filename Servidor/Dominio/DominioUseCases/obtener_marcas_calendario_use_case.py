@@ -3,6 +3,9 @@ from time import monotonic
 from Servidor.Dominio.DominioQueries.obtener_marcas_calendario_query import ObtenerMarcasCalendarioQuery
 from Servidor.Dominio.DominioServices.marcas_calendario import MarcaCalendario, marcas_del_mes
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaturas import RepositorioAsignaturas
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_avisos_secretaria import (
+    RepositorioAvisosSecretaria,
+)
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos import RepositorioEventos
 from Servidor.Infraestructura.sincronizador_esiiab import SincronizadorEsiiab
 
@@ -15,18 +18,22 @@ class ObtenerMarcasCalendarioUseCase:
         repositorio_eventos: RepositorioEventos,
         repositorio_asignaturas: RepositorioAsignaturas,
         sincronizador_esiiab: SincronizadorEsiiab | None = None,
+        repositorio_avisos_secretaria: RepositorioAvisosSecretaria | None = None,
     ):
         self.repositorio_eventos = repositorio_eventos
         self.repositorio_asignaturas = repositorio_asignaturas
         self.sincronizador_esiiab = sincronizador_esiiab
+        self.repositorio_avisos_secretaria = repositorio_avisos_secretaria
         self._cache: dict[tuple[int, int], tuple[float, list[MarcaCalendario]]] = {}
         self._catalogo_cache: tuple[float, dict] | None = None
         self._eventos_cache: tuple[float, list] | None = None
+        self._avisos_cache: tuple[float, list] | None = None
 
     def invalidar_cache(self) -> None:
         self._cache.clear()
         self._catalogo_cache = None
         self._eventos_cache = None
+        self._avisos_cache = None
 
     def ejecutar(self, query: ObtenerMarcasCalendarioQuery) -> list[MarcaCalendario]:
         clave = (query.anio, query.mes)
@@ -37,6 +44,7 @@ class ObtenerMarcasCalendarioUseCase:
 
         asignaturas_por_codigo = self._catalogo(ahora)
         eventos = self._eventos(ahora)
+        avisos = self._avisos(ahora)
         examenes = None
         calendario = None
         if self.sincronizador_esiiab is not None:
@@ -49,6 +57,7 @@ class ObtenerMarcasCalendarioUseCase:
             query.mes,
             examenes=examenes,
             calendario=calendario,
+            avisos_secretaria=avisos,
         )
         self._cache[clave] = (ahora, marcas)
         if len(self._cache) > 36:
@@ -85,3 +94,12 @@ class ObtenerMarcasCalendarioUseCase:
         eventos = self.repositorio_eventos.obtener_todos()
         self._eventos_cache = (ahora, eventos)
         return eventos
+
+    def _avisos(self, ahora: float) -> list:
+        if self.repositorio_avisos_secretaria is None:
+            return []
+        if self._avisos_cache and ahora - self._avisos_cache[0] < _TTL_CACHE_MARCAS:
+            return self._avisos_cache[1]
+        avisos = self.repositorio_avisos_secretaria.obtener_todos()
+        self._avisos_cache = (ahora, avisos)
+        return avisos
