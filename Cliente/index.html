@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="ClienteShared/pagina.css">
     <link rel="stylesheet" href="ClienteShared/dialogo.css">
     <link rel="stylesheet" href="ClienteShared/formulario.css?v=15">
-    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=41">
-    <link rel="stylesheet" href="ClienteShared/agenda.css?v=42">
+    <link rel="stylesheet" href="ClienteShared/usuarios.css?v=46">
+    <link rel="stylesheet" href="ClienteShared/agenda.css?v=48">
     <link rel="stylesheet" href="ClienteShared/avisos.css">
 </head>
 <body>
@@ -240,10 +240,24 @@
                         </span>
                     </label>
                     <p id="rolEditar" class="usuario-meta" hidden></p>
+                    <p id="resumenEditarAlumno" class="usuario-meta" hidden></p>
                     <label id="campoHacerAdmin" class="recordar campo-admin" hidden>
                         <input id="hacerAdministrador" name="hacerAdministrador" type="checkbox">
                         <span data-texto="hacerAdministrador">Hacer profesor</span>
                     </label>
+                    <div id="panelSecretariaEditar" class="panel-secretaria-editar" hidden>
+                        <label id="campoDelegadoEditar" class="recordar campo-admin" hidden>
+                            <input id="casillaDelegadoEditar" type="checkbox">
+                            <span data-texto="asignarDelegado">Asignar delegado</span>
+                        </label>
+                        <button id="botonAsignarRolEditar" class="boton-secundario" type="button" data-texto="asignarRol">Asignar rol</button>
+                        <div class="bloque-matricula-secretaria">
+                            <h2 data-texto="editarMatricula">Editar matrícula</h2>
+                            <p class="ayuda-matricula" data-texto="ayudaMatricula">Escribe el nombre o la letra inicial para buscar la asignatura y elige el grupo.</p>
+                            <div id="listaMatriculaSecretaria" class="lista-matricula-editable"></div>
+                            <button id="botonAnadirAsignaturaSecretaria" class="boton-pill" type="button" data-texto="anadirAsignaturaMatricula">Añadir asignatura</button>
+                        </div>
+                    </div>
                     <div id="camposContrasenaEditar">
                     <label class="campo">
                         <span data-texto="nuevaContrasenaOpcional">Nueva contraseña (opcional)</span>
@@ -271,10 +285,8 @@
                     </label>
                     </div>
                     <button class="boton-entrar" type="submit" data-texto="guardarCambios">Guardar cambios</button>
-                    <div class="pie-tarjeta">
-                        <p>
-                            <a href="#" id="enlaceVolverEditar" data-texto="volverGestion">Volver</a>
-                        </p>
+                    <div class="pie-editar">
+                        <button id="botonVolverEditar" class="boton-pill" type="button" data-texto="volverGestion">Volver</button>
                     </div>
                 </form>
             </section>
@@ -325,9 +337,20 @@
                         </form>
                     </section>
                     <h2 id="tituloListadoAlumnos" class="titulo-listado-alumnos" hidden>
-                        <span data-texto="listadoAlumnos">Listado de tus alumnos</span>
+                        <span id="textoTituloListadoAlumnos" data-texto="listadoAlumnos">Listado de tus alumnos</span>
                         (<span id="numeroAlumnosProfesor">0</span>)
                     </h2>
+                    <label id="filtroCursoSecretaria" class="filtro-curso-secretaria" hidden>
+                        <span data-texto="filtrarPorCurso">Curso</span>
+                        <select id="selectFiltroCurso" aria-label="Filtrar por curso">
+                            <option value="" data-texto="todosLosCursos">Todos los cursos</option>
+                            <option value="primero" data-texto="cursoPrimero">1º</option>
+                            <option value="segundo" data-texto="cursoSegundo">2º</option>
+                            <option value="tercero" data-texto="cursoTercero">3º</option>
+                            <option value="cuarto" data-texto="cursoCuarto">4º</option>
+                            <option value="sin_curso" data-texto="sinCursoAsignado">Sin curso asignado</option>
+                        </select>
+                    </label>
                     <button id="botonRefrescar" type="button" data-texto="refrescar" hidden>Refrescar</button>
                     <ul id="listaUsuarios"></ul>
                 </div>
@@ -494,27 +517,73 @@
                     <div id="diasSemanaAgenda" class="dias-semana"></div>
                     <div id="rejillaAgenda" class="rejilla"></div>
                     <ul id="leyendaCalendario" class="leyenda-calendario" aria-label="Leyenda">
-                        <li>
+                        <li data-filtro="estrella" class="leyenda-activa" role="button" tabindex="0">
                             <span class="leyenda-icono leyenda-estrella" aria-hidden="true"></span>
                             <span data-texto="leyendaExamen">Examen</span>
                         </li>
-                        <li>
+                        <li data-filtro="punto" class="leyenda-activa" role="button" tabindex="0">
                             <span class="leyenda-icono leyenda-punto" aria-hidden="true"></span>
                             <span data-texto="leyendaEntrega">Entrega</span>
                         </li>
-                        <li>
+                        <li data-filtro="secretaria" class="leyenda-activa" role="button" tabindex="0">
+                            <span class="leyenda-icono leyenda-letra secretaria" aria-hidden="true" data-texto="abrevSecretaria">S</span>
+                            <span data-texto="leyendaAvisosSecretaria">Avisos secretaría</span>
+                        </li>
+                        <li data-filtro="cambio_cuatrimestre" class="leyenda-activa" role="button" tabindex="0">
                             <span class="leyenda-icono leyenda-letra cambio-cuatri" aria-hidden="true" data-texto="abrevCambioCuatri">C</span>
                             <span data-texto="leyendaCambioCuatri">Cambio de cuatrimestre</span>
                         </li>
-                        <li>
+                        <li data-filtro="festivo" class="leyenda-activa" role="button" tabindex="0">
                             <span class="leyenda-icono leyenda-letra festivo" aria-hidden="true" data-texto="abrevFestivo">F</span>
                             <span data-texto="leyendaFestivo">Festivo / vacaciones</span>
                         </li>
-                        <li>
+                        <li data-filtro="semana_examenes" class="leyenda-activa" role="button" tabindex="0">
                             <span class="leyenda-icono leyenda-letra semana-examenes" aria-hidden="true" data-texto="abrevPeriodo">P</span>
                             <span data-texto="leyendaSemanaExamenes">Semana de exámenes</span>
                         </li>
                     </ul>
+                    <section id="panelAvisoSecretaria" class="panel-aviso-secretaria" hidden>
+                        <h2 data-texto="nuevoAvisoSecretaria">Nuevo aviso oficial</h2>
+                        <p class="ayuda-evento" data-texto="ayudaAvisoSecretaria">
+                            Publica charlas, talleres o propuestas (p. ej. las de
+                            <a href="https://esiiab.uclm.es/eventos/" target="_blank" rel="noopener">esiiab.uclm.es/eventos</a>)
+                            en el calendario de alumnos y profesores.
+                        </p>
+                        <form id="formAvisoSecretaria" class="fila-evento">
+                            <label class="campo-evento">
+                                <span data-texto="tituloAvisoSecretaria">Título</span>
+                                <input id="tituloAvisoSecretaria" name="titulo" type="text" maxlength="200" required>
+                            </label>
+                            <label class="campo-evento">
+                                <span data-texto="tipoAvisoSecretaria">Tipo</span>
+                                <select id="tipoAvisoSecretaria" name="tipo" required>
+                                    <option value="charla" data-texto="tipoCharla">Charla</option>
+                                    <option value="taller" data-texto="tipoTaller">Taller</option>
+                                    <option value="propuesta" data-texto="tipoPropuesta">Propuesta</option>
+                                    <option value="aviso" data-texto="tipoAvisoOficial">Aviso</option>
+                                </select>
+                            </label>
+                            <label class="campo-evento">
+                                <span data-texto="fechaFinEvento">Fecha</span>
+                                <input id="fechaAvisoSecretaria" name="fecha" type="date" required>
+                            </label>
+                            <label class="campo-evento">
+                                <span data-texto="horaEvento">Hora</span>
+                                <input id="horaAvisoSecretaria" name="hora" type="time" required value="12:00">
+                            </label>
+                            <label class="campo-evento">
+                                <span data-texto="lugarEvento">Lugar</span>
+                                <input id="lugarAvisoSecretaria" name="lugar" type="text" maxlength="120" placeholder="Salón de actos / opcional">
+                            </label>
+                            <label class="campo-evento">
+                                <span data-texto="urlAvisoSecretaria">Enlace</span>
+                                <input id="urlAvisoSecretaria" name="url" type="url" maxlength="400" placeholder="https://esiiab.uclm.es/...">
+                            </label>
+                            <div class="acciones-aviso-secretaria">
+                                <button class="boton-entrar" type="submit" data-texto="publicarAvisoSecretaria">Publicar en calendario</button>
+                            </div>
+                        </form>
+                    </section>
                 </section>
             </div>
             <dialog id="dialogoDiaAgenda" class="dialogo-dia">
@@ -634,19 +703,20 @@
 
     <script src="ClienteJs/ClienteComunicacion/errorApi.js?v=10"></script>
     <script src="ClienteJs/ClienteComunicacion/clienteHttp.js?v=10"></script>
-    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=26"></script>
-    <script src="ClienteShared/textosInterfaz.js?v=47"></script>
+    <script src="ClienteJs/ClienteComunicacion/clienteRest.js?v=31"></script>
+    <script src="ClienteShared/textosInterfaz.js?v=52"></script>
     <script src="ClienteJs/ClientePresentacion/preferenciasNotificaciones.js?v=10"></script>
+    <script src="ClienteJs/ClientePresentacion/preferenciasLeyenda.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/dictadoVoz.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaBarraHerramientas.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaCabecera.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaInicioSesion.js?v=14"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRegistro.js?v=10"></script>
     <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaRecuperacion.js?v=10"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=32"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=40"></script>
-    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=11"></script>
-    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=38"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaUsuarios.js?v=37"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaAgenda.js?v=44"></script>
+    <script src="ClienteJs/ClientePresentacion/PresentacionVistas/vistaEditarDatos.js?v=17"></script>
+    <script src="ClienteJs/ClientePresentacion/controlWeb.js?v=47"></script>
     <script src="ClienteJs/inicio.js?v=10"></script>
 </body>
 </html>

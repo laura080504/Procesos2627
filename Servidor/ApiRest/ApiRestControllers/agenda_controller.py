@@ -5,7 +5,9 @@ from fastapi.responses import JSONResponse
 
 from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import (
     crear_actualizar_evento_use_case,
+    crear_crear_aviso_secretaria_use_case,
     crear_crear_evento_use_case,
+    crear_eliminar_aviso_secretaria_use_case,
     crear_eliminar_evento_use_case,
     crear_guardar_expediente_use_case,
     crear_guardar_matricula_use_case,
@@ -16,9 +18,17 @@ from Servidor.ApiRest.ApiRestDependencies.agenda_dependencies import (
     crear_obtener_matricula_use_case,
     invalidar_cache_marcas,
 )
-from Servidor.ApiRest.ApiRestDependencies.auth_dependencies import obtener_usuario_actual
-from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import obtener_repositorio_asignaturas
+from Servidor.ApiRest.ApiRestDependencies.auth_dependencies import (
+    obtener_superadministrador,
+    obtener_usuario_actual,
+)
+from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
+    obtener_repositorio_asignaturas,
+    obtener_repositorio_avisos_secretaria,
+)
 from Servidor.ApiRest.ApiRestSchemas.asignatura_salida import AsignaturaSalida
+from Servidor.ApiRest.ApiRestSchemas.aviso_secretaria_entrada import AvisoSecretariaEntrada
+from Servidor.ApiRest.ApiRestSchemas.aviso_secretaria_salida import AvisoSecretariaSalida
 from Servidor.ApiRest.ApiRestSchemas.evento_entrada import EventoEntrada
 from Servidor.ApiRest.ApiRestSchemas.evento_salida import EventoSalida
 from Servidor.ApiRest.ApiRestSchemas.expediente_entrada import ExpedienteEntrada
@@ -26,6 +36,12 @@ from Servidor.ApiRest.ApiRestSchemas.expediente_salida import ExpedienteSalida
 from Servidor.ApiRest.ApiRestSchemas.marca_calendario_salida import MarcaCalendarioSalida, MarcasRangoSalida
 from Servidor.ApiRest.ApiRestSchemas.matricula_entrada import MatriculaEntrada
 from Servidor.ApiRest.ApiRestSchemas.matricula_salida import MatriculaSalida
+from Servidor.Dominio.DominioCommands.crear_aviso_secretaria_command import CrearAvisoSecretariaCommand
+from Servidor.Dominio.DominioUseCases.crear_aviso_secretaria_use_case import CrearAvisoSecretariaUseCase
+from Servidor.Dominio.DominioUseCases.eliminar_aviso_secretaria_use_case import EliminarAvisoSecretariaUseCase
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_avisos_secretaria import (
+    RepositorioAvisosSecretaria,
+)
 from Servidor.ApiWs.gestor_conexiones import gestor
 from Servidor.Dominio.DominioCommands.actualizar_evento_command import ActualizarEventoCommand
 from Servidor.Dominio.DominioCommands.crear_evento_command import CrearEventoCommand
@@ -285,6 +301,79 @@ async def eliminar_evento(
         },
         destinatarios,
     )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/api/avisos-secretaria", response_model=list[AvisoSecretariaSalida])
+def listar_avisos_secretaria(
+    _: Usuario = Depends(obtener_usuario_actual),
+    repositorio: RepositorioAvisosSecretaria = Depends(obtener_repositorio_avisos_secretaria),
+):
+    return [
+        AvisoSecretariaSalida(
+            id=aviso.id or "",
+            titulo=aviso.titulo,
+            tipo=aviso.tipo,
+            fecha=aviso.fecha,
+            hora=aviso.hora,
+            lugar=aviso.lugar,
+            url=aviso.url,
+            descripcion=aviso.descripcion,
+        )
+        for aviso in repositorio.obtener_todos()
+        if aviso.id
+    ]
+
+
+@router.post(
+    "/api/avisos-secretaria",
+    response_model=AvisoSecretariaSalida,
+    status_code=status.HTTP_201_CREATED,
+)
+def crear_aviso_secretaria(
+    cuerpo: AvisoSecretariaEntrada,
+    solicitante: Usuario = Depends(obtener_superadministrador),
+    use_case: CrearAvisoSecretariaUseCase = Depends(crear_crear_aviso_secretaria_use_case),
+):
+    try:
+        aviso = use_case.ejecutar(
+            CrearAvisoSecretariaCommand(
+                titulo=cuerpo.titulo,
+                tipo=cuerpo.tipo,
+                fecha=cuerpo.fecha,
+                hora=cuerpo.hora,
+                lugar=cuerpo.lugar,
+                url=cuerpo.url,
+                descripcion=cuerpo.descripcion,
+                solicitante_rol=solicitante.rol,
+            )
+        )
+    except EstadoNoValido as error:
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
+    invalidar_cache_marcas()
+    return AvisoSecretariaSalida(
+        id=aviso.id or "",
+        titulo=aviso.titulo,
+        tipo=aviso.tipo,
+        fecha=aviso.fecha,
+        hora=aviso.hora,
+        lugar=aviso.lugar,
+        url=aviso.url,
+        descripcion=aviso.descripcion,
+    )
+
+
+@router.delete("/api/avisos-secretaria/{aviso_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_aviso_secretaria(
+    aviso_id: str,
+    solicitante: Usuario = Depends(obtener_superadministrador),
+    use_case: EliminarAvisoSecretariaUseCase = Depends(crear_eliminar_aviso_secretaria_use_case),
+):
+    try:
+        use_case.ejecutar(aviso_id, solicitante.rol)
+    except EstadoNoValido as error:
+        return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(error)})
+    invalidar_cache_marcas()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

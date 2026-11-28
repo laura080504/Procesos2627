@@ -39,6 +39,73 @@
     display: none;
 }
 
+.filtro-curso-secretaria {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.85rem 0 0;
+    font-size: 0.92rem;
+}
+
+.filtro-curso-secretaria[hidden] {
+    display: none;
+}
+
+.filtro-curso-secretaria select {
+    border: 1px solid #c9b7b7;
+    border-radius: 0.5rem;
+    padding: 0.3rem 0.55rem;
+    font: inherit;
+    background: #fff;
+}
+
+.panel-secretaria-editar {
+    display: grid;
+    gap: 0.85rem;
+    margin: 0.85rem 0 1rem;
+}
+
+.panel-secretaria-editar[hidden] {
+    display: none;
+}
+
+.bloque-matricula-secretaria {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.bloque-matricula-secretaria h2 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.boton-secundario,
+.boton-pill,
+#botonAnadirAsignaturaSecretaria {
+    border: 1px solid rgba(157, 24, 48, 0.28);
+    background: #fff;
+    color: var(--rojo-logo);
+    border-radius: 999px;
+    padding: 0.4rem 0.95rem;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 650;
+    cursor: pointer;
+    justify-self: start;
+}
+
+.insignia-delegado {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 0.35rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    background: #fff;
+    color: var(--rojo-logo);
+    font-size: 0.82rem;
+    font-weight: 650;
+}
+
 #botonRefrescar:focus-visible,
 #listaUsuarios button:focus-visible {
     outline: 2px solid var(--rojo-logo);
@@ -82,9 +149,20 @@
 }
 
 #campoHacerAdmin[hidden],
+#campoDelegadoEditar[hidden],
 #camposContrasenaEditar[hidden],
 #rolEditar[hidden] {
-    display: none;
+    display: none !important;
+}
+
+.pie-editar {
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.pie-editar .boton-pill {
+    min-width: 8rem;
 }
 
 #hacerAdministrador:disabled {

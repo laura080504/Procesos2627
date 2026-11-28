@@ -95,7 +95,7 @@ Si el mensaje del commit o el README no dan el motivo, queda un `TODO(alumno)`.
 
 **Por qué.** TODO(alumno): ¿por qué partiste el rol administrador de la especificación en profesor y superadministrador?
 
-**Estado.** Vigente. Cambia el alcance de [RF-07](requisitos.md), [RF-08](requisitos.md) y [RF-09](requisitos.md).
+**Estado.** Vigente. **Secretaría = superadministrador** (cuenta de arranque con `SECRETARIA_*` / `ADMIN_*`): listado completo de alumnado, filtro por curso y bajas; sin formulario de avisos docentes. El valor de almacén `secretaria` se lee como superadministrador. Sigue el mapeo `administrador` → profesor. Cambia el alcance de [RF-07](requisitos.md), [RF-08](requisitos.md) y [RF-09](requisitos.md).
 
 ## D-12 Sesión en cookie
 

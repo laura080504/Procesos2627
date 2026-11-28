@@ -61,6 +61,7 @@ def prueba_un_profesor_elimina_a_un_alumno(use_case, usuario_registrado, reposit
     assert repositorio_usuarios.obtener_por_email(usuario_registrado.email).estado == EstadoUsuario.ELIMINADO
 
 
+
 def prueba_un_profesor_no_elimina_a_otro_profesor(use_case, repositorio_usuarios, hasher):
     profesor = repositorio_usuarios.insertar(
         Usuario(

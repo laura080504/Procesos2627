@@ -558,6 +558,20 @@ body.con-agenda .herramientas {
     padding: 1.15rem 1.25rem 1.45rem;
 }
 
+/* Secretaría: sin horario semanal ni lista de asignaturas; solo el calendario mensual. */
+body.agenda-secretaria .agenda-lista,
+body.agenda-secretaria .agenda-horario {
+    display: none;
+}
+
+body.agenda-secretaria .agenda-cuerpo {
+    grid-template-columns: 1fr;
+}
+
+body.agenda-secretaria .agenda-calendario {
+    grid-column: 1 / -1;
+}
+
 .calendario-nav {
     display: flex;
     align-items: center;
@@ -673,6 +687,22 @@ body.con-agenda .herramientas {
     background: #6c3483;
 }
 
+.marca-periodo.marca-secretaria {
+    background: #7a3eb1;
+}
+
+.dia.dia-secretaria {
+    box-shadow: inset 0 0 0 1px rgba(122, 62, 177, 0.28);
+}
+
+.actividad-enlace {
+    display: inline-block;
+    margin-top: 0.35rem;
+    color: var(--rojo-logo);
+    font-weight: 650;
+    font-size: 0.86rem;
+}
+
 .marca-periodo.marca-cambio_cuatrimestre {
     background: #0c7a70;
 }
@@ -739,6 +769,59 @@ body.con-agenda .herramientas {
     outline-offset: 1px;
 }
 
+.panel-aviso-secretaria {
+    margin: 0 0 1rem;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid rgba(157, 24, 48, 0.18);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.panel-aviso-secretaria h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+    color: var(--rojo-logo);
+}
+
+.panel-aviso-secretaria .ayuda-evento {
+    margin: 0 0 0.75rem;
+    font-size: 0.84rem;
+    line-height: 1.4;
+}
+
+.panel-aviso-secretaria .ayuda-evento a {
+    color: var(--rojo-logo);
+    font-weight: 650;
+}
+
+.panel-aviso-secretaria .fila-evento {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: 0.55rem 0.7rem;
+    align-items: end;
+}
+
+.panel-aviso-secretaria .acciones-aviso-secretaria {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.15rem;
+}
+
+.panel-aviso-secretaria .boton-entrar {
+    margin: 0;
+    width: auto;
+    min-width: 0;
+    background: var(--rojo-logo);
+    color: #fff;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.4rem 0.95rem;
+    font-size: 0.84rem;
+    font-weight: 650;
+    cursor: pointer;
+}
+
 .leyenda-calendario {
     display: flex;
     flex-wrap: wrap;
@@ -755,6 +838,15 @@ body.con-agenda .herramientas {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
+    cursor: pointer;
+    user-select: none;
+    opacity: 1;
+    transition: opacity 0.15s ease;
+}
+
+.leyenda-calendario li.leyenda-apagada {
+    opacity: 0.38;
+    text-decoration: line-through;
 }
 
 .leyenda-icono {
@@ -785,6 +877,10 @@ body.con-agenda .herramientas {
     font-weight: 700;
     line-height: 1;
     color: #fff;
+}
+
+.leyenda-icono.secretaria {
+    background: #7a3eb1;
 }
 
 .leyenda-icono.cambio-cuatri {

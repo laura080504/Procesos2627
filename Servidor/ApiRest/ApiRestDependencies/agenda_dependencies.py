@@ -3,9 +3,15 @@ from fastapi import Depends
 from Servidor.ApiRest.ApiRestDependencies.repositorio_dependencies import (
     obtener_cliente_horarios_esiiab,
     obtener_repositorio_asignaturas,
+    obtener_repositorio_avisos_secretaria,
     obtener_repositorio_docencia,
     obtener_repositorio_eventos,
     obtener_repositorio_matriculas,
+)
+from Servidor.Dominio.DominioUseCases.crear_aviso_secretaria_use_case import CrearAvisoSecretariaUseCase
+from Servidor.Dominio.DominioUseCases.eliminar_aviso_secretaria_use_case import EliminarAvisoSecretariaUseCase
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_avisos_secretaria import (
+    RepositorioAvisosSecretaria,
 )
 from Servidor.Dominio.DominioUseCases.actualizar_evento_use_case import ActualizarEventoUseCase
 from Servidor.Dominio.DominioUseCases.crear_evento_use_case import CrearEventoUseCase
@@ -30,6 +36,7 @@ _obtener_marcas = ObtenerMarcasCalendarioUseCase(
     obtener_repositorio_eventos(),
     obtener_repositorio_asignaturas(),
     obtener_cliente_horarios_esiiab(),
+    obtener_repositorio_avisos_secretaria(),
 )
 _obtener_matricula = ObtenerMatriculaUseCase(
     obtener_repositorio_matriculas(),
@@ -113,6 +120,18 @@ def crear_obtener_destinatarios_aviso_use_case(
     repositorio_matriculas: RepositorioMatriculas = Depends(obtener_repositorio_matriculas),
 ) -> ObtenerDestinatariosAvisoUseCase:
     return ObtenerDestinatariosAvisoUseCase(repositorio_matriculas)
+
+
+def crear_crear_aviso_secretaria_use_case(
+    repositorio: RepositorioAvisosSecretaria = Depends(obtener_repositorio_avisos_secretaria),
+) -> CrearAvisoSecretariaUseCase:
+    return CrearAvisoSecretariaUseCase(repositorio)
+
+
+def crear_eliminar_aviso_secretaria_use_case(
+    repositorio: RepositorioAvisosSecretaria = Depends(obtener_repositorio_avisos_secretaria),
+) -> EliminarAvisoSecretariaUseCase:
+    return EliminarAvisoSecretariaUseCase(repositorio)
 
 
 def invalidar_cache_marcas() -> None:

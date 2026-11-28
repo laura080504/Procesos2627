@@ -113,6 +113,7 @@ def prueba_un_usuario_edita_sus_datos(cliente_autenticado, usuario_registrado, r
         "nick": "nuevo",
         "rol": "usuario",
         "estado": "activo",
+        "delegado_curso": None,
     }
     assert repositorio_usuarios.obtener_por_email(email_anterior) is None
     guardado = repositorio_usuarios.obtener_por_email("nuevo@ejemplo.com")
@@ -143,6 +144,16 @@ def prueba_el_superadministrador_asigna_profesor(
     assert respuesta.status_code == 200
     assert respuesta.json()["rol"] == "profesor"
     assert repositorio_usuarios.obtener_por_email(usuario_registrado.email).rol.value == "profesor"
+
+
+def prueba_superadministrador_lista_alumnos_con_curso(
+    cliente_superadministrador, usuario_registrado, repositorio_matriculas
+):
+    repositorio_matriculas.reemplazar_alumno(usuario_registrado.email, ["42330"])
+    respuesta = cliente_superadministrador.get("/api/usuarios")
+    assert respuesta.status_code == 200
+    alumno = next(usuario for usuario in respuesta.json() if usuario["email"] == usuario_registrado.email)
+    assert "curso" in alumno
 
 
 def prueba_el_superadministrador_elimina_a_un_profesor(

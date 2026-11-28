@@ -13,6 +13,13 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_confirmaci
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_confirmaciones_mongo import (
     RepositorioConfirmacionesMongo,
 )
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaciones_rol import RepositorioAsignacionesRol
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaciones_rol_memoria import (
+    RepositorioAsignacionesRolMemoria,
+)
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignaciones_rol_mongo import (
+    RepositorioAsignacionesRolMongo,
+)
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones import RepositorioRecuperaciones
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones_memoria import RepositorioRecuperacionesMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_recuperaciones_mongo import RepositorioRecuperacionesMongo
@@ -25,6 +32,15 @@ from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_asignatura
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_cursos import RepositorioCursos
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_cursos_memoria import RepositorioCursosMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_cursos_mongo import RepositorioCursosMongo
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_avisos_secretaria import (
+    RepositorioAvisosSecretaria,
+)
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_avisos_secretaria_memoria import (
+    RepositorioAvisosSecretariaMemoria,
+)
+from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_avisos_secretaria_mongo import (
+    RepositorioAvisosSecretariaMongo,
+)
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos import RepositorioEventos
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos_memoria import RepositorioEventosMemoria
 from Servidor.Infraestructura.InfraestructuraRepositories.repositorio_eventos_mongo import RepositorioEventosMongo
@@ -47,6 +63,9 @@ from Servidor.Dominio.DominioServices.docencia_muestra import (
 from Servidor.Dominio.DominioServices.horario_esiiab import configurar_proveedor_sesiones
 from Servidor.Dominio.DominioUseCases.asegurar_administrador_use_case import AsegurarAdministradorUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_catalogo_asignaturas_use_case import AsegurarCatalogoAsignaturasUseCase
+from Servidor.Dominio.DominioUseCases.asegurar_avisos_secretaria_muestra_use_case import (
+    AsegurarAvisosSecretariaMuestraUseCase,
+)
 from Servidor.Dominio.DominioUseCases.asegurar_eventos_muestra_use_case import AsegurarEventosMuestraUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_matriculas_muestra_use_case import AsegurarMatriculasMuestraUseCase
 from Servidor.Dominio.DominioUseCases.asegurar_secretaria_use_case import AsegurarSecretariaUseCase
@@ -116,6 +135,18 @@ _configuracion = obtener_configuracion()
     _repositorio_esiiab,
     _repositorio_docencia,
 ) = crear_repositorios(_configuracion)
+if _configuracion.motor_datos == "mongo" and isinstance(_repositorio_usuarios, RepositorioUsuariosMongo):
+    _repositorio_asignaciones_rol: RepositorioAsignacionesRol = RepositorioAsignacionesRolMongo(
+        _repositorio_usuarios.base_datos
+    )
+else:
+    _repositorio_asignaciones_rol = RepositorioAsignacionesRolMemoria()
+if _configuracion.motor_datos == "mongo" and isinstance(_repositorio_usuarios, RepositorioUsuariosMongo):
+    _repositorio_avisos_secretaria: RepositorioAvisosSecretaria = RepositorioAvisosSecretariaMongo(
+        _repositorio_usuarios.base_datos
+    )
+else:
+    _repositorio_avisos_secretaria = RepositorioAvisosSecretariaMemoria()
 _enviador_correo = EnviadorCorreoBrevo(
     _configuracion.brevo_smtp_servidor,
     _configuracion.brevo_smtp_puerto,
@@ -148,6 +179,7 @@ if _configuracion.secretaria_email and _configuracion.secretaria_contrasena:
     )
 AsegurarCatalogoAsignaturasUseCase(_repositorio_cursos, _repositorio_asignaturas).ejecutar()
 AsegurarEventosMuestraUseCase(_repositorio_eventos, _repositorio_asignaturas).ejecutar()
+AsegurarAvisosSecretariaMuestraUseCase(_repositorio_avisos_secretaria).ejecutar()
 AsegurarMatriculasMuestraUseCase(
     _repositorio_usuarios, _repositorio_matriculas, obtener_hasher_contrasenas()
 ).ejecutar()
@@ -174,6 +206,10 @@ def obtener_repositorio_confirmaciones() -> RepositorioConfirmaciones:
     return _repositorio_confirmaciones
 
 
+def obtener_repositorio_asignaciones_rol() -> RepositorioAsignacionesRol:
+    return _repositorio_asignaciones_rol
+
+
 def obtener_repositorio_cursos() -> RepositorioCursos:
     return _repositorio_cursos
 
@@ -184,6 +220,10 @@ def obtener_repositorio_asignaturas() -> RepositorioAsignaturas:
 
 def obtener_repositorio_eventos() -> RepositorioEventos:
     return _repositorio_eventos
+
+
+def obtener_repositorio_avisos_secretaria() -> RepositorioAvisosSecretaria:
+    return _repositorio_avisos_secretaria
 
 
 def obtener_repositorio_matriculas() -> RepositorioMatriculas:

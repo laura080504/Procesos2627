@@ -14,6 +14,8 @@ class AsignarAdministradorUseCase:
     def ejecutar(self, command: AsignarAdministradorCommand) -> Usuario:
         if command.solicitante_rol != Rol.SUPERADMINISTRADOR:
             raise PermisoInsuficiente()
+        if command.rol_destino != Rol.PROFESOR:
+            raise PermisoInsuficiente()
         email = command.email.strip().lower()
         usuario = self.repositorio_usuarios.obtener_por_email(email)
         if usuario is None or usuario.estado == EstadoUsuario.ELIMINADO:
