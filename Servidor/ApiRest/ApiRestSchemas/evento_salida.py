@@ -8,6 +8,7 @@ from Servidor.Dominio.DominioEnums.tipo_evento import TipoEvento
 class EventoSalida(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+    id: str | None = None
     fecha: date
     codigo: str
     tipo: TipoEvento

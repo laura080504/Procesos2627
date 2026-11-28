@@ -11,29 +11,44 @@ URL_PERFIL = "https://openidconnect.googleapis.com/v1/userinfo"
 
 
 class ClienteGoogle:
-    def url_autorizacion(self, client_id: str, redirect_uri: str, estado: str) -> str:
-        consulta = urlencode(
-            {
-                "client_id": client_id,
-                "redirect_uri": redirect_uri,
-                "response_type": "code",
-                "scope": "openid email profile",
-                "state": estado,
-                "prompt": "select_account",
-            }
-        )
-        return f"{URL_AUTORIZACION}?{consulta}"
+    def url_autorizacion(
+        self,
+        client_id: str,
+        redirect_uri: str,
+        estado: str,
+        code_challenge: str | None = None,
+    ) -> str:
+        params = {
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+            "scope": "openid email profile",
+            "state": estado,
+            "prompt": "select_account",
+        }
+        if code_challenge:
+            params["code_challenge"] = code_challenge
+            params["code_challenge_method"] = "S256"
+        return f"{URL_AUTORIZACION}?{urlencode(params)}"
 
-    def perfil(self, code: str, redirect_uri: str, client_id: str, client_secret: str) -> dict:
-        cuerpo = urlencode(
-            {
-                "code": code,
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "redirect_uri": redirect_uri,
-                "grant_type": "authorization_code",
-            }
-        ).encode()
+    def perfil(
+        self,
+        code: str,
+        redirect_uri: str,
+        client_id: str,
+        client_secret: str,
+        code_verifier: str | None = None,
+    ) -> dict:
+        cuerpo_dict = {
+            "code": code,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "redirect_uri": redirect_uri,
+            "grant_type": "authorization_code",
+        }
+        if code_verifier:
+            cuerpo_dict["code_verifier"] = code_verifier
+        cuerpo = urlencode(cuerpo_dict).encode()
         try:
             token = self._leer(URL_TOKEN, cuerpo)
             acceso = token.get("access_token")

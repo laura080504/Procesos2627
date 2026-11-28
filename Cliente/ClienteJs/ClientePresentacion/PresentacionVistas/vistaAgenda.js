@@ -4,7 +4,18 @@ const VistaAgenda = (() => {
     const TONOS_FRANJA = ["#9d1830", "#7a1528", "#c45c6c", "#5c101c", "#a33d4e", "#8e3044"];
 
     class VistaAgenda {
-        constructor({ alBuscar, alAbrirPerfil, alCambiarTema, alCambiarIdioma, alLeer, alCambiarMes, alAbrirAsignatura, alEditarMatricula }) {
+        constructor({
+            alBuscar,
+            alAbrirPerfil,
+            alCambiarTema,
+            alCambiarIdioma,
+            alLeer,
+            alCambiarMes,
+            alAbrirAsignatura,
+            alEditarMatricula,
+            alActualizarEvento,
+            alEliminarEvento,
+        }) {
             this.seccion = document.getElementById("vistaAgenda");
             this.lista = document.getElementById("listaAsignaturas");
             this.vacio = document.getElementById("sinAsignaturas");
@@ -22,6 +33,14 @@ const VistaAgenda = (() => {
             this.tituloDialogo = document.getElementById("tituloDialogoDia");
             this.fechaDialogo = document.getElementById("fechaDialogoDia");
             this.listaDialogo = document.getElementById("listaDialogoDia");
+            this.dialogoEditarEvento = document.getElementById("dialogoEditarEvento");
+            this.formEditarEvento = document.getElementById("formEditarEvento");
+            this.idEventoEditar = document.getElementById("idEventoEditar");
+            this.codigoEventoEditar = document.getElementById("codigoEventoEditar");
+            this.tipoEventoEditar = document.getElementById("tipoEventoEditar");
+            this.fechaEventoEditar = document.getElementById("fechaEventoEditar");
+            this.horaEventoEditar = document.getElementById("horaEventoEditar");
+            this.lugarEventoEditar = document.getElementById("lugarEventoEditar");
             this.dialogoAvisos = document.getElementById("dialogoAvisos");
             this.listaAvisos = document.getElementById("listaAvisos");
             this.sinAvisos = document.getElementById("sinAvisos");
@@ -50,6 +69,8 @@ const VistaAgenda = (() => {
             this.alCambiarMes = alCambiarMes;
             this.alAbrirAsignatura = alAbrirAsignatura;
             this.alEditarMatricula = alEditarMatricula;
+            this.alActualizarEvento = alActualizarEvento;
+            this.alEliminarEvento = alEliminarEvento;
             this.temporizador = null;
             document.getElementById("botonPerfil").addEventListener("click", alAbrirPerfil);
             this.botonMatriculaVacia.addEventListener("click", () => {
@@ -92,6 +113,20 @@ const VistaAgenda = (() => {
                     this.dialogoAvisos.close();
                 }
             });
+            if (this.dialogoEditarEvento) {
+                this.dialogoEditarEvento.addEventListener("click", (evento) => {
+                    if (evento.target === this.dialogoEditarEvento) {
+                        this.dialogoEditarEvento.close();
+                    }
+                });
+                document.getElementById("cerrarEditarEvento").addEventListener("click", () => {
+                    this.dialogoEditarEvento.close();
+                });
+                this.formEditarEvento.addEventListener("submit", (evento) => {
+                    evento.preventDefault();
+                    this.enviarEdicionEvento();
+                });
+            }
             this.prepararLeyenda();
             this.aplicarPreferenciasAvisos(this.preferenciasAvisos);
             window.addEventListener("resize", () => {
@@ -592,10 +627,116 @@ const VistaAgenda = (() => {
                             detalle.textContent = detalleTexto;
                             item.append(detalle);
                         }
+                        if (this.puedeGestionarEvento(simbolo)) {
+                            const acciones = document.createElement("div");
+                            acciones.className = "actividad-acciones";
+                            const editar = document.createElement("button");
+                            editar.type = "button";
+                            editar.className = "boton-actividad";
+                            editar.textContent = this.textos.editarEvento || "Editar";
+                            editar.addEventListener("click", (evento) => {
+                                evento.preventDefault();
+                                evento.stopPropagation();
+                                this.abrirEditarEvento(simbolo);
+                            });
+                            const eliminar = document.createElement("button");
+                            eliminar.type = "button";
+                            eliminar.className = "boton-actividad boton-actividad-eliminar";
+                            eliminar.textContent = this.textos.eliminarEvento || "Eliminar";
+                            eliminar.addEventListener("click", (evento) => {
+                                evento.preventDefault();
+                                evento.stopPropagation();
+                                this.confirmarEliminarEvento(simbolo);
+                            });
+                            acciones.append(editar, eliminar);
+                            item.append(acciones);
+                        }
                         this.listaDialogo.append(item);
                     });
             }
             this.dialogo.showModal();
+        }
+
+        puedeGestionarEvento(simbolo) {
+            if (!simbolo || !simbolo.editable || !simbolo.evento_id || !this.usuario) {
+                return false;
+            }
+            const rol = this.usuario.rol;
+            if (rol === "superadministrador") {
+                return true;
+            }
+            if (rol !== "profesor") {
+                return false;
+            }
+            return this.asignaturas.some((asignatura) => asignatura.codigo === simbolo.codigo);
+        }
+
+        abrirEditarEvento(simbolo) {
+            if (!this.dialogoEditarEvento || !this.alActualizarEvento) {
+                return;
+            }
+            this.rellenarAsignaturasEdicion(simbolo.codigo);
+            this.idEventoEditar.value = simbolo.evento_id;
+            this.tipoEventoEditar.value = simbolo.tipo === "estrella" ? "examen" : "entrega";
+            this.fechaEventoEditar.value = simbolo.fecha || "";
+            this.horaEventoEditar.value = (simbolo.hora || "").slice(0, 5);
+            this.lugarEventoEditar.value = simbolo.lugar || "";
+            this.dialogo.close();
+            this.dialogoEditarEvento.showModal();
+        }
+
+        rellenarAsignaturasEdicion(codigoSeleccionado) {
+            const ingles = this.textos.codigo === "EN";
+            this.codigoEventoEditar.replaceChildren();
+            this.asignaturas.forEach((asignatura) => {
+                const opcion = document.createElement("option");
+                opcion.value = asignatura.codigo;
+                opcion.textContent = ingles ? asignatura.nombre_ingles : asignatura.nombre;
+                if (asignatura.codigo === codigoSeleccionado) {
+                    opcion.selected = true;
+                }
+                this.codigoEventoEditar.append(opcion);
+            });
+            if (![...this.codigoEventoEditar.options].some((opcion) => opcion.value === codigoSeleccionado)) {
+                const opcion = document.createElement("option");
+                opcion.value = codigoSeleccionado;
+                opcion.textContent = codigoSeleccionado;
+                opcion.selected = true;
+                this.codigoEventoEditar.append(opcion);
+            }
+        }
+
+        enviarEdicionEvento() {
+            if (!this.alActualizarEvento) {
+                return;
+            }
+            const datos = {
+                codigo: this.codigoEventoEditar.value,
+                tipo: this.tipoEventoEditar.value,
+                fecha: this.fechaEventoEditar.value,
+                hora: this.horaEventoEditar.value,
+                lugar: this.lugarEventoEditar.value.trim() || null,
+            };
+            this.alActualizarEvento(this.idEventoEditar.value, datos, () => {
+                this.dialogoEditarEvento.close();
+            });
+        }
+
+        confirmarEliminarEvento(simbolo) {
+            if (!this.alEliminarEvento || !simbolo.evento_id) {
+                return;
+            }
+            const nombre = this.textos.codigo === "EN" ? simbolo.nombre_ingles : simbolo.nombre;
+            const tipo = this.etiquetaSimbolo(simbolo.tipo);
+            const mensaje = (this.textos.confirmarEliminarEvento || "¿Eliminar {tipo} de {nombre}?")
+                .replace("{tipo}", tipo)
+                .replace("{nombre}", nombre);
+            if (!window.confirm(mensaje)) {
+                return;
+            }
+            this.alEliminarEvento(simbolo.evento_id, () => {
+                this.dialogo.close();
+            });
         }
 
         marcasVisibles() {

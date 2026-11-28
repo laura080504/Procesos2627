@@ -65,7 +65,9 @@ def prueba_si_brevo_falla_borra_el_token(repositorio_usuarios, repositorio_confi
     assert repositorio_confirmaciones._confirmaciones == {}
 
 
-def prueba_google_activa_una_cuenta_pendiente(repositorio_usuarios, repositorio_sesiones, repositorio_confirmaciones, hasher):
+def prueba_google_no_activa_una_cuenta_pendiente(repositorio_usuarios, repositorio_sesiones, repositorio_confirmaciones, hasher):
+    from Servidor.Dominio.DominioExceptions.cuenta_pendiente import CuentaPendiente
+
     repositorio_usuarios.insertar(
         Usuario(email="laura@ejemplo.com", nick="laura", contrasena_hash=hasher.hashear("contrasena-segura"), estado=EstadoUsuario.PENDIENTE)
     )
@@ -73,26 +75,31 @@ def prueba_google_activa_una_cuenta_pendiente(repositorio_usuarios, repositorio_
         Confirmacion("token-ok", "laura@ejemplo.com", datetime.now(timezone.utc) + timedelta(hours=1))
     )
     use_case = IniciarSesionGoogleUseCase(
-        repositorio_usuarios, repositorio_sesiones, hasher, timedelta(hours=1), repositorio_confirmaciones
+        repositorio_usuarios, repositorio_sesiones, timedelta(hours=1), repositorio_confirmaciones
     )
-    resultado = use_case.ejecutar("laura@ejemplo.com", "Laura")
-    assert resultado.usuario.estado == EstadoUsuario.ACTIVO
-    assert hasher.verificar("contrasena-segura", resultado.usuario.contrasena_hash)
-    assert repositorio_confirmaciones.obtener("token-ok") is None
-    assert repositorio_sesiones.obtener(resultado.sesion.token).email == "laura@ejemplo.com"
+    with pytest.raises(CuentaPendiente):
+        use_case.ejecutar("laura@ejemplo.com", "Laura", email_verificado=True)
+    assert repositorio_usuarios.obtener_por_email("laura@ejemplo.com").estado == EstadoUsuario.PENDIENTE
+    assert repositorio_confirmaciones.obtener("token-ok") is not None
 
 
 def prueba_google_rechaza_una_cuenta_eliminada(repositorio_usuarios, repositorio_sesiones, hasher):
     repositorio_usuarios.insertar(
         Usuario(email="laura@ejemplo.com", nick="laura", contrasena_hash="hash", estado=EstadoUsuario.ELIMINADO)
     )
-    use_case = IniciarSesionGoogleUseCase(repositorio_usuarios, repositorio_sesiones, hasher, timedelta(hours=1))
+    use_case = IniciarSesionGoogleUseCase(repositorio_usuarios, repositorio_sesiones, timedelta(hours=1))
     with pytest.raises(CuentaEliminada):
-        use_case.ejecutar("laura@ejemplo.com", "Laura")
+        use_case.ejecutar("laura@ejemplo.com", "Laura", email_verificado=True)
 
 
 def prueba_google_sin_email_no_crea_usuario(repositorio_usuarios, repositorio_sesiones, hasher):
-    use_case = IniciarSesionGoogleUseCase(repositorio_usuarios, repositorio_sesiones, hasher, timedelta(hours=1))
+    use_case = IniciarSesionGoogleUseCase(repositorio_usuarios, repositorio_sesiones, timedelta(hours=1))
     with pytest.raises(OauthNoValido):
-        use_case.ejecutar("sin-arroba", "Laura")
+        use_case.ejecutar("sin-arroba", "Laura", email_verificado=True)
     assert repositorio_usuarios.obtener_todos() == []
+
+
+def prueba_google_exige_email_verificado(repositorio_usuarios, repositorio_sesiones):
+    use_case = IniciarSesionGoogleUseCase(repositorio_usuarios, repositorio_sesiones, timedelta(hours=1))
+    with pytest.raises(OauthNoValido):
+        use_case.ejecutar("laura@ejemplo.com", "Laura", email_verificado=False)

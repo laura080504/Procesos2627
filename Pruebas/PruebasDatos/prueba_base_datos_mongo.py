@@ -34,6 +34,7 @@ from Servidor.Dominio.DominioEntities.usuario import Usuario
 from Servidor.Dominio.DominioEnums.estado_usuario import EstadoUsuario
 from Servidor.Dominio.DominioEnums.rol import Rol
 from Servidor.Dominio.DominioServices.hasher_contrasenas import HasherContrasenas
+from Servidor.Dominio.DominioServices.token_seguro import hash_token
 from Servidor.Dominio.DominioUseCases.editar_datos_use_case import EditarDatosUseCase
 from Servidor.Dominio.DominioUseCases.registrar_usuario_use_case import RegistrarUsuarioUseCase
 from Servidor.Dominio.DominioUseCases.restablecer_contrasena_use_case import RestablecerContrasenaUseCase
@@ -110,7 +111,7 @@ def prueba_restablecer_contrasena_persiste_el_hash_en_mongo():
     )
     recuperaciones.guardar(
         Recuperacion(
-            "token-valido",
+            hash_token("token-valido"),
             "laura@ejemplo.com",
             datetime.now(timezone.utc) + timedelta(minutes=15),
         )
